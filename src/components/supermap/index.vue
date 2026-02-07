@@ -50,10 +50,10 @@ onMounted(() => {
 
   // 可选：设置相机初始视角（比如定位到北京）
   viewer.camera.setView({
-    destination: SuperMap3D.Cartesian3.fromDegrees(116.403874, 39.914885, 1000000), // 经纬度 + 高度
+    destination: SuperMap3D.Cartesian3.fromDegrees(117.229619, 31.726288, 5000), // 经纬度 + 高度
     orientation: {
-      heading: SuperMap3D.Math.toRadians(0),   // 水平旋转
-      pitch: SuperMap3D.Math.toRadians(-90),   // 俯仰角度
+      heading: SuperMap3D.Math.toRadians(359.2),   // 水平旋转
+      pitch: SuperMap3D.Math.toRadians(-39.5),   // 俯仰角度
       roll: 0
     }
   });
