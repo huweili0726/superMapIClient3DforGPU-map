@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>体数据临近采样</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/tooltip.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/supermap/SuperMap.Include.js"></script>
+    <script src="./js/lib/CustomBubble.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='toolbar' class="param-container tool-bar">
+        <span>提示：点击颜色矩形区域查询对应强度值</span>
+    </div>
+    <script>
+        var viewer, clickPt;
+
+        function onload(SuperMap3D) {
+            var EngineType = getEngineType();
+            viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+            
+            // 导入自定义弹窗
+            const customBubble = new CustomBubble(viewer);
+            customBubble.start();
+
+            var labelPosition = null;
+            var promise = scene.open(URL_CONFIG.SCENE_VOLUME_NEAREST);
+            try {
+                promise.then(function (layers) {
+
+
+                    var tooltip = createTooltip(document.body);
+                    var handler = new SuperMap3D.ScreenSpaceEventHandler(viewer.scene.canvas);
+                    handler.setInputAction(function (e) {
+                        console.log(e);
+                        labelPosition = e;
+                        
+                        scene.pickPositionAsync(e.position).then((last) => {
+                            clickPt = last;
+                            var ellipsoid = viewer.scene.globe.ellipsoid;
+                            var cartographic = ellipsoid.cartesianToCartographic(clickPt);
+                            var lat = SuperMap3D.Math.toDegrees(cartographic.latitude);
+                            var lng = SuperMap3D.Math.toDegrees(cartographic.longitude);
+
+                            var pt = {
+                                x: lng,
+                                y: lat
+                            };
+                            query(pt);
+                            //创建弹出框信息
+                        });
+
+
+                    }, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+                    var layer = scene.layers.find("bm");
+                    layer.selectEnabled = false;
+                    layer.cullEnabled = true;
+                    layer.style3D.fillStyle = SuperMap3D.FillStyle.Fill_And_WireFrame;
+                    layer.wireFrameMode = SuperMap3D.WireFrameType.Sketch;
+                    layer.style3D.lineColor = SuperMap3D.Color.fromCssColorString("#9F9F9F");
+                    layer.style3D.lineWidth = 0.5;
+
+                    var colorTable = new SuperMap3D.ColorTable();
+
+                    colorTable.insert(0, SuperMap3D.Color.fromCssColorString("#ec0300"));
+                    colorTable.insert(4.99, SuperMap3D.Color.fromCssColorString("#ec0300"));
+
+                    colorTable.insert(5, SuperMap3D.Color.fromCssColorString("#f89c01"));
+                    colorTable.insert(9.99, SuperMap3D.Color.fromCssColorString("#f89c01"));
+
+                    colorTable.insert(10, SuperMap3D.Color.fromCssColorString("#fffd00"));
+                    colorTable.insert(19.99, SuperMap3D.Color.fromCssColorString("#fffd00"));
+
+                    colorTable.insert(20, SuperMap3D.Color.fromCssColorString("#37ce00"));
+                    colorTable.insert(29.99, SuperMap3D.Color.fromCssColorString("#37ce00"));
+
+                    colorTable.insert(30, SuperMap3D.Color.fromCssColorString("#0000fa"));
+                    colorTable.insert(39.99, SuperMap3D.Color.fromCssColorString("#0000fa"));
+
+                    colorTable.insert(40, SuperMap3D.Color.fromCssColorString("#ff00cc"));
+                    colorTable.insert(49.99, SuperMap3D.Color.fromCssColorString("#ff00cc"));
+
+                    colorTable.insert(50, SuperMap3D.Color.fromCssColorString("#000000"));
+
+                    var hyp = new SuperMap3D.HypsometricSetting();
+
+                    hyp.ColorTable = colorTable;
+                    hyp.DisplayMode = SuperMap3D.HypsometricSettingEnum.DisplayMode.FACE;
+                    hyp.Opacity = 1.0;
+                    hyp.LineInterval = 1.0;
+                    hyp.ColorTableMaxKey = layer._fMaxValue;
+                    hyp.ColorTableMinKey = layer._fMinValue;
+                    hyp.MaxVisibleValue = layer._fMaxValue;
+                    hyp.MinVisibleValue = layer._fMinValue;
+                    hyp.filterMode = SuperMap3D.HypsometricSettingEnum.FilterMode.NEAREST;
+                    layer.hypsometricSetting = {
+                        hypsometricSetting: hyp,
+                        analysisMode: SuperMap3D.HypsometricSettingEnum.AnalysisRegionMode.ARM_ALL
+                    }
+                }, function (e) {
+                    if (widget._showRenderLoopErrors) {
+                        var title = '加载SCP失败，请检查网络连接状态或者url地址是否正确？';
+                        widget.showErrorPanel(title, undefined, e);
+                    }
+                });
+            } catch (e) {
+                if (widget._showRenderLoopErrors) {
+                    var title = '渲染时发生错误，已停止渲染。';
+                    widget.showErrorPanel(title, undefined, e);
+                }
+            }
+
+            function query(pt) {
+                var geometry = new SuperMap.Geometry.Point(pt.x, pt.y);
+                var getFeatureParameter, getFeatureService;
+                getFeatureParameter = new SuperMap.REST.GetFeaturesByBufferParameters({
+                    bufferDistance: 0.00005,
+                    //attributeFilter: "SMID > 0",
+                    datasetNames: ["mr:mr"],
+                    returnContent: true,
+                    geometry: geometry
+                });
+                getFeatureService = new SuperMap.REST.GetFeaturesByBufferService("http://www.supermapol.com/realspace/services/data-compare/rest/data", {
+                    eventListeners: {
+                        "processCompleted": processCompleted,
+                        "processFailed": null
+                    }
+                });
+                getFeatureService.processAsync(getFeatureParameter);
+
+            }
+
+            function processCompleted(getFeaturesEventArgs) {
+                var dis = 999999;
+                var data;
+                getFeaturesEventArgs.result.features.forEach(function (item, i) {
+
+                    var cart3 = new SuperMap3D.Cartesian3.fromDegrees(Number(item.data.SMX), Number(item.data.SMY), Number(item.data.Z));
+                    var _dis = SuperMap3D.Cartesian3.distance(clickPt, cart3);
+                    if (dis > _dis) {
+                        dis = _dis;
+                        data = item.data;
+                    }
+                });
+                viewer.entities.removeAll();
+                if (getFeaturesEventArgs.result.features.length > 0) {
+                    var pt = {
+                        x: Number(data.SMX),
+                        y: Number(data.SMY),
+                        z: Number(data.Z)
+                    }
+
+                    viewer.entities.add({
+                        position: SuperMap3D.Cartesian3.fromDegrees(pt.x, pt.y, pt.z),
+                        point: {
+                            pixelSize: 10,
+                            color: SuperMap3D.Color.RED
+                        }
+                    });
+
+                    var colorE = getColor(Number(data.GRIDRSCP));
+                    viewer.entities.add({
+                        position: SuperMap3D.Cartesian3.fromDegrees(pt.x, pt.y, pt.z),
+                        box: {
+                            dimensions: new SuperMap3D.Cartesian3(5, 6, 3),
+                            material: SuperMap3D.Color.fromCssColorString(colorE).withAlpha(0.5),
+                            outline: true,
+                            outlineColor: SuperMap3D.Color.BLACK
+                        }
+                    });
+
+                    var valueGRIDRSCP = data.GRIDRSCP;
+                    customBubble.open({
+                        title: `对象属性`,
+                        content: [
+                            {
+                                type: 'table', data: {
+                                    headers: ['字段', '值'],
+                                    rows: [['强度值', valueGRIDRSCP]]
+                                }
+                            }
+                        ]
+                    });
+                }
+            }
+
+            function getColor(value) {
+                if (value < 5) {
+                    return '#ec0300';
+                } else if (5 < value && value < 10) {
+                    return '#f89c01';
+                } else if (10 < value && value < 20) {
+                    return '#fffd00';
+                } else if (20 < value && value < 30) {
+                    return '#37ce00';
+                } else if (30 < value && value < 40) {
+                    return '#0000fa';
+                } else if (40 < value && value < 50) {
+                    return '#ff00cc';
+                } else if (50 <= value) {
+                    return '#000000';
+                }
+            }
+
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

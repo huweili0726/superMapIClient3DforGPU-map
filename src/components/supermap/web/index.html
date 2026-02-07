@@ -1,0 +1,1513 @@
+<!--********************************************************************
+* Copyright© 2000 - 2023 SuperMap Software Co.Ltd. All rights reserved.
+*********************************************************************-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>SuperMap iClient3D for 12i(2025) WebGL/WebGPU</title>
+  <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no" />
+  <meta name="keywords" content="SuperMap，超图，iClient,iClient 9D,iClient 10i,SuperMap iClient,
+    iClient JavaScript,iClient for WebGL" />
+  <meta name="description" content="三维客户端开发平台" />
+  <script type="text/javascript" exclude="common" include="animate.css,swiper" src="./js/include.js"></script>
+  <link rel="stylesheet" href="./css/common.css" />
+  <link rel="stylesheet" href="./css/index.css" />
+  <link rel="stylesheet" href="./css/header.css" />
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini theme-bg">
+  <!--导航+巨幕区域-->
+  <header class="header-home">
+    <div class="bgc-image">
+    </div>
+    <!--顶部导航-->
+    <header class="header-wrapper main-header icl-header"></header>
+    <!--顶部导航 end-->
+    <script>
+      var navigation = {
+        nav: {
+          title: '2025 u1',
+          path: '../web/',
+          isLocal: window.isLocal,
+        },
+      };
+      identification = {};
+      utils.loadTemplate('.icl-header', './template/header.html', navigation);
+    </script>
+
+    <!--巨幕区域-->
+    <div class="screen container">
+      <!-- 右边的文字 -->
+      <div class="header-description animated fadeIn">
+        <div id="header2-text">
+          <h3 class="tc pt50">三维GIS客户端开发平台</h3>
+          <p class="subtitle">免费、开源、可扩展</p>
+        </div>
+        <!-- 左边的链接按钮 -->
+        <div class="buttons" style="padding-left:0px">
+          <div class="buttonsdiv">
+            <div class="button-zip sm-button-item" id="button_zip">
+              <a class="radiusBtn download" href="./downloads/download1.html" target="_blank">
+                <div>
+                  <svg class="radiusBtnimg" width="18px" height="18px" viewBox="0 0 16 16" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                      <g transform="translate(-294.000000, -278.000000)" fill-rule="nonzero">
+                        <g transform="translate(294.000000, 278.000000)">
+                          <rect fill="#000000" opacity="0" x="0" y="0" width="16" height="16"></rect>
+                          <path
+                            d="M12.433,4.88 C12.0572823,2.72459578 10.1857231,1.15177519 7.9978177,1.15276171 C5.80991226,1.15374917 3.93977291,2.72825767 3.566,4.884 C2.00393896,5.00604806 0.798019802,6.30817954 0.796,7.875 C0.79801298,9.47081207 2.04742351,10.7865358 3.641,10.871 L3.641,9.68 C2.98141611,9.63111125 2.40079072,9.22692215 2.12595464,8.6253358 C1.85111856,8.02374944 1.92568654,7.32023378 2.32052737,6.78962872 C2.7153682,6.25902366 3.36782315,5.98553287 4.023,6.076 L4.032,6.076 L4.047,6.078 L4.063,6.079 L4.135,6.079 L4.156,6.077 L4.166,6.077 L4.185,6.074 L4.195,6.072 L4.213,6.069 L4.225,6.066 L4.239,6.063 L4.254,6.059 L4.266,6.056 L4.283,6.05 L4.292,6.047 L4.311,6.04 L4.317,6.038 L4.337,6.029 L4.342,6.027 C4.34940543,6.02382761 4.35674052,6.02049348 4.364,6.017 L4.367,6.015 C4.37439828,6.01112023 4.38173259,6.0071197 4.389,6.003 L4.392,6.002 L4.414,5.989 L4.416,5.987 C4.42307929,5.98245338 4.43008032,5.97778603 4.437,5.973 L4.44,5.971 C4.44688493,5.96594537 4.45355733,5.96060745 4.46,5.955 L4.463,5.953 C4.46982086,5.94786232 4.47649037,5.94252672 4.483,5.937 L4.486,5.934 L4.503,5.919 L4.508,5.914 L4.523,5.899 L4.528,5.893 L4.542,5.878 L4.548,5.871 L4.56,5.855 L4.567,5.848 L4.577,5.833 L4.584,5.824 C4.58742375,5.81906087 4.59075763,5.81406005 4.594,5.809 L4.6,5.8 L4.61,5.784 L4.614,5.774 L4.624,5.759 L4.628,5.749 L4.636,5.733 L4.64,5.724 C4.64273427,5.71803028 4.64540111,5.71202989 4.648,5.706 L4.651,5.697 C4.65731116,5.68168342 4.66265499,5.66598591 4.667,5.65 L4.669,5.642 C4.67108617,5.63535949 4.67308634,5.62869226 4.675,5.622 L4.676,5.612 C4.67775293,5.6053552 4.67941974,5.59868797 4.681,5.592 L4.682,5.582 C4.68314918,5.57569112 4.68414945,5.56935603 4.685,5.563 L4.685,5.56 C4.687,5.559 4.685,5.555 4.687,5.552 L4.688,5.536 L4.689,5.52 L4.689,5.51 C4.75285966,3.72674684 6.21798525,2.31464431 8.00238048,2.31653113 C9.78677571,2.31841795 11.2489117,3.73361577 11.309,5.517 L11.309,5.537 L11.311,5.548 L11.312,5.56 L11.314,5.58 L11.315,5.586 C11.3164728,5.59370754 11.31814,5.60137665 11.32,5.609 L11.32,5.615 C11.321823,5.62304321 11.3238235,5.63104516 11.326,5.639 L11.328,5.645 C11.3298328,5.65237791 11.3318333,5.65971314 11.334,5.667 L11.336,5.674 L11.343,5.694 C11.3457807,5.70286921 11.3491208,5.71155328 11.353,5.72 L11.358,5.731 L11.365,5.746 L11.371,5.758 C11.3729006,5.76237852 11.3749011,5.76671298 11.377,5.771 L11.385,5.784 L11.391,5.795 L11.4,5.809 L11.406,5.819 L11.416,5.833 L11.422,5.842 L11.432,5.856 L11.439,5.864 C11.4422458,5.8687286 11.4455797,5.87339608 11.449,5.878 L11.457,5.886 L11.468,5.898 L11.477,5.907 C11.4834141,5.91391449 11.4900855,5.92058585 11.497,5.927 L11.508,5.937 L11.519,5.947 L11.529,5.955 L11.543,5.965 L11.551,5.972 L11.567,5.982 L11.575,5.988 L11.592,5.998 L11.598,6.002 C11.6042621,6.00578831 11.6105966,6.00945565 11.617,6.013 L11.623,6.016 L11.643,6.026 L11.648,6.029 L11.668,6.039 L11.674,6.041 L11.694,6.048 L11.701,6.051 L11.718,6.057 L11.728,6.06 L11.742,6.064 L11.757,6.068 L11.765,6.07 C11.7719586,6.07183585 11.7789607,6.07350301 11.786,6.075 L11.788,6.075 C11.832,6.083 11.878,6.087 11.922,6.085 L11.927,6.085 L11.95,6.084 L11.959,6.084 L11.972,6.082 L11.99,6.08 L11.991,6.08 C12.9851125,5.9612588 13.8872587,6.67088747 14.006,7.665 C14.1247412,8.65911254 13.4151125,9.56125876 12.421,9.68 L12.421,10.87 C14.0145765,10.7855358 15.263987,9.46981207 15.266,7.874 C15.263813,6.2829593 14.0214624,4.96956714 12.433,4.879 L12.433,4.88 Z M10.507,11.081 L8.563,11.081 L8.563,6.295 L7.437,6.295 L7.437,11.082 L5.494,11.082 C5.43719766,11.0819935 5.38533305,11.1142837 5.36027067,11.1652581 C5.33520829,11.2162324 5.34130864,11.2770221 5.376,11.322 L7.766,14.423 C7.82218895,14.4965418 7.90944948,14.5396864 8.002,14.5396864 C8.09455052,14.5396864 8.18181105,14.4965418 8.238,14.423 L10.626,11.321 C10.6606914,11.2760221 10.6667917,11.2152324 10.6417293,11.1642581 C10.6166669,11.1132837 10.5648023,11.0809935 10.508,11.081 L10.507,11.081 Z"
+                            id="形状" fill-opacity="0.85" fill="#FFFFFF"></path>
+                        </g>
+                      </g>
+                    </g>
+                  </svg>
+                  <span>下 载</span>
+                </div>
+              </a>
+            </div>
+            <div class="button-examples sm-button-item" id="button_examples">
+              <a class="radiusBtn sample" target="_blank" href="../examples/webgl/examples.html">
+                <div>
+                  <svg class="radiusBtnimg" width="18px" height="18px" viewBox="0 0 16 16" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                      <g transform="translate(-518.000000, -277.000000)" fill-rule="nonzero">
+                        <g transform="translate(518.000000, 277.000000)">
+                          <rect fill="#000000" opacity="0" x="0" y="0" width="16" height="16"></rect>
+                          <path
+                            d="M6.205,1.99 L2.989,1.99 C2.43710581,1.99055189 1.99,2.43810554 1.99,2.99 L1.99,6.205 C1.99055189,6.75689419 2.43810554,7.204 2.99,7.204 L6.205,7.204 C6.75689419,7.20344811 7.204,6.75589446 7.204,6.204 L7.204,2.99 C7.20344811,2.43810581 6.75589446,1.99099972 6.204,1.991 L6.205,1.99 Z M6.205,6.205 L2.989,6.205 L2.989,2.989 L6.205,2.989 L6.205,6.205 Z M14.368,3.891 L12.094,1.617 C11.7036149,1.22728406 11.0713851,1.22728406 10.681,1.617 L8.407,3.89 C8.01794911,4.28026975 8.01794911,4.91173025 8.407,5.302 L10.681,7.576 C11.0713851,7.96571594 11.7036149,7.96571594 12.094,7.576 L14.368,5.302 C14.7570509,4.91173025 14.7570509,4.28026975 14.368,3.89 L14.368,3.891 Z M13.661,4.597 L11.387,6.871 L9.114,4.597 L11.387,2.323 L13.662,4.597 L13.661,4.597 L13.661,4.597 Z M6.205,8.718 L2.989,8.718 C2.43710581,8.71855189 1.99,9.16610554 1.99,9.718 L1.99,12.933 C1.99055189,13.4848942 2.43810554,13.932 2.99,13.932 L6.205,13.932 C6.75689419,13.9314481 7.204,13.4838945 7.204,12.932 L7.204,9.718 C7.20344811,9.16610581 6.75589446,8.71899972 6.204,8.719 L6.205,8.718 Z M6.205,12.933 L2.989,12.933 L2.989,9.717 L6.205,9.717 L6.205,12.933 Z M12.995,8.718 L9.78,8.718 C9.22771525,8.718 8.78,9.16571525 8.78,9.718 L8.78,12.933 C8.78055189,13.4848942 9.22810554,13.932 9.78,13.932 L12.995,13.932 C13.5472847,13.932 13.995,13.4842847 13.995,12.932 L13.995,9.718 C13.9944481,9.16610581 13.5468945,8.71899972 12.995,8.719 L12.995,8.718 Z M12.995,12.933 L9.78,12.933 L9.78,9.717 L12.995,9.717 L12.995,12.933 L12.995,12.933 Z"
+                            id="形状" fill-opacity="0.85" fill="#FFFFFF"></path>
+                        </g>
+                      </g>
+                    </g>
+                  </svg>
+                  <span>示 例</span>
+                </div>
+              </a>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SuperMap iClient JavaScript 描述 -->
+    <div class="banner-box-img">
+      <div class="banner-description animated fadeIn">
+        <p class="lead" data-aos="fade-down" data-aos-easing="linear" data-aos-duration="500">
+          基于 WebGL/WebGPU 技术实现的三维GIS客户端开发平台，可用于构建无插件、跨操作系统、
+          跨浏览器的三维 GIS 应用程序，可访问SuperMap iServer发布的多种服务、
+          实现了三维场景可视化浏览、交互操作和地理信息管理等功能。
+          通过本产品可快速实现浏览器和移动端上（WebGPU暂不支持）美观、流畅的地图呈现与空间分析。
+          SuperMap iClient3D 2023从底层同时支持WebGL和WebGPU两种渲染引擎，对外使用一套API接口便于用户根据实际需求快速切换，降低迁移成本。
+        </p>
+        <!-- <p class="lead" style="margin-bottom: 24px;margin-top: 8px;" data-aos="fade-down" data-aos-easing="linear" data-aos-duration="500">
+                    集成了领先的开源地图库和可视化库，且核心代码以 Apache License 2.0 协议完全开源，连接了 SuperMap
+                    与开源社区。提供了全新的大数据可视化和数据流可视化功能，通过本产品可快速实现浏览器和移动端上美观、流畅的地图呈现与空间分析。
+                </p> -->
+      </div>
+    </div>
+  </header>
+  <!--巨幕区域 end-->
+  <!--导航+巨幕区域 end-->
+
+  <!--内容区域-->
+  <div class="animated fadeInUpBig">
+    <div class="contentfixed-box">
+      <div class="leadtitle-box">
+        <h3 class="leadtitle"> SuperMap iClient3D for WebGL/WebGPU — 三维GIS客户端开发平台 </h3>
+      </div>
+      <!--产品，技术TabPC-->
+      <div id="PCstyle-pc" class="PCstyle product-technology">
+        <div class="title-768">
+          <span id="pctab-title768">三维场景呈现</span>
+          <span id="show-pctab-768">
+            更多<span class="more-downward"></span>
+          </span>
+        </div>
+        <ul id="pctab-title" class="nav nav-tabs">
+          <li>
+            <a href="#SceneShow" data-toggle="tab">三维场景呈现</a>
+          </li>
+          <li>
+            <a href="#RealisticSpecial" data-toggle="tab">高真实感三维特效</a>
+          </li>
+          <li>
+            <a href="#SpaceAnalyse" data-toggle="tab">三维地理空间分析</a>
+          </li>
+        </ul>
+        <ul id="pctab-title-768" class="nav nav-tabs">
+          <li>
+            <a href="#SceneShow" data-toggle="tab">三维场景呈现</a>
+          </li>
+          <li>
+            <a href="#RealisticSpecial" data-toggle="tab">高真实感三维特效</a>
+          </li>
+          <li>
+            <a href="#SpaceAnalyse" data-toggle="tab">三维地理空间分析</a>
+          </li>
+        </ul>
+        <div id="myTabContent" class="tab-content">
+
+          <!-- 三维场景呈现 -->
+          <div class="productTabContent tab-content-item tab-pane fade tab-content-box in active" id="SceneShow">
+            <div class="product">
+              <div class="product-introduction">
+                <div class="introduction-box">
+                  <h2 class="product-heading">三维场景呈现</h2>
+                  <p class="product-text">
+                    基于物理的渲染（PBR）材质、屏幕空间反射、景深等多种特效，提升整体场景效果，使得三维场景更加真实美观。
+                  </p>
+                </div>
+              </div>
+              <div class="product-pic">
+                <img class="product-image img-fluid" src="img/ic-3D1.jpg" alt="Generic placeholder image" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 高真实感三维特效 -->
+          <div class="productTabContent tab-content-item tab-pane fade tab-content-box in" id="RealisticSpecial">
+            <div class="product">
+              <div class="product-introduction">
+                <div class="introduction-box">
+                  <h2 class="product-heading">高真实感三维特效</h2>
+                  <p class="product-text">
+                    提供了多种高真实感的视觉特效，如：强大的粒子系统，能模拟雨天、雪天效果，泛光、扫描线等后处理特效、自发光、特效线等，
+                    使场景呈现更生动、绚丽的效果。
+                  </p>
+                </div>
+              </div>
+              <div class="product-pic">
+                <img class="product-image img-fluid" src="img/texiao.jpg" alt="Generic placeholder image" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 三维地理空间分析 -->
+          <div class="productTabContent tab-content-item tab-pane fade tab-content-box in" id="SpaceAnalyse">
+            <div class="product">
+              <div class="product-introduction">
+                <div class="introduction-box">
+                  <h2 class="product-heading">三维地理空间分析</h2>
+                  <p class="product-text">
+                    提供丰富的三维空间分析功能，实现复杂的三维空间分析。
+                  </p>
+                </div>
+              </div>
+              <div class="product-pic">
+                <img class="product-image img-fluid" src="img/fenxi.jpg" alt="Generic placeholder image" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!--产品，技术Tab结束-->
+    </div>
+
+    <!-- 新特性 -->
+    <div class="new-attributes-start">
+      <div class="new-attributes">
+        <div class="g-heading-v10 g-mb-65">
+          <h1 class="first_title"><b>WHAT'S NEW</b></h1>
+        </div>
+        <div class="phonefontsize"><span class="STYLE14">v12i(2025)u1</span></div>
+        <div class="panel-body">
+          <div class="news-list">
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增支持加载基于三维流场数据生成的S3M瓦片</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">数据加载：新增支持加载经GeoSOT空间剖分后生成的低空网格瓦片</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">地图服务：新增支持对接iServer以工作空间形式发布的 REST-地图服务按属性条件过滤出图</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">空间查询：新增支持在平面场景下进行空间查询</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">空间分析：新增支持点外挂实例化模型显示边框线效果</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">空间分析：优化通视分析功能，新增支持将通视线上障碍点/障碍物的ID与其所在模型图层相关联</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">空间分析：优化开敞度分析功能，新增支持获取分析结果的可视部分和不可视部分所占开敞度分析范围的比例</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">Mapbox：新增支持加载Mapbox瓦片影像时设置自定义请求头</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">S3M图层：新增支持对S3M图层风格与前景色设置颜色显示模式</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
+
+        <div class="phonefontsize"><span class="STYLE14">v12i(2025)</span></div>
+        <div class="panel-body">
+          <div class="news-list">
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT：优化MVT沿线文字效果，支持文字与视口平行或与线平行</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT：优化MVT文字显示效果，提升文字清晰度</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT：新增定位到指定层级</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增以箭头显示水流方向的水面可视化效果</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：后处理新增光束效果，可模拟光线的丁达尔效应</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增支持获取点云数据类别ID并根据类别ID设置颜色</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增高度雾，增强三维场景的空间层次感和环境氛围</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增支持水面折射，可模拟真实水面倒影及反射光斑效果</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增体积云，模拟真实云层效果</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：地形修改新增支持是否创建侧边，适用于地形挖方</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：优化polyline效果，避免场景中绘制的线段出现锯齿、发虚、断开的现象</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">可视域分析：可视域分析能力增强，新增支持360度范围的可视域分析</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  三维空间分析：新增支持三维管线垂直、水平方向的净距分析，快速查看管线异常情况，减少施工风险，提升地下空间利用率</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">S3M图层：优化S3M图层裁剪效果，降低裁剪后模型边缘锯齿</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">S3M图层：新增支持通过前端指定范围，请求、显示范围内的S3M模型数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">加载数据：新增支持加载S3M瓦片的三维高斯泼溅数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  加载数据：新增支持设置性能优先模式，在低配机器环境下加载城市级精细模型、白模、倾斜摄影三维模型、MVT数据的帧率达25帧及以上</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">实例化图层：新增颜色替换模式</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">加载I3S瓦片：新增支持加载WGS84 Web Mercator OGC社区标准的I3S服务</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  模型瓦片编辑：S3M瓦片新增支持在前端添加、删除模型对象，对选中的模型对象进行缩放、平移、旋转、替换、属性更新操作</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">水场可视化：新增支持对水动力模型计算出带时序的水流模拟结果进行高真实感的可视化展示</p>
+              </div>
+            </div>
+
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">交互操作：相机优化，鼠标中键缩放增加缩放惯性</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">交互操作：支持设置鼠标中键上下拖动方向与相机俯仰方向保持一致</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">交互操作：优化S3M模型顶点捕捉功能，可精确捕捉S3M模型顶点及拾取模型边线</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
+        <div class="phonefontsize"><span class="STYLE14">v11i(2024)R1</span></div>
+        <div class="panel-body">
+          <div class="news-list">
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：支持调整MVT和影像上下图层顺序</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：MVT和影像同时贴倾斜时，支持调整显示顺序</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：MVT支持加载带tileFeature且具有style风格的rest地图服务</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：多可视域支持根据名字清除</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：多扫描线支持清除所有扫描线的能力</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：支持设置模型线框显示透明度变化的距离</p>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+        <!--11iSP1新特性-->
+        <div class="phonefontsize"><span class="STYLE14">v11i(2024)</span></div>
+        <div class="panel-body">
+          <div class="news-list">
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：新增MVT贴合倾斜摄影三维模型数据显示</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：新增以三维文字方式显示沿线标注</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：新增MVT贴合倾斜摄影三维模型数据时，文字可以依模型、地形高度显示</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：增强地理坐标系下空间查询能力</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  MVT功能增强：新增设置文字注记字体为浏览器默认字体，解决mapbox无法识别字体导致文字不显示的问题</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：新增加载GeoJSON格式的数据源</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：新增加载以WMTS方式发布的MVT数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：增强数据的安全性，支持加载AES加密的MVT数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT功能增强：新增多子域方式加载MVT数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">在线服务：新增天地图影像服务访问方式，可通过url方式加载</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  在线服务：新增WMTS服务支持设置瓦片原点位置，兼容iServer新版本影像范围左上角与切片原点不一致的情况</p>
+              </div>
+            </div>
+
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  在线服务：新增支持在平面场景加载通过ArcGIS动态地图服务和瓦片地图服务发布的，采用地方坐标系的地图数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">分析功能：日照分析新增分析效果叠加到模型表面</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：优化模型光照效果、PBR效果，使模型更有立体感、更真实</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增设置云层运动速度</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增设置水面颜色、水流方向、水域范围、水流强度参数，可调出湖面、河流、海洋等多种水面效果
+                </p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：简化天空盒使用步骤，通过一张JPG或HDR格式图片实现天空盒效果</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增设置天空盒水平旋转角度</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  场景效果：新增使用点云强度特征值设置颜色表时，根据点云强度的最大最小值设置颜色表中的最大最小值。最大值默认255，最小值默认0</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增对包含特征值的点云数据设置颜色表（特征值如类别、强度值、海拔高度）</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景效果：新增支持水场模型的粒子效果表达，可动态展示水流的流速、流向</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">
+                  场景效果：多时序S3M瓦片新增支持多属性切换表达，基于一份S3M数据可切换表达水温、水深等属性随时间动态变化的效果</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">数据接入：新增加载3.01格式的S3M瓦片数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">数据接入：新增加载3D Tiles1.1版本的数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">数据接入：新增实例化图层支持加载Draco压缩后的GLTF数据</p>
+              </div>
+            </div>
+
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">数据接入：新增加载OGC社区标准的i3s格式数据</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">数据接入：新增BIM数据S3M模型缓存，前端加载可显示数据组织结构（目录树）</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">操作体验优化：优化动态图层物体运行与相机绑定协同不一致问题（交通仿真车与标签卡顿问题）</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">浏览器兼容性：增强WebGPU客户端对Chrome浏览器兼容性，支持113及以后版本</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="phonefontsize"><span class="STYLE14">v11i(2023)SP1_WebGL</span></div>
+        <div class="panel-body">
+          <div class="news-list">
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化按下鼠标滚轮时陀螺的效果，在场景中按照固定像素大小显示</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化大气效果，使得场景更加柔和自然</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化地表透明效果并修复地形裂缝问题</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">支持加载带烘焙纹理的gltf模型</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">修复缺陷</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--11i(2023)新特性-->
+        <div class="phonefontsize"><span class="STYLE14">v11i(2023)</span></div>
+        <div class="panel-body">
+          <div class="news-list">
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景默认改为椭球</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化水面效果</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化PBR材质效果</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化阴影效果</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化反走样效果</p>
+              </div>
+            </div>
+
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">场景加载时能动态切换显示不同历史时期入库的倾斜摄影模型数据</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">贴地测面时支持显示贴地面的轮廓线</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">模型选中效果新增高亮模型轮廓线</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">支持加载HDR格式的环境光贴图</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">支持设置水面倒影反射清晰度</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">MVT文字支持显隐渐变和沿线标注</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化空间索引模式下倾斜摄影模型全幅加载和局部更新性能</p>
+              </div>
+            </div>
+            <div class="news-item">
+              <div class="decoration">
+                <div class="news-circle">
+                  <div class="solid-circle"></div>
+                </div>
+              </div>
+              <div class="news-box">
+                <p class="new-attributes_content">优化大数据量BIM构件承载力</p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+      <!-- 新特性 end -->
+    </div>
+    <!--内容区域 end-->
+
+    <!--footer -->
+    <div class="footer-box">
+      <div class="main-footer icl-footer"></div>
+      <script>
+        utils.loadTemplate('.icl-footer', './template/footer.html', navigation);
+      </script>
+    </div>
+    <!--footer end-->
+    <script>
+      (function () {
+        $.when(
+          $.get('./template/newAttributes/card.html'),
+          $.get('./template/newAttributes/text.html'),
+          $.getScript('./template/version.js')
+        ).done(
+          function (card, text, data) {
+            // 'show-less-768' 屏幕小于768px时显示轮播翻页按钮
+            var ClassForlessPixelWillShow = [
+              'show-less-768',
+              'show-less-992',
+              'show-less-1600'
+            ]
+            var box = $('#newAttributesBox')
+            for (var i = 0, l = versionUpdateConfig.length; i < l; i++) {
+              // 如果又图片地址使用card模板
+              var item = versionUpdateConfig[i]
+              if (item.content[0] && item.content[0].imgUrl) {
+                var id = "swiper" + i
+
+                // 数据结构中的mask中的超链接， 整理出来放在As属性中，绘制在卡片底部
+                item.content = item.content.map(_item => {
+                  _item.As = _item.details.filter(node => {
+                    if (node.hrefText) {
+                      return true
+                    }
+                    return false
+                  })
+                  return _item
+                })
+
+                box.append(template.compile(card[0])(Object.assign(item, {
+                  id,
+                  //通过判断一个轮播图中有多少张卡片 控制轮播翻页按钮的显示情况
+                  lessPixelWillShowClass: (item.content.length > 1 && item.content
+                    .length < 5) ?
+                    ClassForlessPixelWillShow[item.content.length - 2] : ''
+                })))
+                new Swiper('#' + id, {
+                  slidesPerView: 'auto',
+                  spaceBetween: 24,
+                  navigation: {
+                    nextEl: `#go${id}`,
+                    prevEl: `#back${id}`
+                  },
+                  roundLengths: true
+                });
+              } else {
+                // 使用文字行的模板
+                box.append(template.compile(text[0])(item))
+              }
+            }
+          }
+        )
+      })();
+    </script>
+    <script type="text/javascript" src="./js/common.js"></script>
+</body>
+<script>
+  // index界面swiper、bootscript内容
+  $(document).ready(function () {
+    var spaceBetween = 24
+
+    // 二级tab按钮
+    $("#GeographicalVisualization").click(
+      function () {
+        setTimeout(function () {
+          new Swiper('#tabsContent', {
+            slidesPerView: 6,
+            spaceBetween: 24,
+            navigation: {
+              nextEl: '#butright',
+              prevEl: '#butleft'
+            },
+            roundLengths: true
+          })
+        }, 200);
+      })
+
+    new Swiper('#V-1100', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV1100',
+        prevEl: '#backV1100'
+      },
+      roundLengths: true
+    });
+
+    new Swiper('#V-1100b', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV1100b',
+        prevEl: '#backV1100b'
+      },
+      roundLengths: true
+    });
+
+    new Swiper('#V-1011', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV1011',
+        prevEl: '#backV1011'
+      },
+      roundLengths: true
+    });
+
+    // 新特性按钮
+    new Swiper('#V-1010', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV1010',
+        prevEl: '#backV1010'
+      },
+      roundLengths: true
+    });
+
+    new Swiper('#V-1001', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV1001',
+        prevEl: '#backV1001'
+      },
+      roundLengths: true
+    });
+
+    new Swiper('#V-1000', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV1000',
+        prevEl: '#backV1000'
+      },
+      roundLengths: true
+    });
+
+    new Swiper('#V-910', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV910',
+        prevEl: '#backV910'
+      },
+      roundLengths: true
+    });
+
+    new Swiper('#V-910-S', {
+      slidesPerView: 'auto',
+      spaceBetween: spaceBetween,
+      navigation: {
+        nextEl: '#goV910-S',
+        prevEl: '#backV910-S'
+      },
+      roundLengths: true
+    });
+
+
+    // 手机端的一级tab按钮
+    new Swiper('#phone-nav', {
+      slidesPerView: 'auto',
+      spaceBetween: 32,
+      navigation: {
+        nextEl: '#phone-nav-next',
+      },
+      roundLengths: true
+    });
+
+    //tab下面内容支持手机端滑动。
+    new Swiper('#mapBaseMapContent', {
+      pagination: {
+        el: '#swpp1',
+        clickable: true
+      }
+    });
+    new Swiper('#mapComponentpContent', {
+      observer: true, //修改swiper自己或子元素时，自动初始化swiper
+      observeParents: true, //修改swiper的父元素时，自动初始化swiper
+      pagination: {
+        el: '#swpp2',
+        clickable: true
+      }
+    });
+
+    new Swiper('#BBVContent', {
+      observer: true, //修改swiper自己或子元素时，自动初始化swiper
+      observeParents: true, //修改swiper的父元素时，自动初始化swiper
+      pagination: {
+        el: '#swpp3',
+        clickable: true
+      }
+    });
+
+    // 去掉手机端what's new部分的swiper
+    let initwindowWidth = $(window).width();
+
+    deleteSwiper(initwindowWidth);
+
+    window.addEventListener('resize', function () {
+      let windowWidth = $(window).width();
+      deleteSwiper(windowWidth);
+    })
+
+    function deleteSwiper (width) {
+      if (width < 768) {
+        $("#V-1011").addClass("swiper-no-swiping");
+        $("#V-1010").addClass("swiper-no-swiping");
+        $("#V-1001").addClass("swiper-no-swiping");
+        $("#V-1000").addClass("swiper-no-swiping");
+        $("#V-910").addClass("swiper-no-swiping");
+      }
+    }
+
+    // 初始话bootscript的组件
+    (function () {
+      // 设置 tooltip
+      $('[data-toggle="tooltip"]').tooltip()
+
+      initCollapse('#mapBaseMapAccordion')
+      initCollapse('#openSourceComponentAccordion')
+      initCollapse('#bigBataVisualizationAccordion')
+
+      function initCollapse (id) {
+        $(id + ' .collapse').collapse()
+        // 设置面板和url的绑定
+        $(id).on('show.bs.collapse', function (e) {
+          // 获取需要更换的图片地址
+          var urlStr = $(e.target).attr('img-url')
+          var root = $(e.target).parent().parent()
+          var id = root.attr('id')
+          var img = $("[data-img='#" + id + "']").children('img')
+          img.attr('src', urlStr)
+        })
+        // 设置折叠面板只开一个
+        $(id + ' a[data-toggle="collapse"]').on('click touchend', function (e) {
+          $(id + ' .panel-heading').removeClass('gradient')
+          //点击头部加上渐变
+          var head = $(e.target).parent().parent()
+          head.addClass('gradient')
+          $(id + ' .collapse.in').collapse('hide')
+        })
+        $($(id + ' .panel-heading')[0]).addClass('gradient')
+      }
+    })();
+
+    // 示例部分内容，品目小于768时的"更多"展开项
+    (function () {
+      var pctab768 = $('#pctab-title-768')
+      var wardEle = $('#show-pctab-768>span:last-child')
+      $('#show-pctab-768').click(function () {
+        if (pctab768.css("display") === 'flex') {
+          pctab768.attr('style', 'display:none');
+          wardEle.removeClass('more-upward');
+          wardEle.addClass('more-downward');
+        } else {
+          pctab768.attr('style', 'display:flex');
+          wardEle.removeClass('more-downward');
+          wardEle.addClass('more-upward');
+        }
+      })
+      pctab768.children("li").each(function (index, ele) {
+        $(ele).click(function (e) {
+          $('#pctab-title768').text(e.target.textContent)
+          pctab768.attr('style', 'display:none');
+          wardEle.removeClass('more-upward');
+          wardEle.addClass('more-downward');
+        })
+      })
+    })();
+
+    // 示例部分内容，品目小于576时的"更多"展开项 
+    (function () {
+      var pctab576 = $('#pctab-title-576')
+      var wardEle = $('#show-pctab-576>span:last-child')
+      $('#show-pctab-576').click(function (e) {
+        if (pctab576.css("display") === 'flex') {
+          pctab576.attr('style', 'display:none');
+          wardEle.removeClass('more-upward');
+          wardEle.addClass('more-downward');
+        } else {
+          pctab576.attr('style', 'display:flex');
+          wardEle.removeClass('more-downward');
+          wardEle.addClass('more-upward');
+        }
+      })
+      pctab576.children("li").each(function (index, ele) {
+        $(ele).click(function (e) {
+          $('#pctab-title576').text(e.target.textContent)
+          pctab576.attr('style', 'display:none');
+          wardEle.removeClass('more-upward');
+          wardEle.addClass('more-downward');
+        })
+      })
+    })();
+
+  });
+</script>
+
+</html>

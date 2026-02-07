@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+	<title>BOX裁剪(交互绘制)</title>
+	<link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/pretty.css" rel="stylesheet">
+	<link href="./style/clipboxByEditor.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+	<script src="./js/jquery.min.js"></script>
+	<script src="./js/bootstrap.min.js"></script>
+	<script src="./js/bootstrap-select.min.js"></script>
+	<script src="./js/tooltip.js"></script>
+	<script src="./js/slider.js"></script>
+	<script src="./js/config.js"></script>
+	<script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+	<div id="Container"></div>
+	<div id='loadingbar' class="spinner">
+		<div class="spinner-container container1">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+		<div class="spinner-container container2">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+		<div class="spinner-container container3">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+	</div>
+	<div id='toolbar' class="param-container tool-bar">
+		<div>
+			<select style="width: 180px;" id="clipMode">
+				<option value="clip_behind_all_plane">裁剪包围盒内</option>
+				<option value="clip_behind_any_plane">裁剪包围盒外</option>
+			</select>
+			<button type="button" id="clearbox" class="button black" style="float: right;">清 除</button>
+
+		</div>
+	</div>
+
+	<script>
+		function onload(SuperMap3D) {
+			var EngineType = getEngineType();
+			var viewer = new SuperMap3D.Viewer('Container', {
+				selectionIndicator: false,
+				infoBox: false,
+				contextOptions: {
+					contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+				}
+			});
+			viewer.scenePromise.then(function (scene) {
+				init(SuperMap3D, scene, viewer);
+			});
+		}
+		function init(SuperMap3D, scene, viewer) {
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+			viewer.resolutionScale = window.devicePixelRatio;
+			var widget = viewer.Widget;
+			try {
+				// 场景添加S3M图层服务
+				var promise = scene.open(URL_CONFIG.SCENE_BIMBUILDING);
+				promise.then(function (layers) {
+
+					// 设置裁剪线颜色
+					for (var i = 0, j = layers.length; i < j; i++) {
+						layers[i].clipLineColor = new SuperMap3D.Color(1, 1, 1, 0);
+					}
+
+					var boxEntity = undefined;
+					var tooltip = createTooltip(document.body);
+
+					function setAllLayersClipOptions(boxOptions) {
+						for (var i = 0, j = layers.length; i < j; i++) {
+							layers[i].setCustomClipBox(boxOptions);
+						}
+					}
+
+					function setClipBox() {
+						var clipMode = $('#clipMode').val();
+						if (typeof (boxEntity) == "undefined") {
+							return;
+						}
+						var newDim = boxEntity.box.dimensions.getValue();
+						var position = boxEntity.position.getValue(0);
+
+						var heading = 0;
+						if (typeof (boxEntity.orientation) != "undefined") {
+							let rotationM3 = SuperMap3D.Matrix3.fromQuaternion(boxEntity.orientation._value, new SuperMap3D.Matrix3());
+							let localFrame = SuperMap3D.Matrix4.fromRotationTranslation(rotationM3, SuperMap3D.Cartesian3.ZERO, new SuperMap3D.Matrix4());
+							let inverse = SuperMap3D.Matrix4.inverse(SuperMap3D.Transforms.eastNorthUpToFixedFrame(position), new SuperMap3D.Matrix4());
+							let hprm = SuperMap3D.Matrix4.multiply(inverse, localFrame, new SuperMap3D.Matrix4());
+							var rotation = SuperMap3D.Matrix4.getMatrix3(hprm, new SuperMap3D.Matrix3());
+							let hpr = SuperMap3D.HeadingPitchRoll.fromQuaternion(SuperMap3D.Quaternion.fromRotationMatrix(rotation));
+							heading = hpr.heading;
+						}
+
+
+						var boxOptions = {
+							dimensions: newDim,
+							position: position,
+							clipMode: clipMode,
+							heading: heading
+						};
+						setAllLayersClipOptions(boxOptions);
+					}
+
+					//交互绘制box
+					var handlerBox = new SuperMap3D.DrawHandler(viewer, SuperMap3D.DrawMode.Box);
+					var editorBox;
+					handlerBox.movingEvt.addEventListener(function (windowPosition) {
+
+						if (handlerBox.isDrawing) {
+							tooltip.showAt(windowPosition, '<p>点击鼠标左键结束矩形绘制，移动鼠标绘制box高度。</p><p>右键结束绘制.</p>');
+						} else {
+							tooltip.showAt(windowPosition, '<p>点击鼠标左键，开始绘制矩形作为box底面</p>');
+						}
+
+					});
+					handlerBox.drawEvt.addEventListener(function (e) {
+						boxEntity = e.object;
+						var newDim = boxEntity.box.dimensions.getValue();
+						var position = boxEntity.position.getValue(0);
+						var boxOption = {
+							dimensions: newDim,
+							position: position,
+							clipMode: $('#clipMode').val(),
+							heading: 0
+						};
+
+						//box编辑
+						editorBox = new SuperMap3D.BoxEditor(viewer, boxEntity);
+
+						editorBox.editEvt.addEventListener(function (e) {
+							boxEntity.box.dimensions = e.dimensions
+							boxEntity.position = e.position;
+							boxEntity.orientation = e.orientation;
+
+							setClipBox();
+						});
+						editorBox.distanceDisplayCondition = new SuperMap3D.DistanceDisplayCondition(0, 950);
+						editorBox.activate();
+						setAllLayersClipOptions(boxOption);
+						tooltip.setVisible(false);
+						handlerBox.clear();
+						handlerBox.deactivate();
+					});
+
+					handlerBox.activate();
+
+					$('#clearbox').click(function () {
+						for (var i = 0, j = layers.length; i < j; i++) {
+							layers[i].clearCustomClipBox();
+						};
+						editorBox.deactivate();
+						viewer.entities.removeAll();
+						handlerBox.clear();
+						handlerBox.deactivate();
+						handlerBox.activate();
+
+					});
+
+					$('#clipMode').change(function () {
+						setClipBox();
+					});
+				}, function (e) {
+					if (widget._showRenderLoopErrors) {
+						var title = '加载SCP失败，请检查网络连接状态或者url地址是否正确？';
+						widget.showErrorPanel(title, undefined, e);
+					}
+				});
+			} catch (e) {
+				if (widget._showRenderLoopErrors) {
+					var title = '渲染时发生错误，已停止渲染。';
+					widget.showErrorPanel(title, undefined, e);
+				}
+			}
+			$('#toolbar').show();
+			$('#loadingbar').remove();
+		}
+		if (typeof SuperMap3D !== 'undefined') {
+			window.startupCalled = true;
+			onload(SuperMap3D);
+		}
+	</script>
+</body>
+
+</html>

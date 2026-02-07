@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+  <title>变电站</title>
+  <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet" />
+  <link href="./css/pretty.css" rel="stylesheet" />
+  <link href="./css/style.css" rel="stylesheet">
+  <link href="./style/Transformer_Substation.css" rel="stylesheet">
+  <script src="./js/jquery.min.js"></script>
+  <script src="./js/bootstrap.min.js"></script>
+  <script src="./js/bootstrap-select.min.js"></script>
+  <script src="./js/config.js"></script>
+  <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+  <div id="Container"></div>
+  <div id='loadingbar' class="spinner">
+    <div class="spinner-container container1">
+      <div class="circle1"></div>
+      <div class="circle2"></div>
+      <div class="circle3"></div>
+      <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container2">
+      <div class="circle1"></div>
+      <div class="circle2"></div>
+      <div class="circle3"></div>
+      <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container3">
+      <div class="circle1"></div>
+      <div class="circle2"></div>
+      <div class="circle3"></div>
+      <div class="circle4"></div>
+    </div>
+  </div>
+
+  <div id="toolbar" class="param-container tool-bar">
+    <div class="titleBox">
+      <div class="titl WhiteBox">变电站</div>
+      <span class="close2" aria-hidden="false">×</span>
+    </div>
+    <div class="param-item" style="margin-bottom: 0px;">
+      <label class="WhiteLabel" for="openNight">开启夜景</label>
+      <input type="checkbox" id="openNight">
+    </div>
+    <div class="param-item" style="margin-bottom: 0px;">
+      <label class="WhiteLabel" for="openShadow">开启阴影</label>
+      <input type="checkbox" id="openShadow">
+    </div>
+  </div>
+
+  <script>
+    function onload(SuperMap3D) {
+      const EngineType = getEngineType();
+      const viewer = new SuperMap3D.Viewer('Container', {
+        contextOptions: {
+          msaaLevel: 4,
+          contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+        }
+      });
+      
+      window.viewer = viewer;
+      viewer.resolutionScale = window.devicePixelRatio;
+
+      viewer.scenePromise.then(function (scene) {
+        init(SuperMap3D, scene, viewer);
+      });
+    }
+
+    function init(SuperMap3D, scene, viewer) {
+      viewer.clock.currentTime = SuperMap3D.JulianDate.fromDate(new Date(2023, 4, 15, 10)) // 设定比当前时间更好的光照效果
+      viewer.shadows = false; // 默认关闭阴影，提高性能
+      scene.debugShowFramesPerSecond = true;  //帧率显示
+      scene.envMapIntensity = 0.55;
+      scene.sun.show = true;
+
+      //设置太阳光的颜色与强度
+      scene.lightSource.sunLightColor = new SuperMap3D.Color(
+        1 * 3,
+        1 * 3,
+        1 * 3,
+        1
+      )
+      
+      // 环境光贴图
+      scene.specularEnvironmentMaps = './images/SkyBox/transformer_substation/hdr/Studio_set2_02_KFJR_1K.hdr';
+
+      // 加载高德影像地图
+      viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+        url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+        minimumLevel: 3,
+        maximumLevel: 18,
+      }));
+
+      // 整个场景的后处理
+      const correction = scene.colorCorrection; //创建颜色校正对象
+      correction.show = true; //开启颜色校正
+      correction.brightness = 1.0;
+      correction.contrast = 1.15;
+      correction.saturation = 1.0;
+      correction.hue = 0.0;
+
+      // 初始化时把天空盒资源准备好
+      const blueSkyBox = new SuperMap3D.SkyBox({
+        sources: {
+          positiveX: './images/SkyBox/transformer_substation/skybox/kloofendal_48d_partly_cloudy_puresky_1k_4.right.jpg',
+          negativeX: './images/SkyBox/transformer_substation/skybox/kloofendal_48d_partly_cloudy_puresky_1k_4.left.jpg',
+          positiveY: './images/SkyBox/transformer_substation/skybox/kloofendal_48d_partly_cloudy_puresky_1k_4.front.jpg',
+          negativeY: './images/SkyBox/transformer_substation/skybox/kloofendal_48d_partly_cloudy_puresky_1k_4.back.jpg',
+          positiveZ: './images/SkyBox/transformer_substation/skybox/kloofendal_48d_partly_cloudy_puresky_1k_4.top.jpg',
+          negativeZ: './images/SkyBox/transformer_substation/skybox/kloofendal_48d_partly_cloudy_puresky_1k_4.bottom.jpg'
+        }
+      });
+      const nightSkyBox = new SuperMap3D.SkyBox({
+				sources: {
+					positiveX: './images/SkyBox/Night/Right.png',
+					negativeX: './images/SkyBox/Night/Left.png',
+					positiveY: './images/SkyBox/Night/Front.png',
+					negativeY: './images/SkyBox/Night/Back.png',
+					positiveZ: './images/SkyBox/Night/Up.png',
+					negativeZ: './images/SkyBox/Night/Down.png'
+				}
+			});
+
+      function initialSkyBox() {
+        if (scene.frameState.passes.render) {
+          blueSkyBox.update(scene.frameState, true);
+          scene.postRender.removeEventListener(initialSkyBox);
+        }
+      }
+      
+      scene.postRender.addEventListener(initialSkyBox);
+      blueSkyBox.show = true;
+      scene.skyAtmosphere.show = false;
+      // blueSkyBox.WSpeed = 0.5; // 天空盒不旋转
+      scene.skyBox = blueSkyBox;
+
+      let layerNightList = [];
+
+      //加载场景
+      const promiseDay = scene.open(URL_CONFIG.SCENE_TRANSFORMER_SUBSTATION);
+      const promiseNight = scene.open(URL_CONFIG.SCENE_TRANSFORMER_SUBSTATION_NIGHT);
+      promiseNight.then(function (layers) {
+        for (let layer of layers) {
+          //开启阴影
+          layer.shadowType = 2;
+          layer.visible = false;
+          layerNightList.push(layer);
+        }
+      })
+      promiseDay.then(function (layers) {
+        for (let layer of layers) {
+          //开启阴影
+          layer.shadowType = 2;
+        }
+
+        $('#toolbar').show()
+        $('#loadingbar').remove()
+      })
+
+      // 日夜景切换
+      $("#openNight").on("input change", function () {
+        if (this.checked) { // 日景效果设置
+          for (let layer of layerNightList) {
+            layer.visible = true;
+          }
+
+          // 环境光贴图
+          const L00 = new SuperMap3D.Cartesian3(0.482930183410645, 0.400395631790161, 0.395146757364273);
+          const L1_1 = new SuperMap3D.Cartesian3(0.061545863747597, 0.040452364832163, 0.125792920589447);
+          const L10 = new SuperMap3D.Cartesian3(0.075215362012386, 0.083970695734024, 0.049690131098032);
+          const L11 = new SuperMap3D.Cartesian3(0.048506908118725, 0.033957757055759, 0.005837893113494);
+          const L2_2 = new SuperMap3D.Cartesian3(-0.039349641650915, -0.035721402615309, -0.037456795573235);
+          const L2_1 = new SuperMap3D.Cartesian3(0.023377167060971, 0.011719226837158, 0.003272810950875);
+          const L20 = new SuperMap3D.Cartesian3(0.092992208898067, 0.078490316867828, 0.066979713737965);
+          const L21 = new SuperMap3D.Cartesian3(-0.273886859416962, -0.242468923330307, -0.224863514304161);
+          const L22 = new SuperMap3D.Cartesian3(0.063277758657932, 0.052205424755812, 0.036139599978924);
+          const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+          scene.sphericalHarmonicCoefficients = coefficients;
+          scene.specularEnvironmentMaps = './images/SkyBox/transformer_substation/ktx/rooftop_night_1k_4.ktx2';
+          scene.envMapIntensity = 0.3;
+
+          viewer.clock.currentTime = SuperMap3D.JulianDate.fromDate(new Date(2024, 4, 24, 10));
+          scene.lightSource.sunLightColor = new SuperMap3D.Color(
+            153 / 255 * 1.0,
+            190 / 255 * 1.0,
+            255 / 255 * 1.0,
+            1
+          )
+
+          //泛光
+          viewer.scene.bloomEffect.show = true;
+          viewer.scene.bloomEffect.threshold = 0.9;
+          viewer.scene.bloomEffect.bloomIntensity = 4;
+
+          //全球影像亮度调节
+          viewer.imageryLayers._layers[1].brightness = 0.4;
+          viewer.imageryLayers._layers[1].hue = -0.2;
+
+          // 天空盒
+          scene.skyAtmosphere.show = false;
+          scene.skyBox = nightSkyBox;
+        } else { // 夜景效果设置
+          for (let layer of layerNightList) {
+            layer.visible = false;
+          }
+
+          // 环境光贴图
+          const L00 = new SuperMap3D.Cartesian3(0.492085933685303, 0.492085874080658, 0.492085933685303);
+          const L1_1 = new SuperMap3D.Cartesian3(0.078874699771404, 0.078874610364437, 0.078874692320824);
+          const L10 = new SuperMap3D.Cartesian3(0.078090153634548, 0.078090116381645, 0.078090183436871);
+          const L11 = new SuperMap3D.Cartesian3(0.025034775957465, 0.025034755468369, 0.025034774094820);
+          const L2_2 = new SuperMap3D.Cartesian3(0.031029928475618, 0.031029941514134, 0.031029921025038);
+          const L2_1 = new SuperMap3D.Cartesian3(0.035155173391104, 0.035155214369297, 0.035155173391104);
+          const L20 = new SuperMap3D.Cartesian3(-0.005440676584840, -0.005440662149340, -0.005440671462566);
+          const L21 = new SuperMap3D.Cartesian3(0.008016115985811, 0.008016133680940, 0.008016110397875);
+          const L22 = new SuperMap3D.Cartesian3(-0.071910448372364, -0.071910388767719, -0.071910433471203);
+          const coefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+          scene.sphericalHarmonicCoefficients = coefficients;
+          scene.specularEnvironmentMaps = './images/SkyBox/transformer_substation/ktx/Studio_set2_02_KFJR.ktx2';
+          scene.envMapIntensity = 0.55;
+
+          scene.lightSource.sunLightColor = new SuperMap3D.Color(1 * 3,
+            1 * 3,
+            1 * 3,
+            1
+          )
+
+          viewer.scene.bloomEffect.show = false;
+
+          // 底图效果
+          viewer.imageryLayers._layers[1].brightness = 1.0;
+          viewer.imageryLayers._layers[1].hue = 0;
+
+          // 整个场景的后处理
+          const correction = scene.colorCorrection; //创建颜色校正对象
+          correction.show = true; //开启颜色校正
+          correction.brightness = 1.0;
+          correction.contrast = 1.15;
+          correction.saturation = 1.0;
+          correction.hue = 0.0;
+
+          // 加载天空盒
+          scene.postRender.addEventListener(initialSkyBox);
+          blueSkyBox.show = true;
+          scene.skyAtmosphere.show = false;
+          // blueSkyBox.WSpeed = 0.5;
+          scene.skyBox = blueSkyBox;
+        }
+      })
+
+      // 开启关闭阴影
+      $("#openShadow").on("input change", function () {
+        if (this.checked) {
+          viewer.shadows = true;
+          //  UE阴影 设置为false，使用原来的软阴影效果；设置为true，实现了新的阴影算法，可以大幅度提升阴影边界的质量，看起来会非常柔和，没有锯齿。这个设置webgl2.0默认开启了。
+          viewer.pcss = true,
+          viewer.shadowQuality = 0,
+          //设置阴影的出现距离
+          scene.shadowMap.maximumDistance = 2000;
+          //设置阴影的浓度，值越高，阴影越淡
+          viewer.shadowMap.darkness = 0.4;
+          //默认值是0.1，值越小越清晰
+          viewer.shadowMap.penumbraRatio = 0.1;
+        } else {
+          viewer.shadows = false;
+        }
+      });
+    }
+    if (typeof SuperMap3D !== 'undefined') {
+      window.startupCalled = true
+      onload(SuperMap3D)
+    }
+  </script>
+</body>
+
+</html>

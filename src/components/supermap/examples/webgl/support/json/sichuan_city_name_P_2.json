@@ -1,0 +1,347 @@
+{
+    "type": "FeatureCollection",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 510100,
+                "name": "成都市",
+                "level": 2
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    103.8685612257488,
+                    30.762084
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 510300,
+                "name": "自贡市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    104.62979423713188,
+                    29.281627
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 510500,
+                "name": "泸州市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    105.46006007635022,
+                    28.02589243170271
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 510600,
+                "name": "德阳市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    104.4039949499803,
+                    31.113481
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 510700,
+                "name": "绵阳市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    104.59439260222996,
+                    31.8737855
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 510800,
+                "name": "广元市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    105.91496671489975,
+                    32.2298125
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 510900,
+                "name": "遂宁市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    105.47735424592894,
+                    30.667042000000003
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511000,
+                "name": "内江市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    104.88519553034445,
+                    29.612202
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511100,
+                "name": "乐山市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    103.56232951979237,
+                    29.1744145
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511300,
+                "name": "南充市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    106.33230969809967,
+                    31.1536795
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511400,
+                "name": "眉山市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    104.1012780913407,
+                    29.877782000000005
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511500,
+                "name": "宜宾市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    104.76509486569838,
+                    28.55169
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511600,
+                "name": "广安市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    106.59216616965262,
+                    30.428079
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511700,
+                "name": "达州市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    107.47649326425916,
+                    31.345027066009487
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511800,
+                "name": "雅安市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    102.6870664802237,
+                    29.891097000000003
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 511900,
+                "name": "巴中市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    107.03420464904451,
+                    31.994053
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 512000,
+                "name": "资阳市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    105.03331023975466,
+                    30.150176
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 513200,
+                "name": "阿坝藏族羌族自治州",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    102.81061231112973,
+                    32.15886870879596
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 513400,
+                "name": "凉山彝族自治州",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    102.48043224999337,
+                    27.90377603823264
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 513400,
+                "name": "攀枝花市",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    101.62940752075765,
+                    26.869699204101207
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "adcode": 513300,
+                "name": "甘孜藏族自治州",
+                "level": 1
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    100.37040376231093,
+                    31.0843835
+                ]
+            }
+        }
+    ]
+}

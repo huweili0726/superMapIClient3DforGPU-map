@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>连续量算</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./style/measureHandler.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/bootstrap-select.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/lib/SceneMeasure.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <div id="toolbar" class="param-container tool-bar">
+        <div>
+            <select id="selOpt" class="black1 selectpicker show-tick ">
+                <option selected value="Space">空间量算</option>
+                <option value="Ground">贴地量算</option>
+                <option value="CGCS2000">CGCS2000(国情)</option>
+                <option value="XIAN80">Xi-An1980(国情)</option>
+                <option value="Projection">平面投影(三调)</option>
+            </select>
+        </div>
+        <div style="margin-top: 10px;display: flex;justify-content: space-between;">
+            <button id="flytoModle" class="button black" style="margin-right: 0;width: 132px;">定位至模型</button>
+            <button id="flytoMountain" class="button black" style="margin-right: 0;width: 132px;">定位至山区</button>
+        </div>
+        <button type="button" id="distance" class="button black">测距</button>
+        <button type="button" id="area" class="button black">测面</button>
+        <button type="button" id="height" class="button black">测高</button>
+        <button type="button" id="clear" class="button black">清除</button>
+
+        <div style="vertical-align:middle;margin-top: 5px;">
+            <input type="checkbox" id="isContinue" style="margin: 0 6px;" checked /> <span>连续绘制</span>
+            <input type="checkbox" id="isShowLine" style="margin: 0 6px;" checked /> <span>等高线</span>
+            <input type="checkbox" id="pickPointEnabled" style="margin: 0 6px;margin-left: 20px;" /> <span>顶点捕捉</span>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            var EngineType = getEngineType();
+            var viewer = new SuperMap3D.Viewer('Container', {
+                //创建地形服务提供者的实例，url为SuperMap iServer发布的TIN地形服务
+                terrainProvider: new SuperMap3D.SuperMapTerrainProvider({
+                    url: URL_CONFIG.ZF_TERRAIN,
+                    isSct: true//地形服务源自SuperMap iServer发布时需设置isSct为true
+                }),
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+            //添加SuperMap iServer发布的影像服务
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.SuperMapImageryProvider({
+                url: URL_CONFIG.ZF_IMG
+            }));
+
+            //设置相机位置、视角
+            viewer.scene.camera.setView({
+                destination: new SuperMap3D.Cartesian3(-1206939.1925299785, 5337998.241228442, 3286279.2424502545),
+                orientation: {
+                    heading: 1.4059101895600987,
+                    pitch: -0.20917672793046682,
+                    roll: 2.708944180085382e-13
+                }
+            });
+
+            var promise = scene.open(URL_CONFIG.SCENE_CBD, undefined, { 'autoSetView': false });
+            SuperMap3D.when(promise, function (layers) {
+                var waterLayer = scene.layers.find('Lake@CBD');
+                // 设置水面参数
+                waterLayer.waterSpeed = 0.5;
+                waterLayer.waterWaveScale = 0.5;
+                layers.forEach((s3mlayer) => {
+                    if (!s3mlayer.visibleDistanceMax || s3mlayer.visibleDistanceMax > 12000) {
+                        s3mlayer.visibleDistanceMax = 12000   //设置模型最可见距离
+                    }
+                })
+            })
+            
+            // 量算类初始化配置项
+            // const measure = new SceneMeasure(viewer, {
+            //     isContinuousDrawing: true, // 是否连续绘制 【默认为true】
+            //     isShowContourLine: true, // 是否显示等高线 【默认为true】【仅适用于测高模式】
+            //     isPickPoint: false // 是否开启顶点捕捉 【默认为false】
+            // })
+            
+            // 建议直接传入viewer, 使用默认值创建量算实例
+            const measure = new SceneMeasure(viewer);
+            window.measure = measure;
+
+            $('#distance').click(function () {
+                measure.startDistence().then(result => {
+                    console.log("距离:", result);
+                });
+            });
+            $('#area').click(function () {
+                measure.startArea().then(result => {
+                    console.log("面积:", result);
+                });
+            });
+            $('#height').click(function () {
+                measure.startHeight().then(result => {
+                    console.log("DVH:", result);
+                });
+            });
+
+            $('#clear').click(function () {
+                measure.clear();
+            });
+
+            // 连续绘制
+            $("#isContinue").change(function () {
+                const val = $(this).is(':checked');
+                measure.setContinueDrawEnable(Boolean(val)); // 设置是否开启连续绘制
+            })
+
+            // 等高线
+            $("#isShowLine").change(function () {
+                const val = $(this).is(':checked');
+                measure.setContourLineEnable(Boolean(val)); // 设置是否显示等高线【仅适用于测高模式】
+            })
+
+            // 顶点捕捉
+            $("#pickPointEnabled").change(function () {
+                const val = $(this).is(':checked');
+                measure.setPickPointEnable(Boolean(val)); // 设置是否开启顶点捕捉
+            })
+
+
+            $('#selOpt').change(function () {
+                const value = $(this).val();
+                $('#distance').show();
+                $('#height').show();
+
+                // 切换坐标系时,传入椭球枚举,量算类内部会根据该枚举值,选择对应椭球计算量算结果
+                measure.setCalculateMode(value);
+
+                if (value == 'Space') {
+                    // 量算过程中绘制线的风格：0空间模式 1贴地模式
+                    measure.setClampMode(0)
+                } else {
+                    measure.setClampMode(1)
+
+                    if (value == 'Projection') {
+                        $('#distance').hide();
+                        $('#height').hide();
+
+                    } else if (value == 'CGCS2000' || value == 'XIAN80') {
+                        $('#height').hide();
+                    }
+                }
+            });
+
+
+            $('#flytoModle').click(function () {
+                viewer.scene.camera.setView({
+                    destination: new SuperMap3D.Cartesian3.fromDegrees(116.4566, 39.9149, 5323.445971240632),
+                    orientation: {
+                        heading: 3.1612,
+                        pitch: -1.5188,
+                        roll: 6.283185307179563
+                    }
+                });
+            });
+            $('#flytoMountain').click(function () {
+                viewer.scene.camera.setView({
+                    destination: new SuperMap3D.Cartesian3(-1206939.1925299785, 5337998.241228442, 3286279.2424502545),
+                    orientation: {
+                        heading: 1.4059101895600987,
+                        pitch: -0.20917672793046682,
+                        roll: 2.708944180085382e-13
+                    }
+                });
+            });
+
+            if (!scene.pickPositionSupported) {
+                alert('不支持深度拾取,量算功能无法使用(无法进行鼠标交互绘制)！');
+            }
+
+            $('#loadingbar').remove();
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

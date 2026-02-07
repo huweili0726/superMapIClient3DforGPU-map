@@ -1,0 +1,7 @@
+b {
+    color: #ffffff;
+}
+
+input[type=range] {
+    width: 180px;
+}

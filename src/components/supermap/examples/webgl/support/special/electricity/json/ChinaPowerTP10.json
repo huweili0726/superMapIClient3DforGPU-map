@@ -1,0 +1,161 @@
+{
+    "type": "FeatureCollection",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:EPSG::3857"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "内蒙古自治区",
+                "value": 3353.0
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    11730474.506776706,
+                    4948491.753693101
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "江苏省",
+                "value": 6128.0
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13316297.446600205,
+                    3891088.907195793
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "浙江省",
+                "value": 4532.8
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13357977.56556526,
+                    3398230.254532989
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "福建省",
+                "value": 2313.8
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13137592.169345197,
+                    2993543.904437935
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "河南省",
+                "value": 3417.68
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    12589722.992087497,
+                    4016901.702305104
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "四川省",
+                "value": 2459.0
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    11459755.52135517,
+                    3639592.743733496
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "辽宁省",
+                "value": 2302.38
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13688213.618261945,
+                    5118470.169146261
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "广东省",
+                "value": 6323.35
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    12631427.99575532,
+                    2729979.959697336
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "山东省",
+                "value": 6083.88
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13139693.89389794,
+                    4350970.318921203
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "河北省",
+                "value": 3366.28
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    12824860.96728818,
+                    4649130.601235167
+                ]
+            }
+        }
+    ]
+}

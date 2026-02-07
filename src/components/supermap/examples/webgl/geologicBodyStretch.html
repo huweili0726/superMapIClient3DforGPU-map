@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>地质体拉伸</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./style/geologicBodyStretch.css" rel="stylesheet">
+    <link href="./css/bootstrap-new.min.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <div id="toolbar" class="param-container tool-bar">
+        <div class="dzt-title">地质体垂直拉伸</div>
+        <div class="divide"></div>
+        <div class="dzt-operate">
+            <span class="dzt-tip">Z轴方向拉伸高度</span>
+            <div class="input-group spinner-boot">
+                <input type="text" class="form-control" value="1" id="zScale">
+                <div class="input-group-btn-vertical">
+                    <button class="btn btn-default" type="button"><i
+                            class="glyphicon glyphicon-triangle-top"></i></button>
+                    <button class="btn btn-default" type="button"><i
+                            class="glyphicon glyphicon-triangle-bottom"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function onload(SuperMap3D) {
+            var EngineType = getEngineType();
+            var viewer = new SuperMap3D.Viewer('Container', {
+                infoBox: false,
+                contextOptions: {
+					contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+				}
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+            scene.globe.show = false;
+            try {
+                scene.camera.setView({
+                    destination: new SuperMap3D.Cartesian3(-2167835.4408, 4423497.534529, 4095839.284566),
+                    orientation: {
+                        heading: 4.02932,
+                        pitch: -0.237966,
+                    }
+                });
+
+                var cells = [
+                    './data/model/dizhiti/Layer1.s3m',
+                    './data/model/dizhiti/Layer2.s3m',
+                    './data/model/dizhiti/Layer3.s3m',
+                    './data/model/dizhiti/Layer4.s3m',
+                    './data/model/dizhiti/Layer5.s3m',
+                    './data/model/dizhiti/Layer6.s3m',
+                ];
+
+                var point = [115.019082651804, 39.0115415990412, -1226.22602844238];
+
+
+                var keyMap = {};
+
+
+                for (let i = 0, j = cells.length; i < j; i++) {
+                    let key = cells[i];
+                    let state = new SuperMap3D.DynamicObjectState({
+                        id: 1,
+                        longitude: point[0],
+                        latitude: point[1],
+                        altitude: point[2],
+                        scale: new SuperMap3D.Cartesian3(1, 1, 1)
+                    });
+                    keyMap[key] = [state];
+                }
+
+                var layer = new SuperMap3D.DynamicLayer3D(scene.context, cells);
+                layer.updateInterval = 50;
+                scene.primitives.add(layer);
+
+
+                for (let key in keyMap) {
+                    layer.updateObjectWithModel(key, keyMap[key]);
+                }
+
+            } catch (e) {
+                console.error(e)
+            }
+            $('.spinner-boot input').on('input propertyChange', function () {
+                var z = +$('.spinner-boot input').val();
+                console.log(z)
+                for (let key in keyMap) {
+                    keyMap[key][0].scale = new SuperMap3D.Cartesian3(1, 1, z);
+                    keyMap[key][0].lockOrientation = true;
+                    layer.updateObjectWithModel(key, keyMap[key]);
+                }
+            })
+
+            $('.spinner-boot .btn:first-of-type').on('click', function () {
+                let val = parseInt($('.spinner-boot input').val()) + 1;
+                $('.spinner-boot input').val(val).trigger('input');
+            });
+            
+            $('.spinner-boot .btn:last-of-type').on('click', function () {
+                let val = parseInt($('.spinner-boot input').val()) - 1;
+                if (val < 0) {
+                    val = 0;
+                }
+                $('.spinner-boot input').val(val).trigger('input');
+            });
+
+            $('#loadingbar').remove();
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

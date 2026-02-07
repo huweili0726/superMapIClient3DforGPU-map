@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>点 图标</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script src="./js/config.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            let EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                navigation:false,
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+            let promise = viewer.scene.open(URL_CONFIG.SCENE_CBD,undefined,{autoSetView:false});
+            promise.then(function () {
+                viewer.camera.setView({
+                    destination: { x: -2183716.7136601, y: 4386822.894409964, z: 4069961.538435185 },
+                    orientation: {
+                        heading: 5.834283929613806,
+                        pitch: -0.4068592191308409,
+                        roll: 1.7256687190325692e-7
+                    }
+                });
+
+                $('#loadingbar').remove();
+            })
+
+            let rate1 = 100, rate2 = 200, rate3 = 300; // 控制闪烁间隔：值越小闪烁越快
+            // 带边框的点
+            viewer.entities.add({
+                name: '轮廓点',
+                position: SuperMap3D.Cartesian3.fromDegrees(116.46033703619656, 39.911295864658754, 5.0704092720486),
+                point: new SuperMap3D.PointGraphics({
+                    color: new SuperMap3D.Color.fromCssColorString("rgba(255,0,0,1)"),
+                    pixelSize: 15,
+                    outlineColor: SuperMap3D.Color.BLUE,
+                    outlineWidth: 3,
+                    scaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY  // 使billBoard不被遮挡 完全不遮挡Number.POSITIVE_INFINITY
+                })
+            });
+
+            // 闪烁点
+            viewer.entities.add({
+                name: "闪烁点",
+                position: SuperMap3D.Cartesian3.fromDegrees(116.45704223086888, 39.910520777382196, 5.078142212900698),
+                point: new SuperMap3D.PointGraphics({
+                    color: SuperMap3D.Color.AQUA,
+                    pixelSize: 15,
+                    scaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                    show: new SuperMap3D.CallbackProperty(function () {
+                        let time = new Date().getTime(); // 获取当前时间
+                        let value = Math.sin(time / rate2); // 使用正弦函数计算闪烁效果
+                        return value > 0 ? true : false;
+                    }, false),
+                }),
+            });
+
+            // 静态文字
+            viewer.entities.add({
+                name: "中服大厦",
+                position: SuperMap3D.Cartesian3.fromDegrees(116.45709236589721, 39.90800217738526, 135.1855005288918),
+                label: {
+                    text: '中服大厦',
+                    font: 'normal 22px MicroSoft YaHei',
+                    scaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                },
+            });
+
+            // 动态文字（闪烁）
+            viewer.entities.add({
+                name: '中国国际贸易中心',
+                position: SuperMap3D.Cartesian3.fromDegrees(116.45419139101804, 39.90952568647991, 151.76185804286078),
+                label: {
+                    text: '中国国际贸易中心',
+                    font: 'normal 22px MicroSoft YaHei',
+                    scaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                    show: new SuperMap3D.CallbackProperty(function () {
+                        let time = new Date().getTime();
+                        let value = Math.sin(time / rate3);
+                        return value > 0 ? true : false;
+                    }, false),
+                },
+            });
+
+            // 文字图标
+            viewer.entities.add({
+                name: "中央广播电视台",
+                position: SuperMap3D.Cartesian3.fromDegrees(116.45737155619143, 39.914089474458265, 219.85780786201954),
+                billboard: {
+                    image: './images/EntityGeometry/billboardLable.png',
+                    pixelOffset: new SuperMap3D.Cartesian2(60, -40), // 偏移
+                    // 设置pixelOffset时，随着放大缩小会出现巨大偏移，这是由于像素固定值导致的，需要设置该属性，且应与scaleByDistance保持一致
+                    pixelOffsetScaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0), 
+                    scaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                },
+                label: {
+                    text: '中央广播电视台',
+                    font: 'normal 18px MicroSoft YaHei',
+                    pixelOffset: new SuperMap3D.Cartesian2(85, -65), // 偏移
+                    pixelOffsetScaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    scaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                }
+            })
+
+            // 警告图标
+            viewer.entities.add({
+                name: "警告标志闪烁",
+                position: SuperMap3D.Cartesian3.fromDegrees(116.45792419117362, 39.91139041718439, 5.1739203722179),
+                billboard: {
+                    image: './images/EntityGeometry/waring.png',
+                    scaleByDistance: new SuperMap3D.NearFarScalar(2000, 1, 8000, 0),
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                    show: new SuperMap3D.CallbackProperty(function () {
+                        let time = new Date().getTime();
+                        let value = Math.sin(time / rate1);
+                        return value > 0 ? true : false;
+                    }, false),
+                },
+            });
+
+            // viewer.zoomTo(viewer.entities);
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

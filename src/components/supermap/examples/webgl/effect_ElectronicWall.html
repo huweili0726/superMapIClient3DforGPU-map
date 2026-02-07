@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>电子围栏</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/bootstrap-select.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script type="text/javascript" src="./js/MaterialProperty/DynamicWallMaterialProperty_vertical.js"></script>
+    <script type="text/javascript" src="./js/MaterialProperty/DynamicWallMaterialProperty_standard.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            let EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                navigation: false,
+                contextOptions: {
+                    contextType: 2, // Webgl2:2 ; WebGPU:3
+                },
+            });
+            
+            window.viewer = viewer;
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+            // 坐标
+            let data1 = [[116.46365538034432, 39.91492006951573], [116.46363441611503, 39.912345833335266], [116.46574811285815, 39.91234213809507], [116.46586232238988, 39.91449388432528], [116.46365538034432, 39.91492006951573]]
+            let data2 = [
+                [
+                    116.46332584111558,
+                    39.918313242524825, 100
+                ],
+                [
+                    116.46066192993628,
+                    39.9182766959575, 100
+                ],
+                [
+                    116.4606771056401,
+                    39.91797204891636, 100
+                ],
+                [
+                    116.45990181148504,
+                    39.91658339068073, 100
+                ],
+                [
+                    116.46327901242431,
+                    39.91549460619278, 100
+                ],
+                [
+                    116.46332584111558,
+                    39.918313242524825, 100
+                ]
+            ]
+            let data3 = [[116.4681087160241, 39.91424072871992], [116.46796747100693, 39.912363725474066], [116.47169580296425, 39.912397019603276], [116.47168588283934, 39.91403233025405], [116.4681087160241, 39.91424072871992]]
+            let data4 = [
+                [
+                    116.46361860859342,
+                    39.910263298057146
+                ],
+                [
+                    116.46362028011175,
+                    39.90854311647451
+                ],
+                [
+                    116.46568210277309,
+                    39.90853688813915
+                ],
+                [
+                    116.46565878193903,
+                    39.910257428875305
+                ],
+                [
+                    116.46361860859342,
+                    39.910263298057146
+                ]
+            ]
+            let data5 = [
+                [
+                    116.46738876797936,
+                    39.910257187108044
+                ],
+                [
+                    116.46739058074104,
+                    39.9085279370898
+                ],
+                [
+                    116.46946852389561,
+                    39.908534296745955
+                ],
+                [
+                    116.46943599387997,
+                    39.91026482196831
+                ],
+                [
+                    116.46738876797936,
+                    39.910257187108044
+                ]
+            ]
+            let data6 = [
+                [
+                    116.46962763990787,
+                    39.91026843140126
+                ],
+                [
+                    116.46961932616112,
+                    39.90893932206307
+                ],
+                [
+                    116.47161595277213,
+                    39.90892965690643
+                ],
+                [
+                    116.47162747071901,
+                    39.91026822541751
+                ],
+                [
+                    116.46962763990787,
+                    39.91026843140126
+                ]
+            ]
+
+            let coor1 = Array.prototype.concat.apply([], data1);
+            let coor2 = Array.prototype.concat.apply([], data2);
+            let coor3 = Array.prototype.concat.apply([], data3);
+            let coor4 = Array.prototype.concat.apply([], data4);
+            let coor5 = Array.prototype.concat.apply([], data5);
+            let coor6 = Array.prototype.concat.apply([], data6);
+
+            let promise = viewer.scene.open(URL_CONFIG.SCENE_CBD,undefined,{autoSetView:false});
+            promise.then(function () {
+                viewer.camera.setView({
+                    destination: { x: -2182650.9968351284, y: 4386851.473091948, z: 4070959.5956579098 },
+                    orientation: {
+                        heading: 1.3285723896299872,
+                        pitch: -0.6571857687724312,
+                        roll: 4.910314581607622e-7
+                    }
+                });
+                $('#loadingbar').remove();
+            })
+
+
+            // 循环运动
+            viewer.entities.add({
+                name: '电子围栏-动态风格-循环',
+                wall: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(coor1),
+                    maximumHeights: new Array(data1.length).fill(60),
+                    minimumHeights : new Array(data1.length).fill(0),
+                    material: new SuperMap3D.DynamicWallMaterialProperty({ trailImage: './images/ElectronicWall/wall.png', color: SuperMap3D.Color.CYAN, duration: 1500 })
+                },
+            });
+
+            // 运动箭头围墙
+            viewer.entities.add({
+                name: '电子围栏-动态-箭头',
+                wall: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(coor3),
+                    maximumHeights: new Array(data3.length).fill(60),
+                    minimumHeights : new Array(data3.length).fill(0),
+                    material: new SuperMap3D.ArrawWallMaterialProperty({ trailImage: './images/ElectronicWall/arrow.png', color: SuperMap3D.Color.YELLOW, duration: 1500 })
+                },
+            });
+
+            // 动态上升
+            let flag = 0;
+            viewer.entities.add({
+                name: '电子围栏-动态-上升',
+                wall: {
+                    positions: new SuperMap3D.Cartesian3.fromDegreesArrayHeights(coor2),
+                    minimumHeights: new Array(data2.length).fill(0),
+                    maximumHeights: new SuperMap3D.CallbackProperty(function (time) {
+                        flag += 1;
+                        if (flag > 100) {
+                            flag = 1;
+                        }
+                        return new Array(data2.length).fill(flag);
+                    }, false),
+                    material: new SuperMap3D.ImageMaterialProperty({
+                        image: "./images/ElectronicWall/gradient_blue.png",
+                        transparent: true,
+                    })
+                }
+            })
+
+            // 渐变
+            viewer.entities.add({
+                name: '电子围栏-静态风格-渐变',
+                wall: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(coor4),
+                    maximumHeights: new Array(data4.length).fill(60),
+                    minimumHeights : new Array(data4.length).fill(0),
+                    material: new SuperMap3D.ImageMaterialProperty({
+                        image: "./images/ElectronicWall/gradient_yellow.png",
+                        transparent: true,
+                        color: SuperMap3D.Color.AQUA
+                    })
+                },
+            });
+
+            // 静态纹理围墙
+            viewer.entities.add({
+                name: '电子围栏-静态风格-纹理',
+                wall: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(coor5),
+                    maximumHeights: new Array(data5.length).fill(60),
+                    minimumHeights : new Array(data5.length).fill(0),
+                    outline: true,
+                    outlineColor: SuperMap3D.Color.RED,
+                    outlineWidth: 3,
+                    material: new SuperMap3D.ImageMaterialProperty({
+                        image: "./images/ElectronicWall/grid.png",
+                        transparent: true,
+                        color: SuperMap3D.Color.RED.withAlpha(0.5)
+                    })
+                },
+            });
+
+            // viewer.zoomTo(viewer.entities);
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

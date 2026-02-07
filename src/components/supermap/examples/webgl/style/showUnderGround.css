@@ -1,0 +1,19 @@
+#excavation {
+    color: rgb(255, 255, 255);
+    font-size: 14px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 33px;
+    padding-right: 33px;
+    border-width: 2px;
+    border-color: rgb(74, 99, 31);
+    border-style: solid;
+    border-radius: 11px;
+    background-color: rgb(44, 89, 128);
+}
+
+#excavation:hover {
+    color: #ffffff;
+    background-color: #78c300;
+    border-color: #c5e591;
+}

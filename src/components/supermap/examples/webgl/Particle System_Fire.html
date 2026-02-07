@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>鸟巢火炬</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/pretty.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./style/Particle System_Fire.css">
+    <link rel="stylesheet" href="./css/font-awesome.min.css">
+    <link rel="stylesheet" href="./css/liMarquee.css">
+    <link rel="stylesheet" href="./css/InfoGrid-skyline.css">
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script type="text/javascript" src="./js/jquery.min.js"></script>
+    <script type="text/javascript" src="./js/config.js"></script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+
+<div id="Container" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar" style="position: absolute;left: 1%;top: 2%;display: none;">
+    <div class="titleBox">
+        <div class="titl">属性编辑</div>
+    </div>
+    <div id="distinguishSaprk">
+        <div class="inputBox" id="emitRateBox">
+            <label for="emitRate" class="lab">发射速度</label>
+            <div class="rangeBox">
+                <input type="range" id="emitRateRange" min="1" max="2500" step="20" title="emitRateRange"
+                       data-bind="value: emitRate,valueUpdate: 'input'">
+            </div>
+            <input type="text" size="5" data-bind="value: emitRate" style="color: #fff;">
+        </div>
+        <div class="inputBox" id="minEmitPowerBox">
+            <label for="minEmitPower" class="lab">最小发射力度</label>
+            <div class="rangeBox">
+                <input type="range" id="minEmitPowerRange" min="1" max="500" step="20" title="minEmitPowerRange"
+                       data-bind="value: minEmitPower,valueUpdate: 'input'">
+            </div>
+            <input type="text" size="5" data-bind="value: minEmitPower" style="color: #fff;">
+        </div>
+        <div class="inputBox" id="maxEmitPowerBox">
+            <label for="maxEmitPower" class="lab">最大发射力度</label>
+            <div class="rangeBox">
+                <input type="range" id="maxEmitPowerRange" min="1" max="500" step="20" title="maxEmitPowerRange"
+                       data-bind="value: maxEmitPower,valueUpdate: 'input'">
+            </div>
+            <input type="text" size="5" data-bind="value: maxEmitPower" style="color: #fff;">
+        </div>
+        <div class="inputBox" id="minLifeTimeBox">
+            <label for="minLifeTime" class="lab">最小生命周期</label>
+            <div class="rangeBox">
+                <input type="range" id="minLifeTimeRange" min="0" max="20" step="1" title="minLifeTimeRange"
+                       data-bind="value: minLifeTime,valueUpdate: 'input'">
+            </div>
+            <input type="text" size="5" data-bind="value: minLifeTime" style="color: #fff;">
+        </div>
+        <div class="inputBox" id="maxLifeTimeBox">
+            <label for="maxLifeTime" class="lab">最大生命周期</label>
+            <div class="rangeBox">
+                <input type="range" id="maxLifeTimeRange" min="0" max="20" step="1" title="maxLifeTimeRange"
+                       data-bind="value: maxLifeTime,valueUpdate: 'input'">
+            </div>
+            <input type="text" size="5" data-bind="value: maxLifeTime" style="color: #fff;">
+        </div>
+        <div class="inputBox" id="minSizeBox">
+            <label for="minSize" class="lab">最小粒子大小</label>
+            <div class="rangeBox">
+                <input type="range" id="minSizeRange" min="1" max="100" step="1" title="minSizeRange"
+                       data-bind="value: minSize, valueUpdate: 'input'">
+            </div>
+            <input type="text" size="5" data-bind="value: minSize" style="color: #fff;">
+        </div>
+        <div class="inputBox" id="maxSizeBox">
+            <label for="maxSize" class="lab">最大粒子大小</label>
+            <div class="rangeBox">
+                <input type="range" id="maxSizeRange" min="1" max="100" step="1" title="maxSizeRange"
+                       data-bind="value: maxSize,valueUpdate: 'input'">
+            </div>
+            <input type="text" size="5" data-bind="value: maxSize" style="color: #fff;">
+        </div>
+    </div>
+</div>
+<div id='loadingbar' class="spinner">
+    <div class="spinner-container container1">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container2">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container3">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+</div>
+<script type="module">
+    import knockout from './js/knockout-3.5.1.js'
+
+    function onload(SuperMap3D) {
+        // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+        var EngineType = getEngineType();
+        var viewer = new SuperMap3D.Viewer('Container', {
+            contextOptions: {
+                contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+            },
+        });
+
+        viewer.scenePromise.then(function(scene){
+            init(SuperMap3D, scene, viewer);
+        });
+    }
+
+    function init(SuperMap3D, scene, viewer) {
+        var scene = viewer.scene;
+        window.camera = viewer.camera;
+        var promise = scene.open(URL_CONFIG.SCENE_OLYMPIC_NIGHT);
+        
+        var multiFireUrl = './data/particle/Fire.json';
+
+        promise.then(function(layers) {
+            for(let i = 0; i < layers.length; i++) {
+                layers[i].selectEnabled = false;
+            }
+            let modelMatrix = new SuperMap3D.Matrix4();
+            let posFire = SuperMap3D.Cartesian3.fromDegrees(116.39079868215512, 39.99197702476255, 86);
+            SuperMap3D.Transforms.eastNorthUpToFixedFrame(posFire, undefined, modelMatrix);
+
+            scene.camera.setView({
+                destination: new SuperMap3D.Cartesian3(-2175219.2228243165, 4383447.646385594, 4077257.478460168),
+                orientation: {
+                    heading: 5.449429448643489,
+                    pitch: -0.12716653520403987,
+                    roll: 2.860839218854494e-7
+                }
+            });
+
+            let viewModel = {
+                particleSys: knockout.observableArray([]),
+                emitRate: knockout.observable(1),
+                minEmitPower: knockout.observable(1),
+                maxEmitPower: knockout.observable(1),
+                minLifeTime: knockout.observable(0),
+                maxLifeTime: knockout.observable(0.25),
+                minSize: knockout.observable(1),
+                maxSize: knockout.observable(1),
+            }
+            let toolbar = document.getElementById('toolbar');
+            knockout.applyBindings(viewModel, toolbar);
+            let particleArrLen = 0;
+            let particle = undefined;
+            loadParticleFile(multiFireUrl);
+            
+            // 加载粒子文件
+            function loadParticleFile(url) {
+                SuperMap3D.ParticleHelper.fromJsonUrl(url, scene).then(function(particleSystem){
+                    particle = particleSystem;
+                    settingParticleSys(particleSystem, 0, 0);
+                });
+            }
+
+            // 粒子属性订阅
+            function viewModelSubcribe(subscribeStr, particleSystem) {
+                viewModel[subscribeStr].subscribe(function (newValue) {
+                    particleSystem[subscribeStr] = Number(newValue);
+                })
+            }
+
+            // 设置当前粒子系统
+            function settingParticleSys(particleSystem, offset, index) {
+                particleSystem.modelMatrix = modelMatrix;
+                particleSystem.start();
+                viewModelSubcribe('emitRate', particleSystem);
+                viewModelSubcribe('minEmitPower', particleSystem);
+                viewModelSubcribe('maxEmitPower', particleSystem);
+                viewModelSubcribe('minLifeTime', particleSystem);
+                viewModelSubcribe('maxLifeTime', particleSystem);
+                viewModelSubcribe('minSize', particleSystem);
+                viewModelSubcribe('maxSize', particleSystem);
+                viewModel['emitRate'](particleSystem.emitRate);
+                viewModel['minEmitPower'](particleSystem.minEmitPower);
+                viewModel['maxEmitPower'](particleSystem.maxEmitPower);
+                viewModel['minLifeTime'](particleSystem.minLifeTime);
+                viewModel['maxLifeTime'](particleSystem.maxLifeTime);
+                viewModel['minSize'](particleSystem.minSize);
+                viewModel['maxSize'](particleSystem.maxSize);
+            }
+            
+            $("#toolbar").show();
+            $('#loadingbar').remove();
+        })
+    }
+    if (typeof SuperMap3D !== "undefined") {
+        window.startupCalled = true;
+        onload(SuperMap3D);
+    }
+</script>
+</body>
+</html>

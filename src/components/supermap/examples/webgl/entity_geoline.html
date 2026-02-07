@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>特效线</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/bootstrap-select.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            let EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                navigation: false,
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                },
+            });
+
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+            let startLon = -10;
+            let endLon = 90;
+            let lat = 0;
+
+            let redLine = viewer.entities.add({
+                name: 'Red line on the surface',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray([-75, 35, -125, 35]),
+                    width: 5,
+                    material: SuperMap3D.Color.RED
+                }
+            });
+
+            let glowingLine = viewer.entities.add({
+                name: 'Glowing line on the surface',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray([-75, 37, -125, 37]),
+                    width: 10,
+                    material: new SuperMap3D.PolylineGlowMaterialProperty({
+                        glowPower: 0.5,
+                        color: SuperMap3D.Color.fromCssColorString("rgba(250, 196, 65, 1)")
+                    })
+                }
+            });
+
+            let orangeOutlined = viewer.entities.add({
+                name: 'Orange line with black outline at height and following the surface',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArrayHeights([-75, 39, 250000, -125, 39, 250000]),
+                    width: 10,
+                    material: new SuperMap3D.PolylineOutlineMaterialProperty({
+                        color: SuperMap3D.Color.fromCssColorString("rgba(250, 196, 65, 1)"),
+                        outlineColor: SuperMap3D.Color.fromCssColorString("rgba(29, 206, 200, 1)"),
+                        outlineWidth: 2,
+                    })
+                }
+            });
+
+            let purpleArrow = viewer.entities.add({
+                name: 'Purple straight arrow at height',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000, -125, 43, 500000]),
+                    width: 10,
+                    followSurface: false,
+                    material: new SuperMap3D.PolylineArrowMaterialProperty(SuperMap3D.Color.PURPLE)
+                }
+            });
+
+            let dashedLine = viewer.entities.add({
+                name: 'BLUE dashed line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArrayHeights([-75, 45, 500000, -125, 45, 500000]),
+                    width: 4,
+                    material: new SuperMap3D.PolylineDashMaterialProperty({
+                        color: SuperMap3D.Color.BLUE
+                    })
+                }
+            });
+
+            let wakeLine = viewer.entities.add({
+                name: 'pink wake line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArrayHeights([-75, 47, 500000, -125, 47, 500000]),
+                    width: 4,
+                    material: new SuperMap3D.PolylineTrailMaterialProperty({
+                        color: SuperMap3D.Color.PINK,
+                        trailLength: 0.2,
+                        period: 5.0, // 该属性为PolylineTrailMaterialProperty必设置值属性
+                    })
+                }
+            });
+
+            let postion = [0, 45, 125, 45];
+            let dynamicLine = viewer.entities.add({
+                name: 'RED dynamic line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(postion),
+                    width: 10,
+                    hMax: 500000,
+                    material: new SuperMap3D.PolylineDynamicMaterialProperty({
+                        color: SuperMap3D.Color.RED,
+                        outlineWidth: 0,
+                        outlineColor: SuperMap3D.Color.BLACK
+                    })
+                }
+            });
+            let dynamicLine2 = viewer.entities.add({
+                name: 'ORANGE dynamic line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(postion),
+                    width: 5,
+                    hMax: 550000,
+                    material: new SuperMap3D.PolylineDynamicMaterialProperty({
+                        color: SuperMap3D.Color.ORANGE,
+                        outlineWidth: 0,
+                        outlineColor: SuperMap3D.Color.BLACK
+                    })
+                }
+            });
+            let dynamicLine3 = viewer.entities.add({
+                name: 'Yellow dynamic line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(postion),
+                    width: 5,
+                    hMax: 600000,
+                    material: new SuperMap3D.PolylineDynamicMaterialProperty({
+                        color: SuperMap3D.Color.YELLOW,
+                        outlineWidth: 0,
+                        outlineColor: SuperMap3D.Color.BLACK
+                    })
+                }
+            });
+            let dynamicLine4 = viewer.entities.add({
+                name: 'GREEN dynamic line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(postion),
+                    width: 5,
+                    hMax: 650000,
+                    material: new SuperMap3D.PolylineDynamicMaterialProperty({
+                        color: SuperMap3D.Color.GREEN,
+                        outlineWidth: 0,
+                        outlineColor: SuperMap3D.Color.BLACK
+                    })
+                }
+            });
+            let dynamicLine5 = viewer.entities.add({
+                name: 'BLUE dynamic line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(postion),
+                    width: 5,
+                    hMax: 700000,
+                    material: new SuperMap3D.PolylineDynamicMaterialProperty({
+                        color: SuperMap3D.Color.BLUE,
+                        outlineWidth: 0,
+                        outlineColor: SuperMap3D.Color.BLACK
+                    })
+                }
+            });
+            let dynamicLine6 = viewer.entities.add({
+                name: 'CYAN dynamic line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(postion),
+                    width: 5,
+                    hMax: 750000,
+                    material: new SuperMap3D.PolylineDynamicMaterialProperty({
+                        color: SuperMap3D.Color.CYAN,
+                        outlineWidth: 0,
+                        outlineColor: SuperMap3D.Color.BLACK
+                    })
+                }
+            });
+            let dynamicLine7 = viewer.entities.add({
+                name: 'purple dynamic line',
+                polyline: {
+                    positions: SuperMap3D.Cartesian3.fromDegreesArray(postion),
+                    width: 5,
+                    hMax: 800000,
+                    material: new SuperMap3D.PolylineDynamicMaterialProperty({
+                        color: SuperMap3D.Color.PURPLE,
+                        outlineWidth: 0,
+                        outlineColor: SuperMap3D.Color.BLACK
+                    })
+                }
+            });
+
+            viewer.zoomTo(viewer.entities);
+
+            $('#loadingbar').remove();
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

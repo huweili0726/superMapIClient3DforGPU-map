@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>区域渐变</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/bootstrap-select.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            var EngineType = getEngineType();
+            var viewer = new SuperMap3D.Viewer('Container', {
+                navigation: false,
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                },
+            });
+
+            window.viewer = viewer;
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            // 底图POI
+            viewer.imageryLayers.addImageryProvider(
+                new SuperMap3D.SuperMapImageryProvider({
+                    url: "http://www.supermapol.com/realspace/services/map-China400/rest/maps/China400",
+                })
+            );
+
+            var colorList = ["rgb(15,176,255)", "rgb(18,76,154)", "#40C4E4", "#42B2BE", "rgb(51,176,204)", "#8CB7E5", "rgb(0,244,188)", "#139FF0"];
+            //加载线数据
+            var regionPromise = SuperMap3D.GeoJsonDataSource.load('./data/json/beijing.json');
+            regionPromise.then(function (dataSource) {
+                $('#loadingbar').remove();
+                viewer.flyTo(dataSource);
+                viewer.dataSources.add(dataSource);
+                var regions = dataSource.entities.values;
+                for (var i = 0; i < regions.length; i++) {
+                    var region = regions[i];
+                    region.polygon.height = 1000;
+                    region.polygon.extrudedHeight = 9000;
+                    region.polygon.outline = false;
+                    var randomColor = colorList[Math.floor(Math.random() * colorList.length)]; // 从数组中获取随机颜色
+                    region.polygon.material = new SuperMap3D.ImageMaterialProperty({
+                        image: "./images/EntityGeometry/gradient_yellow.png", // 使用渐变透明的png图片当做材质
+                        transparent: true,
+                        color: SuperMap3D.Color.fromCssColorString(randomColor).withAlpha(0.5) // 随机获取颜色加到image中实现不同样式的面
+                    });
+                }
+
+            }).otherwise(function (error) {
+                window.alert(error);
+            });
+
+            viewer.camera.setView({
+                "destination": {
+                    "x": -2439504.4755902938,
+                    "y": 4887959.69608622,
+                    "z": 4333450.888602303
+                },
+                "orientation": {
+                    "heading": 6.23280992225679,
+                    "pitch": -1.322375934447281,
+                    "roll": 0.001581480161846116
+                }
+            });
+
+            $('#loadingbar').remove();
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

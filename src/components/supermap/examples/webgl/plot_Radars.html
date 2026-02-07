@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Test">
+    <meta name="Cesium-sandcastle-labels" content="Geometries">
+    <title>Plot雷达实例</title> 
+    <script src="js/plotPanelControl/PlottingUI.Include.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../../Build/SuperMap3D/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script>
+
+</head>
+
+<body style=" margin: 0;background: #fff;width: 100%;height:100%;position: absolute;top: 0;">
+    <div id="radartest" class="sticklr" style="position: absolute;left: 10px;top: 20px;z-index: 1000;">
+        <button onclick="createRadars()"> 创建雷达</button>
+        <button onclick="saveRadars()"> 保存雷达</button>
+        <input type="file" id="loadRadars">
+    </div>
+
+    <div id="SuperMap3DContainer" class="fullSize" style="position: absolute;width: 100%;height: 100%;">
+
+        <script id="SuperMap3D_sandcastle_script">
+            var scene, viewer, plotting, radarManager;
+            let customRadar1, customRadar2,parameterRadar;
+            let rotateRadar, rotateRadar2, warningRadar, mechanicalRadar, pieRadar;
+            let scanRadar;
+
+            function onload(SuperMap3D) {
+                'use strict';
+                if (window.Cesium) {
+                    window.SuperMap3D = SuperMap3D;
+                }
+                var host = window.isLocalPlot ? window.plotServer : "http://support.supermap.com.cn:8090";
+                var serverUrl = host + '/iserver/services/plot-jingyong/rest/plot';
+                viewer = new SuperMap3D.Viewer('SuperMap3DContainer');
+                scene = viewer.scene;
+                plotting = new SuperMap3D.Plotting.getInstance(serverUrl, scene);
+                radarManager = plotting.getRadarManager();
+
+                var file = document.getElementById('loadRadars');
+                file.addEventListener("change", function (e) {
+                    let reader = new FileReader();
+                    reader.readAsText(e.target.files[0], "UTF-8");
+                    reader.onload = function (event) {
+                        loadRadars(event.target.result);
+                    }
+                })
+            }
+
+            function saveRadars() {
+                let temp = radarManager.toGeoJson();
+                DownLoad(temp, "雷达.json");
+            }
+
+            function loadRadars(responseText) {
+                let temp = radarManager.fromGeoJson(responseText);
+                console.log(temp);
+            }
+
+            function createRadars() {
+                
+
+                let radarResult1 = computeCustomRadarPts1();
+                customRadar1 = new SuperMap3D.PlotCustomRadar({
+                    point: new SuperMap3D.PlotPoint3D(110, 35, 100000),
+                    radii: radarResult1.radii,
+                    customPts: radarResult1.positions,
+                    slicePartitions: radarResult1.slicePartitions,
+                    stackPartitions: radarResult1.stackPartitions,
+                    subdivisions: radarResult1.subdivisions,
+                    show: true,
+                    fill: true,
+                    material: new SuperMap3D.Color(1, 0, 0, 0.5),
+                    isOutline: true,
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    outlineWidth: 1,
+                    rotate: new SuperMap3D.Cartesian3(0, 0, 0)
+                }, scene);
+
+                let radarResult2 = computeCustomRadarPts2();
+                customRadar2 = new SuperMap3D.PlotCustomRadar({
+                    point: new SuperMap3D.PlotPoint3D(110, 30, 100000),
+                    radii: radarResult2.radii,
+                    customPts: radarResult2.positions,
+                    slicePartitions: radarResult2.slicePartitions,
+                    stackPartitions: radarResult2.stackPartitions,
+                    subdivisions: radarResult2.subdivisions,
+                    show: true,
+                    fill: true,
+                    material: new SuperMap3D.Color(1, 0, 0, 0.5),
+                    isOutline: true,
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    outlineWidth: 1,
+                    rotate: new SuperMap3D.Cartesian3(0, 0, 0)
+                }, scene);
+
+
+                parameterRadar = new SuperMap3D.PlotParameterRadar({
+                    id: "PlotParameterRadar",
+                    point: new SuperMap3D.Cartesian3(110.0, 40.0, 10000),
+                    rotate: new SuperMap3D.Cartesian3(0, 0, 0),
+                    radii: new SuperMap3D.Cartesian3(150000, 150000, 150000.0),
+                    innerRadii: new SuperMap3D.Cartesian3(10000.0, 10000.0, 10000.0),
+                    minimumCone: 10,
+                    maximumCone: 90,
+                    minimumClock: 0,
+                    maximumClock: 260,
+                    material: SuperMap3D.Color.RED.withAlpha(0.3),
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    isOutline: true,
+                    isShowScan: true,
+                    scanCount: 5,
+                    scanColor: new SuperMap3D.Color(1, 1, 0, 0.5),
+                    dScanSpeed: 20
+                }, scene)
+
+
+                var rectPts = [new SuperMap3D.Cartesian3(0, 20000, 0),
+                new SuperMap3D.Cartesian3(100000, 40000, 0),
+                new SuperMap3D.Cartesian3(100000, 0, 0),
+                new SuperMap3D.Cartesian3(0, 20000, 0)];
+
+                var rotateAngle = 360;
+                rotateRadar = new SuperMap3D.PlotRotateRadar({
+                    id: "rotateRadar01",
+                    point: new SuperMap3D.Cartesian3(100.0, 40.0, 10000),
+                    rotate: new SuperMap3D.Cartesian3(0, 0, -30),
+                    isOutline: true,
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    customPts: rectPts,
+                    slicePartitions: rotateAngle / 5,
+                    rotateAngle: rotateAngle,
+                    isShowScan: true,
+                    scanCount: 5
+                }, scene);
+
+                rotateRadar2 = new SuperMap3D.PlotRotateRadar({
+                    id: "rotateRadar02",
+                    point: new SuperMap3D.Cartesian3(95, 35, 10000),
+                    rotate: new SuperMap3D.Cartesian3(0, 0, 0),
+                    isOutline: false,
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    customPts: getMechanicalPts(),
+                    slicePartitions: rotateAngle / 5,
+                    rotateAngle: rotateAngle,
+                    isShowScan: true,
+                    scanCount: 5,
+                    scanColor: new SuperMap3D.Color(0, 1, 0, 0.5)
+                }, scene);
+
+                warningRadar = new SuperMap3D.PlotWarningRadar({
+                    id: "PlotWarningRadar",
+                    point: new SuperMap3D.Cartesian3(100.0, 37.5, 10000),
+                    rotate: new SuperMap3D.Cartesian3(0, 0, 0),
+                    radii: new SuperMap3D.Cartesian3(50000, 50000, 50000),
+                    isOutline: false,
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    isShowScan: true,
+                    scanCount: 4,
+                    scanColor: new SuperMap3D.Color(0, 0, 1, 0.5)
+                }, scene);
+
+                mechanicalRadar = new SuperMap3D.PlotMechanicalRadar({
+                    id: "PlotMechanicalRadar",
+                    point: new SuperMap3D.Cartesian3(95.0, 40.0, 10000),
+                    rotate: new SuperMap3D.Cartesian3(0, 0, 0),
+                    radii: new SuperMap3D.Cartesian3(150000, 150000, 150000.0),
+                    isOutline: true,
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    cellAngle: 5,
+                    isShowScan: true,
+                    scanCount: 5,
+                }, scene);
+
+
+                scanRadar = new SuperMap3D.PlotScanRadar({
+                    id: "PlotScanRadar",
+                    point: new SuperMap3D.Cartesian3(100.0, 35.0, 10000),
+                    scanVAngle: 35,
+                    scanHAngle: 90,
+                    rotate: new SuperMap3D.Cartesian3(0, 0, 135),
+                    radii: new SuperMap3D.Cartesian3(150000, 150000, 150000.0),
+                    material: SuperMap3D.Color.RED.withAlpha(0.3),
+                    outline: true,
+                    outlineColor: new SuperMap3D.Color(0, 1, 0, 1),
+                    isShowScan: true,
+                    dScanSpeed: 20
+                }, scene)
+
+
+                pieRadar = new SuperMap3D.PlotPieRadar({
+                    id: "_PlotPieRadar",
+                    point: new SuperMap3D.Cartesian3(100.0, 30.0, 100000),
+                    radii: new SuperMap3D.Cartesian3(105000, 105000, 105000),
+                    fillColor: new SuperMap3D.Color(0.01176, 0.0784, 0.058824, 0.38),
+                    outlineColor: new SuperMap3D.Color(0.12157, 0.50196, 0.1373, 0.8),
+                    outline: true,
+                    rotateAngle: 90,
+                    isShowScan:true,
+                    scanCount: 1
+                }, scene);
+            }
+
+            function computeCustomRadarPts1() {
+                var positions = [];
+                var radii = new SuperMap3D.Cartesian3(150000, 150000, 150000.0);
+
+                var minimumClock = SuperMap3D.Math.toRadians(0);
+                var maximumClock = SuperMap3D.Math.toRadians(360);
+                var minimumCone = SuperMap3D.Math.toRadians(0);
+                var maximumCone = SuperMap3D.Math.toRadians(90);
+
+                var slicePartitions = 62;//圆上点个数
+                var stackPartitions = 16;//水平圆个数
+
+
+
+                var i;
+                var j;
+                var phis = [minimumCone];
+                var thetas = [minimumClock];
+                for (i = 0; i < stackPartitions; i++) {
+                    phis.push(minimumCone + (i * (maximumCone - minimumCone)) / (stackPartitions - 1));
+                }
+                phis.push(maximumCone);
+                for (j = 0; j < slicePartitions; j++) {
+                    thetas.push(minimumClock + (j * (maximumClock - minimumClock)) / (slicePartitions - 1));
+                }
+                thetas.push(maximumClock);
+                var numPhis = phis.length;
+                var numThetas = thetas.length;
+
+                // Allow for extra indices if there is an inner surface and if we need
+                // to close the sides if the clock range is not a full circl
+
+                // Calculate sin/cos phi
+                var sinPhi = new Array(numPhis);
+                var cosPhi = new Array(numPhis);
+                for (i = 0; i < numPhis; i++) {
+                    sinPhi[i] = Math.sin(phis[i]);
+                    cosPhi[i] = Math.cos(phis[i]);
+                }
+
+                // Calculate sin/cos theta
+                var sinTheta = new Array(numThetas);
+                var cosTheta = new Array(numThetas);
+                for (j = 0; j < numThetas; j++) {
+                    cosTheta[j] = Math.cos(thetas[j]);
+                    sinTheta[j] = Math.sin(thetas[j]);
+                }
+
+                // Create outer surface
+                for (i = 0; i < numPhis; i++) {
+                    var temp = [];
+                    for (j = 0; j < numThetas; j++) {
+                        var x = radii.x * sinPhi[i] * cosTheta[j];
+                        var y = radii.y * sinPhi[i] * sinTheta[j];
+                        var z = radii.z * cosPhi[i];
+                        temp.push(new SuperMap3D.Cartesian3(x, y, z));
+                    }
+                    positions.push(temp);
+                }
+
+                let hasBtoSurface = true;
+                if (hasBtoSurface) {
+                    var temp = [];
+                    for (j = 0; j < numThetas; j++) {
+                        temp.push(new SuperMap3D.Cartesian3());
+                    }
+                    positions.push(temp);
+                    numPhis += 1;
+                }
+
+                return {
+                    positions: positions,
+                    slicePartitions: numThetas,
+                    stackPartitions: numPhis,
+                    radii: radii
+                };
+            }
+
+            function computeCustomRadarPts2() {
+                var positions = [];
+                var radii = new SuperMap3D.Cartesian3(150, 150, 150.0);
+
+                var minimumClock = SuperMap3D.Math.toRadians(0);
+                var maximumClock = SuperMap3D.Math.toRadians(360);
+                var minimumCone = SuperMap3D.Math.toRadians(0);
+                var maximumCone = SuperMap3D.Math.toRadians(90);
+
+                var slicePartitions = 62;//圆上点个数
+                var stackPartitions = 16;//水平圆个数
+
+
+
+                var i;
+                var j;
+                var phis = [minimumCone];
+                var thetas = [minimumClock];
+                for (i = 0; i < stackPartitions; i++) {
+                    phis.push(minimumCone + (i * (maximumCone - minimumCone)) / (stackPartitions - 1));
+                }
+                phis.push(maximumCone);
+                for (j = 0; j < slicePartitions; j++) {
+                    thetas.push(minimumClock + (j * (maximumClock - minimumClock)) / (slicePartitions - 1));
+                }
+                thetas.push(maximumClock);
+                var numPhis = phis.length;
+                var numThetas = thetas.length;
+
+                // Allow for extra indices if there is an inner surface and if we need
+                // to close the sides if the clock range is not a full circl
+
+                // Calculate sin/cos phi
+                var sinPhi = new Array(numPhis);
+                var cosPhi = new Array(numPhis);
+                for (i = 0; i < numPhis; i++) {
+                    sinPhi[i] = Math.sin(phis[i]);
+                    cosPhi[i] = Math.cos(phis[i]);
+                }
+
+                // Calculate sin/cos theta
+                var sinTheta = new Array(numThetas);
+                var cosTheta = new Array(numThetas);
+                for (j = 0; j < numThetas; j++) {
+                    cosTheta[j] = Math.cos(thetas[j]);
+                    sinTheta[j] = Math.sin(thetas[j]);
+                }
+
+                let radiiArray = [
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(100,100,100),
+                new SuperMap3D.Cartesian3(100,100,100),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(100,100,100),
+                new SuperMap3D.Cartesian3(100,100,100),
+                new SuperMap3D.Cartesian3(100,100,100),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                new SuperMap3D.Cartesian3(150,150,150),
+                ]
+
+                // Create outer surface
+                for (i = 0; i < numPhis; i++) {
+                    var temp = [];
+                    for (j = 0; j < numThetas; j++) {
+                        var x = radiiArray[i].x * sinPhi[i] * cosTheta[j];
+                        var y = radiiArray[i].y * sinPhi[i] * sinTheta[j];
+                        var z = radiiArray[i].z * cosPhi[i];
+                        temp.push(new SuperMap3D.Cartesian3(x, y, z));
+                    }
+                    positions.push(temp);
+                }
+
+                let hasBtoSurface = true;
+                if (hasBtoSurface) {
+                    var temp = [];
+                    for (j = 0; j < numThetas; j++) {
+                        temp.push(new SuperMap3D.Cartesian3());
+                    }
+                    positions.push(temp);
+                    numPhis += 1;
+                }
+
+                return {
+                    positions: positions,
+                    slicePartitions: numThetas,
+                    stackPartitions: numPhis,
+                    radii: radii
+                };
+            }
+
+
+            function getMechanicalPts() {
+                var pts = [];
+                pts.push(new SuperMap3D.Cartesian3(0, 0, 0));
+                pts.push(new SuperMap3D.Cartesian3(1.10296043731977 * 10000, 0.046804145634484 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(2.21610390044188 * 10000, 0.11759698792659 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(3.23948463412258 * 10000, 0.207919742367934 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(4.24306826853316 * 10000, 0.304605633553736 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(5.07593366806073 * 10000, 0.449055607644075 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(6.09774013826592 * 10000, 0.626275021765735 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(6.82649676873021 * 10000, 0.854033937659516 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(7.59836360255064 * 10000, 1.13340451890574 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(8.12046765798091 * 10000, 1.39526442140232 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(8.77215268479149 * 10000, 1.76316819829927 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(9.24420050024946 * 10000, 2.26394442518268 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(9.41437066670075 * 10000, 2.78004341750028 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(9.37677016147896 * 10000, 3.37826190260998 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(9.02402463279236 * 10000, 4.05665157036142 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(8.49067600110484 * 10000, 4.52027646588052 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(7.93178024681909 * 10000, 4.83964546832953 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(7.37859457443028 * 10000, 4.95818525526998 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(6.73933014626123 * 10000, 4.97031713954619 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(6.1144105659988 * 10000, 4.8548345993221 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(5.51606295388907 * 10000, 4.68304158511523 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(4.84103177562709 * 10000, 4.34900006813962 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(4.09846873384157 * 10000, 3.95082720446673 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(3.26846203349058 * 10000, 3.4279079135254 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(2.2493811983941 * 10000, 2.68004157158963 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(1.43802404023069 * 10000, 1.88816148893958 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(0.67580571600966 * 10000, 0.925081705540024 * 10000, 0));
+                pts.push(new SuperMap3D.Cartesian3(0, 0, 0));
+                return pts;
+            }
+
+            function DownLoad(content,fileName){
+                const eleLink = document.createElement('a');
+                eleLink.download = fileName;
+                eleLink.style.display = 'none';
+                const blob = new Blob([content]);
+                eleLink.href = URL.createObjectURL(blob);
+                document.body.appendChild(eleLink);
+                eleLink.click();
+                document.body.removeChild(eleLink);
+            }
+
+            if (typeof MGIS_SuperMap3D !== 'undefined') {
+                window.startupCalled = true;
+                onload(MGIS_SuperMap3D);
+            }
+        </script>
+    </div>
+</body>
+
+</html>

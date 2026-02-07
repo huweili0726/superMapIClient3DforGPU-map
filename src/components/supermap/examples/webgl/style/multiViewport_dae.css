@@ -1,0 +1,68 @@
+label {
+    display: inline-block;
+    margin-right: 1rem;
+}
+
+label > input,
+label > span {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#split_up {
+    position: absolute;
+    background-color: white;
+    left: 50%;
+    bottom: 50%;
+    width: 2px;
+    height: 50%;
+    -webkit-transform: translate(-50%, 0);
+}
+
+#split_bottom {
+    position: absolute;
+    background-color: white;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 50%;
+    -webkit-transform: translate(-50%, 0);
+}
+
+#split_left {
+    position: absolute;
+    background-color: white;
+    right: 50%;
+    bottom: 50%;
+    height: 2px;
+    width: 50%;
+    -webkit-transform: translate(0, -50%);
+}
+
+#split_right {
+    position: absolute;
+    background-color: white;
+    left: 50%;
+    bottom: 50%;
+    height: 2px;
+    width: 50%;
+    -webkit-transform: translate(0, -50%);
+}
+
+#split_vertical_trisection_left {
+    position: absolute;
+    background-color: white;
+    left: 33.33%;
+    top: 0;
+    height: 100%;
+    width: 2px;
+}
+
+#split_vertical_trisection_right {
+    position: absolute;
+    background-color: white;
+    right: 33.33%;
+    top: 0;
+    height: 100%;
+    width: 2px;
+}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+	<title>图层动画</title>
+	<link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+	<link href="./css/pretty.css" rel="stylesheet">
+	<script src="./js/jquery.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+	<div id="Container"></div>
+	<div id='loadingbar' class="spinner">
+		<div class="spinner-container container1">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+		<div class="spinner-container container2">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+		<div class="spinner-container container3">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+	</div>
+	<div id="toolbar" class="param-container tool-bar">
+		<button type="button" id="start" class="button black">动画开始</button>
+	</div>
+	<script>
+		function onload(SuperMap3D) {
+			// 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+			var EngineType = getEngineType();
+			var viewer = new SuperMap3D.Viewer('Container', {
+				contextOptions: {
+					contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+				}
+			});
+
+			viewer.scenePromise.then(function(scene){
+				init(SuperMap3D, scene, viewer);
+			});
+		}
+
+		function init(SuperMap3D, scene, viewer) {
+			viewer.resolutionScale = window.devicePixelRatio;
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+			var scene = viewer.scene;
+			viewer.scene.globe.show = false;
+			scene.debugShowFramesPerSecond = false;
+			scene.hdrEnabled = false;
+			scene.sun.show = true;
+			viewer.scene.postProcessStages.mxaa = false;
+			viewer.scene.postProcessStages.fxaa.enabled = true;
+			var promise = scene.open(URL_CONFIG.SCENE_ANIMATION);
+			var animationLayer = [];
+			var sequenceLayers = [];
+			var layerName = ["第一层", "第二层", "第三层", "设备", "第四层", "墙01@Model - 副本", "屋顶@Model - 副本"];
+			var layerIndex = [0, 1, 2, 3, 4, 5, 6]; //索引数组
+			var scratchWindowPosition = new SuperMap3D.Cartesian2();
+			promise.then(function (layers) {
+				//相机定位
+				scene.camera.setView({
+					destination: new SuperMap3D.Cartesian3( -2182797.2623676993, 4386114.878266503, 4070255.8560934374),
+					orientation: {
+						heading: 3.1380738694592583,
+						pitch: -0.2798725811830971,
+						roll: 6.283185307179586
+					}
+				});
+				for (var i = 0; i < layers.length; i++) {
+					layers[i].visible = false;
+				}
+
+				for (var j = 0; j < layerName.length; j++) {
+					var layer = scene.layers.find(layerName[j]);
+					animationLayer.push(layer);
+				}
+				for (var i = 0; i < animationLayer.length; i++) {
+					sequenceLayers[layerIndex[i]] = animationLayer[i];
+				}
+
+
+				var index = 0;
+				$("#start").click(function () {
+					
+					for (var i = 0; i < layers.length; i++) {
+					if( layers[i].visible ){
+							layers[i].visible = false;
+						}
+					}
+					// viewer.scene.camera.flyCircleLoop = true; //是否循环旋转
+					viewer.camera.speedRatio = 0.25;
+					//旋转点
+					var viewCenter =  new SuperMap3D.Cartesian3(-2182812.4475240344, 4386152.956300519, 4070141.1967559103);
+
+					setAnimation(sequenceLayers, index);
+					viewer.camera.flyCircle(viewCenter);					
+				});
+
+				$('#loadingbar').remove();
+			});
+
+			var animationAllLayer;
+
+			function setAnimation(layers, index) {
+				animationAllLayer = layers;
+				layers[index].visible = true;				
+				return layers[index].setAnimation({				
+					keyframes: {
+						'100%': {
+							translation: SuperMap3D.Cartesian3.fromDegrees(layers[index].lon, layers[index].lat, 0)
+						},
+						'0%': {
+							translation: SuperMap3D.Cartesian3.fromDegrees(layers[index].lon, layers[index].lat, 50),
+						}
+					},
+					duration: 2.0
+				}).then(function () {
+					if ((index + 1) >= animationAllLayer.length) {
+						return;
+					}
+					return setAnimation(animationAllLayer, index + 1);
+				})
+			}
+		}
+		if (typeof SuperMap3D !== 'undefined') {
+			window.startupCalled = true;
+			onload(SuperMap3D);
+		}
+	</script>
+</body>
+
+</html>

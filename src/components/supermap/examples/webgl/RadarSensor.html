@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>雷达传感器</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link rel="stylesheet" href="./js/view-design/dist/styles/iview.css">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <!-- 自定义几何体的js 瓣体扫描器效果-->
+    <script src="js/CesiumGeometry.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id="app"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <div id="toolbar" class="param-container tool-bar">
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>半径（meter）</label>
+            <Input data-bind="value: radius,valueUpdate: 'input'" id="radius" style="width:110px;height:30px;">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>方向（heading）</label>
+            <input type="range" min="0" max="360" step="1" data-bind="value: heading,valueUpdate: 'input'" id="heading"
+                style="width:120px;margin: 5px 0">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>俯仰（pitch）</label>
+            <input type="range" min="0" max="360" step="1" data-bind="value: pitch,valueUpdate: 'input'" id="pitch"
+                style="width:120px;margin: 5px 0">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>翻滚（roll）</label>
+            <input type="range" min="0" max="360" step="1" data-bind="value: roll,valueUpdate: 'input'" id="roll"
+                style="width:120px;margin: 5px 0">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>左右夹角（x）</label>
+            <input type="range" min="0" max="90" step="1" data-bind="value: xHalfAngle,valueUpdate: 'input'"
+                id="xHalfAngle" style="width:120px;margin: 5px 0">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>上下夹角（y）</label>
+            <input type="range" min="0" max="90" step="1" data-bind="value: yHalfAngle,valueUpdate: 'input'"
+                id="yHalfAngle" style="width:120px;margin: 5px 0">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>扫描线颜色</label>
+            <input class="colorPicker" size="8" data-bind="value: scanlineColor,valueUpdate: 'input'"
+                id="scanlineColor">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>扫描面颜色</label>
+            <input class="colorPicker" size="8" data-bind="value: scanPlaneColor,valueUpdate: 'input'"
+                id="scanPlaneColor">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>扫描模式</label>
+            <select id="scanPlaneMode">
+                <option value="0">垂直扫描</Option>
+                <option value="1">水平扫描</Option>
+            </select>
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>扫描速率</label>
+            <input type="range" min="0" max="10" step="1" data-bind="value: scanPlaneRate,valueUpdate: 'input'"
+                id="scanPlaneRate" style="width:120px;margin: 5px 0">
+        </div>
+        <div class="param-item" style="display: flex; justify-content: space-between;">
+            <label>显示扫描面</label>
+            <div>
+                <input type="checkbox" checked id="showScanPlane">
+                <span>是否显示</span>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            var EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                baseLayerPicker: false,
+                terrainProvider: new SuperMap3D.SuperMapTerrainProvider({
+                    url: URL_CONFIG.STK,
+                    requestWaterMask: true,
+                    requestVertexNormals: true,
+                    isSct: false
+                }),
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+            var radius = 1000;
+            var scanPlane = true;
+            var lineColor = 'rgba(0, 0, 1, 1)';
+            var scanPlaneColor = 'rgba(0.0, 1.0, 1.0, 0.4)';
+            var scanPlaneMode = 0;
+            var showIntersection = true;
+            var sensorEntity;
+            var viewModel = {
+                xHalfAngle: 60,
+                yHalfAngle: 60,
+                scanPlaneRate: 3,
+                heading: 0,
+                pitch: 0,
+                roll: 0,
+                radius
+            }
+
+            //设置参数
+            setOptions();
+            //设置属性绑定
+            setOptionsBind();
+
+            sensorEntity = viewer.entities.add({
+                position: SuperMap3D.Cartesian3.fromDegrees(30, 30, 200),
+                rectangularSensor: new SuperMap3D.RectangularSensorGraphics({
+                    //gaze: targetEntity,
+                    radius: new SuperMap3D.CallbackProperty(function () {
+                        return +radius;
+                    }, false),
+                    slice: 120,//切分程度
+                    xHalfAngle: new SuperMap3D.CallbackProperty(function () {
+                        return SuperMap3D.Math.toRadians(viewModel.xHalfAngle);
+                    }, false),//左右夹角
+                    yHalfAngle: new SuperMap3D.CallbackProperty(function () {
+                        return SuperMap3D.Math.toRadians(viewModel.yHalfAngle);
+                    }, false),//上下夹角
+                    lineColor: new SuperMap3D.CallbackProperty(function () {
+                        return SuperMap3D.Color.fromCssColorString(lineColor);
+                    }, false),//线颜色
+                    material: new SuperMap3D.Color(0.0, 1.0, 1.0, 0.4),//统一材质
+                    showScanPlane: new SuperMap3D.CallbackProperty(function () {
+                        return scanPlane;
+                    }, false),//显示扫描面
+                    scanPlaneColor: new SuperMap3D.CallbackProperty(function () {
+                        return SuperMap3D.Color.fromCssColorString(scanPlaneColor);
+                    }, false),//扫描面颜色
+                    scanPlaneMode: new SuperMap3D.CallbackProperty(function () {
+                        return scanPlaneMode ? 'vertical' : 'horizontal';
+                    }, false),//垂直扫描模式
+                    scanPlaneRate: new SuperMap3D.CallbackProperty(function () {
+                        return viewModel.scanPlaneRate;
+                    }, false),//扫描速率
+                    showIntersection: true,//是否显示扫描与地球的线
+                    showThroughEllipsoid: true//是否穿过地球显示
+                })
+            });
+            viewer.scene.camera.flyTo({
+                destination: new SuperMap3D.Cartesian3(4795937.093083232, 2768268.4251703713, 3160409.2172610476),
+                orientation: {
+                    heading: 6.283158722315867,
+                    pitch: -0.1086498908579534,
+                    roll: 1.0675904604795505e-12
+                }
+            });
+
+            function setOptionsBind() {
+                //建立绑定
+                SuperMap3D.knockout.track(viewModel);
+                var toolbar = document.getElementById('toolbar');
+                SuperMap3D.knockout.applyBindings(viewModel, toolbar);
+
+                //设置radius
+                SuperMap3D.knockout.getObservable(viewModel, 'radius').subscribe(
+                    function (newValue) {
+                        radius = newValue;
+                    }
+                );
+                
+                //设置heading
+                SuperMap3D.knockout.getObservable(viewModel, 'heading').subscribe(
+                    function (newValue) {
+                        let hpr = new SuperMap3D.HeadingPitchRoll(
+                            SuperMap3D.Math.toRadians(newValue),
+                            SuperMap3D.Math.toRadians(viewModel.pitch),
+                            SuperMap3D.Math.toRadians(viewModel.roll)
+                        );
+                        let orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(sensorEntity.position._value, hpr);
+                        sensorEntity.orientation = orientation;
+                    }
+                );
+                //设置pitch
+                SuperMap3D.knockout.getObservable(viewModel, 'pitch').subscribe(
+                    function (newValue) {
+                        let hpr = new SuperMap3D.HeadingPitchRoll(
+                            SuperMap3D.Math.toRadians(viewModel.heading),
+                            SuperMap3D.Math.toRadians(newValue),
+                            SuperMap3D.Math.toRadians(viewModel.roll)
+                        );
+                        let orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(sensorEntity.position._value, hpr);
+                        sensorEntity.orientation = orientation;
+                    }
+                );
+                //设置roll
+                SuperMap3D.knockout.getObservable(viewModel, 'roll').subscribe(
+                    function (newValue) {
+                        let hpr = new SuperMap3D.HeadingPitchRoll(
+                            SuperMap3D.Math.toRadians(viewModel.heading),
+                            SuperMap3D.Math.toRadians(viewModel.pitch),
+                            SuperMap3D.Math.toRadians(newValue)
+                        );
+                        let orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(sensorEntity.position._value, hpr);
+                        sensorEntity.orientation = orientation;
+                    }
+                );
+            }
+
+            function setOptions() {
+                //设置是否显示扫描面
+                $('#showScanPlane').on('change', function (event) {
+                    scanPlane = event.target.checked;
+                });
+                //设置扫描模式
+                $('#scanPlaneMode').on('change', function (event) {
+                    scanPlaneMode = event.target.value;
+                });
+                //设置扫描线颜色
+                $('#scanlineColor').spectrum({
+                    color: lineColor,
+                    showPalette: true,
+                    showAlpha: true,
+                    localStorageKey: "spectrum.demo",
+                    preferredFormat:'rgb'
+                });
+                $('#scanlineColor').on('change', function (event) {
+                    lineColor = event.target.value;
+                });
+                //设置扫描面颜色
+                $('#scanPlaneColor').spectrum({
+                    color: scanPlaneColor,
+                    showPalette: true,
+                    showAlpha: true,
+                    localStorageKey: "spectrum.demo",
+                    preferredFormat:'rgb'
+                });
+                $('#scanPlaneColor').on('change', function (event) {
+                    scanPlaneColor = event.target.value;
+                });
+            }
+
+            $('#loadingbar').remove();
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

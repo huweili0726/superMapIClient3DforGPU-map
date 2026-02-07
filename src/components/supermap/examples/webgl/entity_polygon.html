@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>面样式</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script src="./js/config.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            let EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            window.viewer = viewer;
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.imageryLayers.addImageryProvider(
+                new SuperMap3D.SuperMapImageryProvider({
+                    url: "http://www.supermapol.com/realspace/services/map-China400/rest/maps/China400",
+                })
+            );
+
+            // 实体填充面
+            viewer.entities.add({
+                name: '实体填充面',
+                polygon: {
+                    hierarchy: {
+                        positions: SuperMap3D.Cartesian3.fromDegreesArray([
+                            116.68328157156301,
+                            39.87922739879921,
+                            116.68462616858797,
+                            39.879768723128095,
+                            116.68501942287305,
+                            39.87917182650424,
+                            116.68538469777205,
+                            39.879295533699526,
+                            116.68524409503105,
+                            39.8789275761811,
+                            116.68517585950235,
+                            39.878887382661084,
+                            116.68523595860641, 39.87876766380559,
+                            116.68414853575567,
+                            39.87866476290174,
+                            116.68353058525365,
+                            39.878640001122044
+                        ]),
+                    },
+                    height: 3,
+                    material: SuperMap3D.Color.fromCssColorString("rgba(250, 196, 65, 1)"),
+                    perPositionHeight: false,
+                    classificationType: undefined, // 贴地
+                },
+            });
+
+            // 网格填充面
+            viewer.entities.add({
+                name: '网格填充面',
+                polygon: {
+                    extrudedHeight: 10,
+                    hierarchy: {
+                        positions: SuperMap3D.Cartesian3.fromDegreesArray([
+                            116.68190512640454,
+                            39.87871497527855,
+                            116.67901115253997,
+                            39.8778971720237,
+                            116.67909884451464,
+                            39.87758963316523,
+                            116.67986238477285,
+                            39.876283362377585,
+                            116.68024571834621,
+                            39.87558649073437,
+                            116.68130828744266,
+                            39.87593891131367,
+                            116.68169736142052,
+                            39.87755442215698,
+                            116.6817244226792,
+                            39.877869270613814,
+                            116.68190994275504,
+                            39.87867313884978
+                        ]),
+                    },
+                    height: 3,
+                    material: new SuperMap3D.GridMaterialProperty({
+                        color: SuperMap3D.Color.fromCssColorString("rgba(250, 196, 65, 1)"), //间隔颜色,
+                        cellAlpha: 0.1,
+                        lineCount: new SuperMap3D.Cartesian2(8, 8),
+                        lineThickness: new SuperMap3D.Cartesian2(1, 1),
+                    }),
+                    perPositionHeight: false,
+                    // classificationType: SuperMap3D.ClassificationType.TERRAIN, // 贴地
+                },
+            });
+
+            // 带边框的面
+            viewer.entities.add({
+                name: '带边框的面',
+                polygon: {
+                    hierarchy: SuperMap3D.Cartesian3.fromDegreesArray([
+                        116.68171059439841,
+                        39.87571152018525,
+                        116.68311472063982,
+                        39.87434110868042,
+                        116.6836707584378,
+                        39.873794114800035,
+                        116.68397849371448,
+                        39.87375309474349,
+                        116.68449269781448,
+                        39.873921229040484,
+                        116.68535920576673,
+                        39.87395099173695,
+                        116.68497373420712,
+                        39.87491233272439,
+                        116.68482809598143,
+                        39.87489830196316,
+                        116.68449466357981,
+                        39.87570142818758,
+                        116.68440917910927,
+                        39.87603697333188
+                    ]),
+                    material: SuperMap3D.Color.BLUE.withAlpha(0.2),
+                    outline: true,
+                    outlineWidth: 2,
+                    outlineColor: SuperMap3D.Color.RED,
+                    perPositionHeight: false,
+                    classificationType: SuperMap3D.ClassificationType.TERRAIN, // 贴地
+                },
+            });
+
+            // 局部水面
+            viewer.scene.primitives.add(
+                new SuperMap3D.Primitive({
+                    geometryInstances: new SuperMap3D.GeometryInstance({
+                        geometry: new SuperMap3D.PolygonGeometry({
+                            polygonHierarchy: new SuperMap3D.PolygonHierarchy(
+                                SuperMap3D.Cartesian3.fromDegreesArray([
+                                    116.69012462221622,
+                                    39.8794857931142,
+                                    116.68648802599813,
+                                    39.877689574566325,
+                                    116.68630294286714,
+                                    39.877419257440394,
+                                    116.68633955962837,
+                                    39.87720657362303,
+                                    116.68668941696897,
+                                    39.87651844522773,
+                                    116.68675250419231,
+                                    39.876330143326705,
+                                    116.68686425043981,
+                                    39.87623416423754,
+                                    116.68737407207726,
+                                    39.87618989336234,
+                                    116.69002579339653, 39.876351147915464, 116.69115064630681, 39.87635031039263, 116.69258059905826, 39.87647563209625,
+                                    116.69271118513484,
+                                    39.87672720756616,
+                                    116.69239272030049,
+                                    39.87803738307752,
+                                    116.69213078901622,
+                                    39.87833988248347,
+                                    116.69199483592759,
+                                    39.87874938901489,
+                                    116.69190427408347,
+                                    39.87887326435219,
+                                    116.69171086259173,
+                                    39.878979722032206,
+                                    116.69051398403118,
+                                    39.87919049706827,
+                                    116.69018777673234,
+                                    39.87946515940433
+                                ])
+                            ),
+                            extrudedHeight: 3
+                        }),
+                    }),
+                    appearance: new SuperMap3D.EllipsoidSurfaceAppearance({
+                        material: new SuperMap3D.Material({
+                            fabric: {
+                                type: "Water",
+                                uniforms: {
+                                    basewaterColor: new SuperMap3D.Color(64 / 255, 157 / 255, 253 / 255, 0.5),
+                                    normalMap: './images/EntityGeometry/waterNormals.jpg',
+                                    frequency: 500,
+                                    animationSpeed: 0.01,
+                                    amplitude: 5,
+                                    specularIntensity: 2,
+                                }
+                            }
+                        })
+                    }),
+                })
+            );
+
+            viewer.camera.setView({
+                destination: { "x": -2201921.3990370277, "y": 4380874.767245257, "z": 4067341.6883744686 },
+                orientation: {
+                    heading: 0.000012799177921962723,
+                    pitch: -0.7855895527274859,
+                    roll: 5.999064889294914e-8
+                }
+            })
+
+            $('#loadingbar').remove();
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

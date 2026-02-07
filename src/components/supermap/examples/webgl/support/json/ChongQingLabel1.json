@@ -1,0 +1,334 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "江北区",
+        "gb": "156500105"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.74227031931541,
+          29.618401999202026,
+          235.5364121768925
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "大渡口区",
+        "gb": "156500104"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.48465145991857,
+          29.42174249920528,
+          281.6821231871403
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "涪陵区",
+        "gb": "156500102"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.32347277419781,
+          29.683366999201,
+          309.09008153635838
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "北碚区",
+        "gb": "156500109"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.55286177053793,
+          29.86990149919792,
+          332.9479032758584
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "南岸区",
+        "gb": "156500108"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.64804951133459,
+          29.5410129992033,
+          287.6723890554592
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "九龙坡区",
+        "gb": "156500107"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.35740676807953,
+          29.410202499205487,
+          260.19452682481218
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "沙坪坝区",
+        "gb": "156500106"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.36220653771315,
+          29.62278999920195,
+          312.54912517843806
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "璧山区",
+        "gb": "156500120"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.17679043764825,
+          29.58544849920261,
+          414.01476684739466
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "黔江区",
+        "gb": "156500114"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.71935920162705,
+          29.472164999204517,
+          770.3453722167066
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "巴南区",
+        "gb": "156500113"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.71195762876467,
+          29.451411999204838,
+          281.37755490789859
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "南川区",
+        "gb": "156500119"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.15245284747145,
+          29.13598049921015,
+          876.1160434622793
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "永川区",
+        "gb": "156500118"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.8638375958258,
+          29.25776399920808,
+          576.9216257964579
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "合川区",
+        "gb": "156500117"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.33147286189663,
+          30.11539799919396,
+          267.23575478532197
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "铜梁区",
+        "gb": "156500151"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.00443196401833,
+          29.809761999198913,
+          334.92001788828568
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "渝北区",
+        "gb": "156500112"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.78657695569399,
+          29.850491499198247,
+          359.82164667327467
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "大足区",
+        "gb": "156500111"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.72027008138203,
+          29.621404499202,
+          418.2201924788693
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "梁平区",
+        "gb": "156500155"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.76625644678325,
+          30.65494349918542,
+          489.0098600343827
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "垫江县",
+        "gb": "156500231"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.39705265649121,
+          30.246292499191875,
+          441.29175410756678
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "SmUserID_1": 0,
+        "name": "丰都县",
+        "gb": "156500230"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.81553530404313,
+          29.905425499197376,
+          513.3134061649494
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>组合剖切</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
+    <link href="./css/normal.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id="toolbar" class="param-container tool-bar">
+        <div class="titleBox">
+            <div class="titl">组合剖切</div>
+            <span class="close2" aria-hidden="false" style="margin-top: 3px;">x</span>
+        </div>
+
+        <div class="param-item inputBox">
+            <span class="titl">剖切模式</span>
+
+            <div class="content" style="display: flex; justify-content: space-between;">
+                <div class="item" style="display: flex; align-items: center;">
+                    <input type="checkbox" id="xAxis">
+                    <label for="xAxis">X轴</label>
+                </div>
+                <div class="item" style="display: flex; align-items: center;">
+                    <input type="checkbox" id="yAxis">
+                    <label for="yAxis">Y轴</label>
+                </div>
+                <div class="item" style="display: flex; align-items: center;">
+                    <input type="checkbox" id="zAxis">
+                    <label for="zAxis">Z轴</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="param-item inputBox">
+            <span class="titl" style="margin-top: 5px;">显示剖切面</span>
+            <input type="checkbox" id="showPlane" checked>
+        </div>
+
+        <div class="button-group" style="display:flex; width:70px; padding-left:108px;">
+            <button type="button" class="btn_foot_clear" id="clear">清除</button>
+        </div>
+    </div>
+
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(2),  // Webgl2:2 ; WebGPU:3
+                    msaaLevel: 1,
+                },
+                timeline: true,
+                useSuperMapOIT: true
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            // 打开场景
+            const promise = scene.addS3MTilesLayerByScp("https://www.supermapol.com/realspace/services/3D-BIMBaoZha-2/rest/realspace/datas/ModelEdit_1@DatasourceYYD007/config");
+            promise.then(function (layers) {
+                $("#loadingbar").hide();
+                
+                scene.camera.setView({
+                    destination: new SuperMap3D.Cartesian3(-2182871.8234577705, 4386106.846924789, 4070269.4242944825),
+                    orientation: {
+                        heading: 3.7491274968876422,
+                        pitch:  -0.5285827329893693,
+                        roll:  6.283185256072535
+                    }
+                });
+
+                let isDisplayPlane = true;
+
+                scene.sun.show = true;
+                scene.globe.show = false;
+                scene.globe.baseColor = SuperMap3D.Color.BLACK; // 没有影像图层时地球的底色
+                scene.skyAtmosphere.show = false;
+
+                const layer = viewer.scene.layers.layerQueue[0];
+
+                // 隐藏多余模型
+                layer.setObjsVisible(['1', "2", "3416", "3415", "3414", "3413", "3412", "3411", "3410", "3409", "3408", "3407", "3406", "3405", "3404", "3403", "3402", "3400", "3401", "3417", "3418", "3419", "3420", "3421", "3422", "3423", "3424", "3425", "3426"], false);
+
+                window.viewer = viewer
+
+                /*
+                * 使用entity绘制可视的可编辑平面模型
+                */
+
+                // 平面风格配置
+                const planeConfig = {
+                    dimensions: new SuperMap3D.Cartesian2(50.0, 50.0), //长宽
+                    material: SuperMap3D.Color.WHITE.withAlpha(0.3),
+                    outline: true,
+                    outlineColor: SuperMap3D.Color.WHITE
+                }
+                // 平面的xyz轴相对原点偏移
+                const editPlaneOption = {
+                    x: 20,
+                    y: 20,
+                    z: 15,
+                    selectedEntity: undefined // 选中的剖切面Entity对象
+                }
+
+                let xPlane, yPlane, zPlane;
+
+                //绘制平面对象  type : x y z ， position: 添加平面原点位置
+                function addPlane(type, position) {
+                    let normal = new SuperMap3D.Cartesian3(-1.0, 0.0, 0.0);
+                    switch (type) {
+                        case 'y': normal = new SuperMap3D.Cartesian3(0.0, -1.0, 0.0); break;
+                        case 'z': normal = new SuperMap3D.Cartesian3(0.0, 0.0, -1.0); break;
+                    }
+                    let plane = new SuperMap3D.ClippingPlane(normal, 0.0);
+                    const planeEntity = viewer.entities.add({
+                        position: position,
+                        plane: {
+                            ...planeConfig,
+                            plane: new SuperMap3D.CallbackProperty(() => {
+                                plane.distance = editPlaneOption[type];
+                                return plane;
+                            }, false)
+                        },
+                        show: isDisplayPlane
+                    });
+                    plane.entityId = planeEntity.id;
+                    plane.type = type;
+                    return plane;
+                }
+
+                function removePlane() {
+                    viewer.entities.removeById(xPlane?.entityId);
+                    viewer.entities.removeById(yPlane?.entityId);
+                    viewer.entities.removeById(zPlane?.entityId);
+                }
+
+                function showPlane(id, isDisplay) {
+                    if (!id) return;
+                    const entity = viewer.entities.getById(id);
+                    if (entity) entity.show = isDisplay;
+                }
+
+
+
+                /*
+                * 使用 setCustomClipBox 实现 XYZ 轴的平面裁剪功能
+                */
+                let clipBoxOption = {
+                    clipMode: 'clip_behind_any_plane',
+                    planePos: [],
+                    planeNormal: [],
+                }
+                let keyValues = {
+                    x: undefined,
+                    y: undefined,
+                    z: undefined
+                }
+
+
+                let layerPos = SuperMap3D.Cartesian3.fromDegrees(layer.lon, layer.lat, layer.height);
+                let enuLayerMat = SuperMap3D.Transforms.eastNorthUpToFixedFrame(layerPos);
+                const normalX = SuperMap3D.Matrix4.multiplyByPointAsVector(enuLayerMat, new SuperMap3D.Cartesian3(-1.0, 0.0, 0.0), new SuperMap3D.Cartesian3());
+                const normalY = SuperMap3D.Matrix4.multiplyByPointAsVector(enuLayerMat, new SuperMap3D.Cartesian3(0.0, -1.0, 0.0), new SuperMap3D.Cartesian3());
+                const normalZ = SuperMap3D.Matrix4.multiplyByPointAsVector(enuLayerMat, new SuperMap3D.Cartesian3(0.0, 0.0, -1.0), new SuperMap3D.Cartesian3());
+                function setClipBox(type, layer) {
+                    let position, normal;
+                    switch (type) {
+                        case 'x':
+                            position = new SuperMap3D.Cartesian3(editPlaneOption.x, 0, 0);
+                            normal = normalX;
+                            break;
+                        case 'y':
+                            position = new SuperMap3D.Cartesian3(0, editPlaneOption.y, 0);
+                            normal = normalY;
+                            break;
+                        case 'z':
+                            position = new SuperMap3D.Cartesian3(0, 0, editPlaneOption.z);
+                            normal = normalZ;
+                            break;
+                    }
+                    position = SuperMap3D.Matrix4.multiplyByPoint(enuLayerMat, position, new SuperMap3D.Cartesian3());
+                    keyValues[type] = [position, normal];
+                    updateClipBoxOption();
+                }
+
+
+                function updateClipBoxOption() {
+                    layer._oriClipPlane[0] = new SuperMap3D.Cartesian4(0.0, 0.0, 0.0, 0.0);
+                    layer._oriClipPlane[1] = new SuperMap3D.Cartesian4(0.0, 0.0, 0.0, 0.0);
+                    layer._oriClipPlane[2] = new SuperMap3D.Cartesian4(0.0, 0.0, 0.0, 0.0);
+                    clipBoxOption.planePos.length = 0;
+                    clipBoxOption.planeNormal.length = 0;
+                    for (const type in keyValues) {
+                        let value = keyValues[type];
+                        if (value) {
+                            clipBoxOption.planePos.push(value[0]);
+                            clipBoxOption.planeNormal.push(value[1]);
+                        }
+                    }
+                    if (clipBoxOption.planePos.length < 1) return;
+                    layer.setCustomClipBox(clipBoxOption);
+                }
+
+                function removeClipBox(x, y, z) {
+                    const args = [...arguments];
+                    args.forEach((arg) => {
+                        delete keyValues[arg];
+                    })
+                    updateClipBoxOption();
+                }
+
+                /*
+                * 鼠标操作实现编辑
+                */
+                let flag = 1;  //用来控制裁剪的方向，始终保持用户操作方向裁剪，还不太准需要优化
+                function getPlaneById(id) {
+                    return [xPlane, yPlane, zPlane].find((plane) => {
+                        return plane?.entityId === id;
+                    })
+                }
+
+                function isCameraFacing(targetType) {  //判断相机方向和正东正北方向的夹角来确定用户操作和裁剪方向一致
+                    if (!targetType || targetType.includes('z')) return -1;
+                    const dir = targetType.includes('x') ? SuperMap3D.Cartesian3.UNIT_X : SuperMap3D.Cartesian3.UNIT_Y;
+                    const direction = SuperMap3D.Cartesian3.clone(viewer.camera.direction);
+                    SuperMap3D.Cartesian3.normalize(direction, direction);
+                    const dotProduct = SuperMap3D.Cartesian3.dot(direction, dir);
+                    return (dotProduct > 0) ? 1 : -1;
+                }
+
+                const downHandler = new SuperMap3D.ScreenSpaceEventHandler(viewer.scene.canvas);
+                downHandler.setInputAction(function (movement) {
+                    scene.pickAsync(movement.position).then(pickedObject=>{
+                        if (
+                            SuperMap3D.defined(pickedObject) &&
+                            SuperMap3D.defined(pickedObject.id) &&
+                            SuperMap3D.defined(pickedObject.id.plane)
+                        ) {
+                            let plane = getPlaneById(pickedObject.id.id);
+                            flag = isCameraFacing(plane?.type);
+                            editPlaneOption.selectedEntity = pickedObject.id;
+                            editPlaneOption.selectedEntity.plane.outlineColor = SuperMap3D.Color.RED;
+                            scene.screenSpaceCameraController.enableInputs = false;
+                        }
+                    })
+                }, SuperMap3D.ScreenSpaceEventType.LEFT_DOWN);
+
+                const upHandler = new SuperMap3D.ScreenSpaceEventHandler(viewer.scene.canvas);
+                upHandler.setInputAction(function () {
+                    if (editPlaneOption.selectedEntity) {
+                        editPlaneOption.selectedEntity.plane.outlineColor = SuperMap3D.Color.WHITE;
+                        editPlaneOption.selectedEntity = undefined;
+                    }
+                    scene.screenSpaceCameraController.enableInputs = true;
+                }, SuperMap3D.ScreenSpaceEventType.LEFT_UP);
+
+                // Update plane on mouse move
+                const moveHandler = new SuperMap3D.ScreenSpaceEventHandler(viewer.scene.canvas);
+                moveHandler.setInputAction(function (movement) {
+                    if (editPlaneOption.selectedEntity) {
+                        let plane = getPlaneById(editPlaneOption.selectedEntity.id);
+                        const delta = movement.endPosition.y - movement.startPosition.y;
+                        editPlaneOption[plane.type] += delta * flag * 0.5; // 控制鼠标拖动步长
+                        setClipBox(plane.type, layer);
+                    }
+                }, SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+
+                $("#xAxis").on("change", function () { // 不能同时监听.on("input change")，否则会触发两次生成两个裁剪面
+                    if (this.checked) {
+                        xPlane = addPlane('x', layerPos);
+                        setClipBox('x', layer);
+                    } else {
+                        viewer.entities.removeById(xPlane?.entityId);
+                        removeClipBox('x');
+                    }
+                })
+                $("#yAxis").on("change", function () {
+                    if (this.checked) {
+                        yPlane = addPlane('y', layerPos);
+                        setClipBox('y', layer);
+                    } else {
+                        viewer.entities.removeById(yPlane?.entityId);
+                        removeClipBox('y');
+                    }
+                })
+                $("#zAxis").on("change", function () {
+                    if (this.checked) {
+                        zPlane = addPlane('z', layerPos);
+                        setClipBox('z', layer);
+                    } else {
+                        viewer.entities.removeById(zPlane?.entityId);
+                        removeClipBox('z');
+                    }
+                })
+
+                $("#showPlane").on("change", function () {
+                    const isDisplay = Boolean(this.checked);
+                    showPlane(xPlane?.entityId, isDisplay);
+                    showPlane(yPlane?.entityId, isDisplay);
+                    showPlane(zPlane?.entityId, isDisplay);
+                })
+
+                $("#clear").click(function () {
+                    removePlane();
+                    removeClipBox('x', 'y', 'z');
+                    $('#xAxis').prop('checked', false);
+                    $('#yAxis').prop('checked', false);
+                    $('#zAxis').prop('checked', false);
+                })
+            })
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>视域体监控范围</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./style/vuecommon.css" rel="stylesheet">
+    <script src="./js/config.js"></script>
+    <script src="./js/layerTree/vue.global.js"></script>
+    <script src="./js/layerTree/naive-ui.min.js"></script>
+    <script src="./js/computeVisibleArea.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container" style="display: none;">
+        <div id="app">
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-header-title">视域体监控范围</div>
+                    <span class="panel-header-close" id="close">X</span>
+                </div>
+
+                <!-- vue component content -->
+                <n-config-provider :theme-overrides="overridesTheme" :theme="darkTheme" style="margin-top: 20px;">
+                    <n-scrollbar style="max-height: 520px;padding-right: 10px;" trigger="none">
+
+                        <div class="row-item">
+                            <span>方位角(&deg;)</span>
+                            <div class="slider-box" style="width: 120px; margin-left: 70px;">
+                                <n-slider v-model:value="state.direction" :min="0.0" :max="360.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.direction" style="width:60px" :min="0.0" :max="360.0"
+                                :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>俯仰角(&deg;)</span>
+                            <div class="slider-box" style="width: 120px; margin-left: 70px;">
+                                <n-slider v-model:value="state.pitch" :min="-90.0" :max="90.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.pitch" style="width:60px" :min="-90.0" :max="90.0"
+                                :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>距离(m)</span>
+                            <div class="slider-box" style="width: 120px; margin-left: 77px;">
+                                <n-slider v-model:value="state.distance" :min="1.0" :max="2000.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.distance" style="width:60px" :min="1.0" :max="2000.0"
+                                :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>水平视角(&deg;)</span>
+                            <div class="slider-box" style="width: 120px; margin-left: 56px;">
+                                <n-slider v-model:value="state.horizontalFov" :min="1.0" :max="179.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.horizontalFov" style="width:60px" :min="1.0"
+                                :max="360.0" :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>垂直视角(&deg;)</span>
+                            <div class="slider-box" style="width: 120px; margin-left: 56px;">
+                                <n-slider v-model:value="state.verticalFov" :min="1.0" :max="179.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.verticalFov" style="width:60px" :min="1.0" :max="360.0"
+                                :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>监控范围(m&sup2;)</span>
+                            <n-input-number disabled v-model:value="state.regionArea" style="width: 208px"
+                                :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                    </n-scrollbar>
+
+                    <div class="btn-row-item" style="margin-left: 134px;">
+                        <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false" @click="draw"
+                            style="margin-right: 5px;">绘制</n-button>
+                        <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false" @click="query"
+                            style="margin-right: 5px; width: 76px;">监控范围</n-button>
+                        <n-button :focusable="false" text-color="#fff" @click="clear">清除</n-button>
+                    </div>
+                </n-config-provider>
+
+            </div>
+        </div>
+    </div>
+    <div class="loading-container">
+        <div class="circle"></div>
+    </div>
+    <script type="module">
+        import DrawHandler from "./js/lib/DrawHandler.js";
+
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(2),  // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+            // 打开场景
+            const promise = scene.open(URL_CONFIG.SCENE_CBD);
+            promise.then(function (layers) {
+                document.querySelector('.loading-container').style.display = 'none';
+                document.querySelector('.vue-container').style.display = 'block';
+
+                scene.camera.setView({
+                    destination: SuperMap3D.Cartesian3.fromDegrees(116.44366835831197, 39.907137217792666, 48.237028126511696),
+                    orientation: {
+                        heading: 1.6310555040487564,
+                        pitch: 0.0017367269669030794,
+                        roll: 3.007372129104624e-12
+                    }
+                });
+
+                // 初始化Vue组件
+                initVueComponents(scene, viewer);
+            })
+        }
+
+
+        // 初始化Vue组件
+        function initVueComponents(scene, viewer) {
+            // 对象解构
+            const { reactive, watch } = Vue;
+            const { darkTheme } = naive;
+
+            // 初始化变量
+            const state = reactive({
+                direction: 150,
+                pitch: 10,
+                distance: 200,
+                verticalFov: 60,
+                horizontalFov: 80,
+                regionArea: " "
+            });
+
+            // 绘制类
+            const drawHandler = new DrawHandler(viewer, {
+                openMouseTip: false,
+            });
+
+            // 观察点
+            let viewPosition;
+
+            // 先将此标记置为true，不激活鼠标移动事件中对可视域分析对象的操作
+            let mouseViewFlag = true;
+
+            // 创建可视域分析对象
+            const viewshed3D = new SuperMap3D.ViewShed3D(scene);
+            viewshed3D.visibleAreaColor = SuperMap3D.Color.GREEN.withAlpha(0);
+            viewshed3D.hiddenAreaColor = SuperMap3D.Color.RED.withAlpha(0);
+
+            const handler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+            // 鼠标移动时间回调
+            handler.setInputAction(function (e) {
+                // 若此标记为false，则激活对可视域分析对象的操作
+                if (!mouseViewFlag) {
+                    //获取鼠标屏幕坐标,并将其转化成笛卡尔坐标
+                    const windowPosition = e.endPosition;
+                    scene.pickPositionAsync(windowPosition).then((last) => {
+                        //计算该点与视口位置点坐标的距离
+                        const distance = SuperMap3D.Cartesian3.distance(viewPosition, last);
+
+                        if (distance > 0) {
+                            // 将鼠标当前点坐标转化成经纬度
+                            const cartographic = SuperMap3D.Cartographic.fromCartesian(last);
+                            const longitude = SuperMap3D.Math.toDegrees(cartographic.longitude);
+                            const latitude = SuperMap3D.Math.toDegrees(cartographic.latitude);
+                            const height = cartographic.height;
+                            // 通过该点设置可视域分析对象的距离及方向
+                            viewshed3D.setDistDirByPoint([longitude, latitude, height]);
+                        }
+                    })
+                }
+            }, SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+            handler.setInputAction(function (e) {
+                //鼠标右键事件回调，不再执行鼠标移动事件中对可视域的操作
+                mouseViewFlag = true;
+            }, SuperMap3D.ScreenSpaceEventType.RIGHT_CLICK);
+
+
+            const draw = async function () {
+                viewshed3D.distance = 0.1;
+                mouseViewFlag = true;
+
+                const position = await drawHandler.startPoint();
+                if (!position) return;
+                viewPosition = position;
+
+                if (mouseViewFlag) {
+                    const cartographic = SuperMap3D.Cartographic.fromCartesian(position);
+                    const longitude = SuperMap3D.Math.toDegrees(cartographic.longitude);
+                    const latitude = SuperMap3D.Math.toDegrees(cartographic.latitude);
+                    const height = cartographic.height;
+                    // 设置视口位置
+                    viewshed3D.viewPosition = [longitude, latitude, height];
+                    viewshed3D.build();
+                    // 将标记置为false以激活鼠标移动回调里面的设置可视域操作
+                    mouseViewFlag = false;
+                }
+            }
+            const query = function () {
+                const viewshedCamera = new SuperMap3D.Camera(scene);
+                const frustum = viewshedCamera.frustum;
+                frustum.fov = SuperMap3D.Math.toRadians(viewshed3D.horizontalFov);
+                frustum.near = 1.0;
+                frustum.far = Math.max(viewshed3D.distance, 10);
+                let viewPos = SuperMap3D.Cartesian3.fromDegreesArrayHeights(viewshed3D.viewPosition)[0];
+                viewshedCamera.setView({
+                    destination: viewPos,
+                    orientation: {
+                        heading: SuperMap3D.Math.toRadians(viewshed3D.direction),
+                        pitch: SuperMap3D.Math.toRadians(viewshed3D.pitch)
+                    }
+                });
+
+                viewer.entities.removeById('viewshed3D-polygon');
+                const points = computeVisibleArea(viewshedCamera);
+                const polygon = viewer.entities.add({
+                    id: "viewshed3D-polygon",
+                    polygon: {
+                        hierarchy: points,
+                        material: SuperMap3D.Color.fromCssColorString("rgba(0,183,239,0.5)"),
+                    }
+                });
+                let polygonGeometry = new SuperMap3D.PolygonGeometry({
+                    polygonHierarchy: new SuperMap3D.PolygonHierarchy(
+                        points
+                    ),
+                    height: 200
+                })
+                const area = scene.globe.computeSurfaceArea(polygonGeometry, scene.globe.ellipsoid, 0.001)
+                state.regionArea = area.toFixed(2);
+            }
+            const clear = function () {
+                viewshed3D.removeAllClipRegion();
+                viewer.entities.removeAll();
+
+                viewshed3D.distance = 0.1;
+                mouseViewFlag = true;
+            }
+
+            // 创建Vue示例
+            const App = {
+                setup() {
+                    watch(() => state.direction,
+                        (val) => {
+                            viewshed3D.direction = parseFloat(val);
+                        }
+                    );
+
+                    watch(() => state.pitch,
+                        (val) => {
+                            viewshed3D.pitch = parseFloat(val);
+                        }
+                    );
+
+
+                    watch(() => state.distance,
+                        (val) => {
+                            viewshed3D.distance = parseFloat(val);
+                        }
+                    );
+
+                    watch(() => state.verticalFov,
+                        (val) => {
+                            viewshed3D.verticalFov = parseFloat(val);
+                        }
+                    );
+
+                    watch(() => state.horizontalFov,
+                        (val) => {
+                            viewshed3D.horizontalFov = parseFloat(val);
+                        }
+                    );
+
+                    return {
+                        state,
+                        darkTheme,
+                        draw,
+                        query,
+                        clear,
+                        overridesTheme: { // 重写主题样式
+                            common: {
+                                primaryColor: "rgba(52, 153, 229, 1)",
+                                primaryColorHover: "rgba(52, 153, 229, 1)",
+                                primaryColorPressed: "rgba(255,255,255,0.85)",
+                                primaryColorSuppl: "rgba(255,255,255,0.45)",
+                            },
+                            Button: {
+                                fontSizeMedium: "14px", // 底部操作按钮：宽高和文字大小自适应浏览器
+                                textColor: "rgba(255,255,255,0.65)", // 设置默认n-button全局样式
+                                border: "1px solid rgba(255,255,255,0.65)",
+                                textColorHover: "#5EB7F2",
+                                borderHover: "1px solid #5EB7F2",
+                                textColorPressed: "#2276BF",
+                                borderPressed: "1px solid #2276BF",
+                            },
+                            Tabs: {
+                                barColor: "#3499e5", // tabs底部横条颜色
+                                tabFontSizeMedium: "14px", // tabs标签文字大小 - 兼容移动端样式
+                            },
+                            ColorPicker: {
+                                border: "none", // color-pick颜色条去掉边框
+                            },
+                            Divider: {
+                                color: "rgba(255, 255, 255, 0.15)", // 分割条颜色
+                            },
+                            Checkbox: {
+                                colorChecked: "#3499E5",
+                                checkMarkColor: "#fff",
+                            },
+                            Slider: {
+                                fillColor: "#3499E5",
+                                fillColorHover: "#3499E5",
+                                handleSize: "12px",
+                            },
+                            Switch: {
+                                railColorActive: "#3499E5",
+                            },
+                            Select: {
+                                color: "rgba(255, 255, 255, 0.15)"
+                            }
+                        },
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

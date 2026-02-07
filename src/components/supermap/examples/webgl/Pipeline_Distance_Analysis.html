@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>净距分析</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
+    <link href="./style/Pipeline_Distance_Analysis.css" rel="stylesheet">
+    <script type="text/javascript" src="./js/jquery.min.js"></script>
+    <script src="./js/tooltip.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <div id='toolbar' style="position: absolute;left: 5px;top: 5px;display: none;">
+        <div class="titleBox">
+            <div class="titl">净距分析</div>
+            <span class="close2" aria-hidden="false">x</span>
+        </div>
+
+        <div class="inputBox">
+            <label class="lab">基准管线ID</label>
+            <input type="text" id="basePipeID" value="" disabled>
+        </div>
+
+        <div class="inputBox">
+            <label class="lab">目标管线ID</label>
+            <input type="text" id="targetPipeID" value="" disabled>
+        </div>
+
+        <div class="inputBox">
+            <label class="lab">分析结果</label>
+            <input type="text" id="analyseResult" value="" disabled>
+        </div>
+
+        <div class="footBox" style="margin: 0 0 12px 110px;">
+            <button type="button" id="analyse" class="footBtn">分析</button>
+            <button type="button" id="clear" class="footBtn">清除</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+           function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            const EngineType = getEngineType();
+            const viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                },
+                timeline: true
+            });
+            window.viewer = viewer;
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+			const sceneUrl = "http://172.16.120.191:8091/iserver/services/3D-PipeLine3D/rest/realspace";
+            const featuresUrl = `http://172.16.120.191:8091/iserver/services/data-PipeLine3D/rest/data/datasources/Pipe3D/datasets/PipeLine3D/features`
+			const analyseUrl = "http://172.16.120.191:8091/iserver/services/spatialAnalysis-PipeLine3D/restjsr/spatialanalyst/geometry/3d/cleardistance.json";
+            const pipeName = "PipeLine3D@Pipe3D";
+
+            const selectPipeInfo = {
+                basePipe:{
+                    id:undefined,
+                    points:undefined,
+                    radius:undefined
+                },
+                targetPipe:{
+                    id:undefined,
+                    points:undefined,
+                    radius:undefined
+                }
+            }
+
+            const tooltip = createTooltip(document.body);
+            const handler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+
+            const promise = viewer.scene.open(sceneUrl);
+            promise.then(function (layers) {
+				$('#toolbar').show();
+				$('#loadingbar').remove();
+
+                const pipeLayer = viewer.scene.layers.find(pipeName);
+                if(!pipeLayer) return;
+                pipeLayer.multiChoose = true; // 支持多选
+                pipeLayer.selectColorType = 1; // 选中颜色使用替换模式
+
+                viewer.camera.setView({
+                    "destination": {
+                        "x": -2174991.3941230914,
+                        "y": 4383394.33232024,
+                        "z": 4077319.111036012
+                    },
+                    "orientation": {
+                        "heading": 1.869417537904055,
+                        "pitch": -0.47498881548151184,
+                        "roll": 7.863103057559329e-9
+                    }
+                })
+
+                // 点击管道模型获取相关信息并显示中心线
+                let currentTargetPipePrimitive = undefined;
+                handler.setInputAction(async function getPicked(e) {
+                    const pickedObject = await scene.pickAsync(e.position);
+                    if(pickedObject && pickedObject.id){
+                        const featureID = pickedObject.id;
+                        const info = await computedPipeInfoFromFeatureID(featureID);
+                        if (!info || !info.points || !info.radius) return;
+                        const pipePoints = info.points;
+                        const pipeRadius = info.radius;
+                        if (!selectPipeInfo.basePipe.id) {
+                            selectPipeInfo.basePipe.id = featureID;
+                            selectPipeInfo.basePipe.points = pipePoints;
+                            selectPipeInfo.basePipe.radius = pipeRadius;
+                            $("#basePipeID").val(featureID);
+                        } else {
+                            selectPipeInfo.targetPipe.id = featureID;
+                            selectPipeInfo.targetPipe.points = pipePoints;
+                            selectPipeInfo.targetPipe.radius = pipeRadius;
+                            $("#targetPipeID").val(featureID);
+                        }
+                    }
+
+                    // 确保只有选中的管道模型高亮
+                    if (selectPipeInfo.basePipe.id && selectPipeInfo.targetPipe.id) {
+                        pipeLayer.releaseSelection();
+                        pipeLayer.setSelection([selectPipeInfo.basePipe.id, selectPipeInfo.targetPipe.id]);
+                    }
+                }, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+                // 鼠标提示
+                handler.setInputAction(function mouseMove(e) {
+                    if(!selectPipeInfo.basePipe.id){
+                        tooltip.showAt(e.endPosition, '<p>请选择基准管线</p>');
+                    }else if(!selectPipeInfo.targetPipe.id){
+                        tooltip.showAt(e.endPosition, '<p>请选择目标管线</p>');
+                    }else{
+                        tooltip.setVisible(false);
+                    }
+                }, SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+
+                // 根据要素ID从要素列表中获取信息
+                async function computedPipeInfoFromFeatureID(featureID){
+                    if(!featureID || featureID == '') return;
+                    const searchUrl = featuresUrl + `/${featureID}.json`;
+                    const featureInfo = await $.ajax({
+                        url: searchUrl,
+                        method: "GET"
+                    });
+
+                    if(!featureInfo || !featureInfo.geometry) return;
+
+                    // 计算管道中心线
+                    const result = {};
+                    if(featureInfo.geometry.points){
+                        const points = featureInfo.geometry.points;
+                        const firstPoint = points[0];
+                        const lastPoint = points[points.length-1];
+                        const startPoint = SuperMap3D.Cartesian3.fromDegrees(firstPoint.x, firstPoint.y, firstPoint.z);
+                        const endPoint = SuperMap3D.Cartesian3.fromDegrees(lastPoint.x, lastPoint.y, firstPoint.z);
+                        result.points = [startPoint, endPoint];
+                    }
+
+                    // 获取管道半径
+                    if(featureInfo.fieldNames && featureInfo.fieldValues){
+                        const radiusIndex = featureInfo.fieldNames.findIndex(item=>item === 'LINEWIDTH');
+                        result.radius = Number(featureInfo.fieldValues[radiusIndex]);
+                    }
+
+                    return result;
+                }
+
+				// 净距分析
+				$('#analyse').click(function () {
+                    if(!selectPipeInfo.basePipe.points ||!selectPipeInfo.targetPipe.points) return;
+
+                    const sourcePoints = selectPipeInfo.basePipe.points;
+                    const operatePoints = selectPipeInfo.targetPipe.points;
+
+                    // 构造分析参数
+					const analyseParam = {
+						"sourceGeometries": [{
+							"type": "LINE3D",
+							"points": sourcePoints
+						}],
+						"operateGeometries": [{
+							"type": "LINE3D",
+							"points": operatePoints
+						}]
+					}
+
+					$.ajax({
+						url: analyseUrl,
+						async: true,
+						data: JSON.stringify(analyseParam),
+						method: "POST"
+					}).done(function (data) {
+						$.ajax({
+							url: data.newResourceLocation + ".json",
+							method: "GET"
+						}).done(function (data) {
+                            if(data && data.distances){
+                                // 服务端返回的距离为管道中心线之间的距离，真实的管道距离还需要减去两个管道的半径。
+                                const distance = Number(data.distances[0]).toFixed(4);
+                                const basePipeRadius = selectPipeInfo.basePipe.radius;
+                                const targetPipeRadius = selectPipeInfo.targetPipe.radius;
+                                let distanceWithoutRadius = distance - basePipeRadius - targetPipeRadius;
+                                if(distanceWithoutRadius <= 0) distanceWithoutRadius = 0;
+                                $("#analyseResult").val(`${distanceWithoutRadius}（米）`);
+                            }
+						})
+					})
+				});
+
+                // 清除
+                $('#clear').click(function () {
+                    viewer.scene.primitives.removeAll();
+                    pipeLayer.releaseSelection();
+                    selectPipeInfo.basePipe.id = undefined;
+                    selectPipeInfo.targetPipe.id = undefined;
+                    selectPipeInfo.basePipe.points = undefined;
+                    selectPipeInfo.targetPipe.points = undefined;
+                    selectPipeInfo.basePipe.radius = undefined;
+                    selectPipeInfo.targetPipe.radius = undefined;
+                    $("#basePipeID").val('');
+                    $("#targetPipeID").val('');
+                    $("#analyseResult").val('');
+                })
+            });
+
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

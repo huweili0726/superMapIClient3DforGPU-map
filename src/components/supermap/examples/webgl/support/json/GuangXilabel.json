@@ -1,0 +1,221 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "柳州市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          109.36831760489246,
+          24.979315499288615,
+          399.079201275163
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "来宾市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          109.2837155529745,
+          23.663224541085474,
+          68.30317042736344
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "南宁市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.29678808252193,
+          23.120720999328094,
+          109.59940533986219
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "河池市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.83231321109696,
+          24.583863999296768,
+          393.2225805851539
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "梧州市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.09159962192916,
+          23.309438831019578,
+          58.95968291905145
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "桂林市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.4483527543597,
+          25.32458899928156,
+          494.6575349339101
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "崇左市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107.30644619540735,
+          22.47675499934244,
+          271.82870711744286
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "贺州市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          111.51448322680337,
+          24.40016649930041,
+          113.25740446414817
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "百色市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.48269662968399,
+          24.100519558274845,
+          702.0584065927247
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "玉林市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.28387623653087,
+          22.384476999344444,
+          194.37407702367433
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "防城港市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.00610531602314,
+          21.79341307061095,
+          184.35478629899687
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "北海市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          109.32159792061734,
+          21.653262209434744,
+          41.89989473737164
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "贵港市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.07698963064002,
+          23.351451999322877,
+          37.469340681967157
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "SmUserID": 0,
+        "name": "钦州市"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          108.86410644437953,
+          22.150773999349658,
+          57.68747910589077
+        ]
+      }
+    }
+  ]
+}

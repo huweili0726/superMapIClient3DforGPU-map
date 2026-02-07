@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Test">
+    <meta name="SuperMap3D-sandcastle-labels" content="Geometries">
+    <title>SuperMap 洗消阵地选址分析</title>
+
+    <!-- MGIS_SuperMap3D插件 -->
+    <!-- <script src="./js/load-mgisclient3d.js"></script> -->
+
+    <!-- MGIS_SuperMap3D插件打包 -->
+    <!-- <script src="../MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script> -->
+
+    <!-- 组件源码 -->
+    <!-- <script type="module" src="./js/load-cesium-es6.js"></script>
+    <link href="../Source/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../Source/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script> -->
+
+    <!-- 组件打包 -->
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../../Build/SuperMap3D/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script>
+
+    <script src="js/jquery.min.js"></script>
+
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <style>
+        .mInput[type=number] {
+            margin: 5px 0px;
+        }
+
+        .mInput[type=text] {
+            margin: 5px 0px;
+        }
+
+        .mButton {
+            margin: 5px 0px;
+        }
+
+        .mSelect {
+            margin: 0px;
+        }
+
+        .panel-body {
+            padding: 10px;
+            background-color: rgba(38, 38, 38, 0.75);
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="param-container"
+        style=" position: absolute;text-align: center;z-index: 9999;border-radius: 4px;width: 345px;padding: 0;">
+        <summary style="font-size: 20px;padding: 10px;background-color: rgba(50, 50, 50, 1);">选址条件设置</summary>
+        <div class="panel-body">
+            <div>
+                <b>面积配置</b>
+            </div>
+            <div style="margin-left: 10px;">
+                <b>旅级面积：</b>
+                <input class="mInput" style="width: 80px;" id="BrigadeLevel" name="BrigadeLevel" type="number" value="5"
+                    step="1" min="0" max="100" />
+                <b>平方公里</b>
+            </div>
+            <div style="margin-left: 10px;">
+                <b>营级面积：</b>
+                <input class="mInput" style="width: 80px;" id="BattalionLevel" name="BattalionLevel" type="number"
+                    value="3.5" step="1" min="0" max="100" />
+                <b>平方公里</b>
+            </div>
+            <div style="margin-left: 10px;">
+                <b>连级面积：</b>
+                <input class="mInput" style="width: 80px;" id="CompanyLevel" name="CompanyLevel" type="number"
+                    value="0.8" step="1" min="0" max="100" />
+                <b>平方公里</b>
+            </div>
+        </div>
+        <div style="width: 100%;height: 1px;background-color: #337ab7;"></div>
+        <div class="panel-body">
+            <div style="margin-left: 10px;">
+                <b>地形最大坡度：</b>
+                <input class="mInput" style="width: 80px;" id="maxSlopeValue" type="number" value="2" step="0.1" min="0"
+                    max="90" />
+                <b>度</b>
+            </div>
+        </div>
+        <div style="width: 100%;height: 1px;background-color: #337ab7;"></div>
+        <div class="panel-body">
+            <div>
+                <b>水源配置</b>
+            </div>
+            <div style="margin-left: 10px;">
+                <b>水源最大距离：</b>
+                <input class="mInput" style="width: 80px;" id="maxWaterDistance" type="number" value="1.2" step="1"
+                    min="1" max="100" />
+                <b>公里</b>
+            </div>
+            <div style="margin-left: 10px;">
+                <input type="checkbox" id="RiverLineDistance" name="RiverLineDistance">
+                <b>淡水河流</b>
+                <input type="checkbox" id="LakeRegionDistance" name="LakeRegionDistance" style="margin-left: 10px;">
+                <b>淡水湖泊</b>
+            </div>
+        </div>
+        <div style="width: 100%;height: 1px;background-color: #337ab7;"></div>
+        <div class="panel-body">
+            <div style="margin-left: 10px;">
+                <b>公路最大距离：</b>
+                <input class="mInput" style="width: 80px;" id="maxRoadDistance" type="number" value="2.0" step="1"
+                    min="0" max="100" />
+                <b>公里</b>
+            </div>
+        </div>
+        <div style="width: 100%;height: 1px;background-color: #337ab7;"></div>
+        <div class="panel-body">
+            <div>
+                <b>区域限制</b>
+            </div>
+            <div style="margin-left: 10px;">
+                <input type="checkbox" id="ForestArea" name="ForestArea">
+                <b>森林区域</b>
+                <input type="checkbox" id="ResidentialArea" name="ResidentialArea" style="margin-left: 10px;">
+                <b>居民区域</b>
+            </div>
+            <div style="margin-left: 10px;">
+                <input type="checkbox" id="WaterArea" name="WaterArea" style="margin-left: 10px;">
+                <b>水域区域</b>
+                <input type="checkbox" id="SwampArea" name="SwampArea" style="margin-left: 10px;">
+                <b>沼泽区域</b>
+            </div>
+        </div>
+        <div style="width: 100%;height: 1px;background-color: #337ab7;"></div>
+        <div class="panel-body">
+            <input type="button" id="submit" class="btn btn-default" value="提交" onclick="submitParameter()">
+            <input type="button" id="percent" style="width: 50px;">
+        </div>
+        <summary style="font-size: 20px;padding: 10px;background-color: rgba(50, 50, 50, 1);">洗消阵地选址分析</summary>
+        <div class="panel-body">
+            <div style="margin-left: 100px;display: flex;">
+                <input id="BrigadeLevel-level" type="radio" name="level" value="" checked>
+                <b>旅级</b>
+                <input id="BattalionLevel-level" type="radio" style="margin-left: 10px;" name="level" value="">
+                <b>营级</b>
+                <input id="CompanyLevel-level" type="radio" style="margin-left: 10px;" name="level" value="">
+                <b>连级</b>
+            </div>
+            <div class="panel-body">
+                <input type="button" class="btn btn-default" value="开始分析" onclick="analyst()" />
+                <input type="button" class="btn btn-default" value="清除结果" onclick="clearResult()" />
+            </div>
+        </div>
+    </div>
+
+    <div id="Container" class="fullSize"
+        style="position: absolute;left: 0;width: 100%;height: 100%;border: 1px solid #3473b7;">
+        <script id="_sandcastle_script">
+
+            var scene, viewer;
+
+            var analystDeconGround;
+
+            var entities = [];
+
+            function onload(MGIS_SuperMap3D) {
+                'use strict';
+                if (window.Cesium) {
+                    window.SuperMap3D = MGIS_SuperMap3D;
+                }
+                //若本地没有标绘相关服务则可访问支持中心的iserver
+                var host = document.location.toString().match(/file:\/\//) ? "http://localhost:8090" : 'http://' + document.location.hostname + ":8090";
+                viewer = new SuperMap3D.Viewer('Container', {
+                    timeline: false,
+                    animation: false,
+                    shouldAnimation: true,
+                    skyAtmosphere: false,
+                    infoBox: false
+                });
+                scene = viewer.scene;
+
+                viewer.camera.setView({
+                    destination: SuperMap3D.Cartesian3.fromDegrees(116.90483093261719, 29.695358276367188, 200000)
+                });
+
+                analystDeconGround = new SuperMap3D.AnalystCampground({ serverUri: host + "/iserver/services/MGISAnalystDeconGroundServer/rest" })
+
+                init();
+            }
+
+            if (typeof MGIS_SuperMap3D !== 'undefined') {
+                window.startupCalled = true;
+                onload(MGIS_SuperMap3D);
+            }
+
+            document.addEventListener("contextmenu", function event(e) {
+                e.preventDefault();
+            })
+
+            function submitParameter() {
+                $("#submit")[0].disabled = true;
+
+                let campgroundParameter = new SuperMap3D.CampgroundParameter();
+
+                //构建级别列表
+                let troopType_1 = new SuperMap3D.TroopType({ name: $("#BrigadeLevel")[0].name, area: $("#BrigadeLevel").val() });
+                let troopType_2 = new SuperMap3D.TroopType({ name: $("#BattalionLevel")[0].name, area: $("#BattalionLevel").val() });
+                let troopType_3 = new SuperMap3D.TroopType({ name: $("#CompanyLevel")[0].name, area: $("#CompanyLevel").val() });
+                campgroundParameter.troopTypes = [troopType_1, troopType_2, troopType_3];
+
+                //设置坡度信息
+                campgroundParameter.slope = $("#maxSlopeValue").val();
+                campgroundParameter.slopeAlgorithmDataItemUUID = "SlopeValue";
+
+                //设置水源信息
+                campgroundParameter.waterSourceRange = $("#maxWaterDistance").val();
+                if ($("#RiverLineDistance")[0].checked) {
+                    campgroundParameter.waterSourceAlgorithmDataItemUUIDs.push($("#RiverLineDistance")[0].name);
+                }
+                if ($("#LakeRegionDistance")[0].checked) {
+                    campgroundParameter.waterSourceAlgorithmDataItemUUIDs.push($("#LakeRegionDistance")[0].name);
+                }
+
+                //设置公路信息
+                campgroundParameter.roadRange = $("#maxRoadDistance").val();
+                campgroundParameter.roadAlgorithmDataItemUUID = "RoadDistance";
+
+                //设置区域限制信息
+                if ($("#ForestArea")[0].checked) {
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.push($("#ForestArea")[0].name);
+                }
+                if ($("#ResidentialArea")[0].checked) {
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.push($("#ResidentialArea")[0].name);
+                }
+                if ($("#WaterArea")[0].checked) {
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.push($("#WaterArea")[0].name);
+                }
+                if ($("#SwampArea")[0].checked) {
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.push($("#SwampArea")[0].name);
+                }
+
+                //提交参数
+                analystDeconGround.setParameter(campgroundParameter, false);
+
+                $("#BrigadeLevel-level").val(troopType_1.uuid);
+                $("#BattalionLevel-level").val(troopType_2.uuid);
+                $("#CompanyLevel-level").val(troopType_3.uuid);
+
+                //更新进度
+                setTimeout(() => {
+                    let timer = setInterval(() => {
+                        let status = analystDeconGround.getExecuteStatus();
+                        if (status == 1) {
+                            $("#percent").val(analystDeconGround.getExecutePercent() + "%");
+                        } else if (status == 2) {
+                            $("#percent").val("0%");
+                            clearInterval(timer);
+
+                            alert("参数更新完成");
+                            $("#submit")[0].disabled = false;
+                        }
+                    }, 30);
+                }, 300);
+            }
+
+            function analyst() {
+                clearResult();
+
+                let rectangle2D = new SuperMap3D.Rectangle2D(
+                    {
+                        leftBottom: new SuperMap3D.Point2D(116.31539209712658, 29.380138888888876),
+                        rightTop: new SuperMap3D.Point2D(116.98761457869301, 29.989861111111104)
+                    });
+
+                let levelUUID = undefined;
+                if ($("#BrigadeLevel-level")[0].checked) {
+                    levelUUID = $("#BrigadeLevel-level").val();
+                } else if ($("#BattalionLevel-level")[0].checked) {
+                    levelUUID = $("#BattalionLevel-level").val();
+                } else if ($("#CompanyLevel-level")[0].checked) {
+                    levelUUID = $("#CompanyLevel-level").val();
+                }
+
+                let groundAreas = analystDeconGround.analyst(rectangle2D, levelUUID);
+                groundAreas.forEach(groundArea => {
+                    if (groundArea.aryPoint2Ds.length > 0) {
+                        let point2Ds = groundArea.aryPoint2Ds[0];
+                        let positions = [];
+                        point2Ds.getItems().forEach(point2D => {
+                            positions.push(point2D.x);
+                            positions.push(point2D.y);
+                        });
+
+                        let holes = [];
+                        for (let i = 1; i < groundArea.aryPoint2Ds.length; i++) {
+                            let point2Ds = groundArea.aryPoint2Ds[i];
+                            let points = [];
+                            point2Ds.getItems().forEach(point2D => {
+                                points.push(point2D.x);
+                                points.push(point2D.y);
+                            });
+                            holes.push({ positions: SuperMap3D.Cartesian3.fromDegreesArray(points) });
+
+                            entities.push(viewer.entities.add({
+                                polyline: {
+                                    positions: SuperMap3D.Cartesian3.fromDegreesArray(points),
+                                    material: SuperMap3D.Color.GREEN,
+                                    width: 2,
+                                    clampToGround: true
+                                }
+                            }));
+                        }
+
+                        entities.push(viewer.entities.add({
+                            polygon: {
+                                hierarchy: {
+                                    positions: SuperMap3D.Cartesian3.fromDegreesArray(positions),
+                                    holes: holes
+                                },
+                                material: SuperMap3D.Color.GREEN.withAlpha(0.4),
+                                outline: true,
+                                outlineColor: SuperMap3D.Color.GREEN,
+                                outlineWidth: 2,
+                                clampToGround: true
+                            }
+                        }));
+                    }
+                });
+            }
+
+            function clearResult() {
+                entities.forEach(element => {
+                    viewer.entities.remove(element);
+                });
+            }
+
+            function init() {
+                viewer.entities.add({
+                    polyline: {
+                        positions: SuperMap3D.Cartesian3.fromDegreesArray([
+                            116.31539209712658, 29.989861111111104,
+                            116.31539209712658, 29.380138888888876,
+                            116.98761457869301, 29.380138888888876,
+                            116.98761457869301, 29.989861111111104,
+                            116.31539209712658, 29.989861111111104
+                        ]),
+                        material: SuperMap3D.Color.RED,
+                        width: 2,
+                        clampToGround: true
+                    }
+                });
+
+                let campgroundParameter = analystDeconGround.getParameter();
+                campgroundParameter.troopTypes.forEach(element => {
+                    $("#" + element.name).val(element.area);
+                });
+
+                $("#maxSlopeValue").val(campgroundParameter.slope);
+
+                $("#maxWaterDistance").val(campgroundParameter.waterSourceRange);
+                $("#RiverLineDistance")[0].checked =
+                    campgroundParameter.waterSourceAlgorithmDataItemUUIDs.includes($("#RiverLineDistance")[0].name);
+                $("#LakeRegionDistance")[0].checked =
+                    campgroundParameter.waterSourceAlgorithmDataItemUUIDs.includes($("#LakeRegionDistance")[0].name);
+
+                $("#maxRoadDistance").val(campgroundParameter.roadRange);
+
+                $("#ForestArea")[0].checked =
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.includes($("#ForestArea")[0].name);
+                $("#ResidentialArea")[0].checked =
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.includes($("#ResidentialArea")[0].name);
+                $("#WaterArea")[0].checked =
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.includes($("#WaterArea")[0].name);
+                $("#SwampArea")[0].checked =
+                    campgroundParameter.geoRestrictionAlgorithmDataItemUUIDs.includes($("#SwampArea")[0].name);
+
+                $("#BrigadeLevel-level").val(campgroundParameter.troopTypes[0].uuid);
+                $("#BattalionLevel-level").val(campgroundParameter.troopTypes[1].uuid);
+                $("#CompanyLevel-level").val(campgroundParameter.troopTypes[2].uuid);
+            }
+
+        </script>
+    </div>
+</body>
+
+</html>

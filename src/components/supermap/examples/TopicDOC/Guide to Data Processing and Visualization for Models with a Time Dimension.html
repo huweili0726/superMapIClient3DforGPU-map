@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  <title>带时间维度的模型数据处理与可视化指南</title>
+  <link rel="shortcut icon" type="image/x-icon" href="../../web/img/favicon.ico" />
+  <script type="text/javascript" src="../../web/js/include.js"></script>
+  <script type="text/javascript" src="../../web/js/common.js"></script>
+  <link rel="stylesheet" href="../css/common.css" />
+  <link rel="stylesheet" href="../css/examples.css" />
+  <link rel='stylesheet' href='../css/sm-extend.css' />
+  <link rel='stylesheet' href='../css/sm-doc.css' />
+
+</head>
+
+<body class="hold-transition skin-blue sidebar-mini" data-spy="scroll" data-target="#scrollSpy">
+  <!-- ./wrapper -->
+
+  <!--顶部导航-->
+  <header class="header-wrapper main-header icl-header"></header>
+  <script>
+    var navigation = {
+      nav: {
+        title: '2025 u1',
+        path: "../../web/",
+        isLocal: window.isLocal
+      }
+    };
+    utils.loadTemplate(".icl-header", "../../web/template/header.html", navigation);
+  </script>
+  <!--顶部导航 end-->
+
+  <div class="wrapper"></div>
+  <div id='container' class='container' style="width: 90%; padding-top: 75px;">
+    <div class='page-header'>
+      <h1>带时间维度的模型数据处理与可视化指南</h1>
+      <hr />
+      <h2 class="title">背景需求<a name="Summary"> </a></h2>
+      <p>本文档以某项目水动力模型数据为例，介绍如何将带有时间维度的原始数据导入SuperMap iDesktopX，并生成时序模型瓦片，以及如何在SuperMap iClient3D for
+        WebGL/WebGPU中可视化表达时序模型瓦片。</p>
+      <p>文档将从以下几个方面分别进行说明： </p>
+      <ol>
+        <ol class="list">
+          <li><a href="#01a">软件与数据准备；</a></li>
+          <li><a href="#02a">基于原始数据生成时序模型瓦片；</a></li>
+          <li><a href="#03a">服务发布及Web端数据可视化；</a></li>
+        </ol>
+      </ol>
+      <h2 class="title"><a name="01a" style="padding-top:100px; margin-top:-100px;"></a>1、软件与数据准备<a name="Summary"> </a>
+      </h2>
+      <p>软件与数据准备章节提供如何准备软件环境和所需数据的要点。</p>
+      <h3>1.1软件配置</h3>
+      <ul>
+        <ul class="disc">
+          <li>①<strong>生成时序模型瓦片</strong>：需要SuperMap iDesktopX或SuperMap iObjectX，本应用示例中分别使用了SuperMap iDesktopX
+            11.2.0和SuperMap iObject Java 11.2.0版本。</li>
+          <li>②<strong>瓦片数据可视化效果展示</strong>：需要SuperMap iClient3D for WebGL/WebGPU，本应用示例中使用了SuperMap iClient3D for
+            WebGL/WebGPU 11.2.0版本。</li>
+          <li>③<strong>软件下载</strong>：超图技术资源中心平台软件 <a
+              href="http://support.supermap.com.cn/DownloadCenter/ProductPlatform.aspx"
+              target="_blank">http://support.supermap.com.cn/DownloadCenter/ProductPlatform.aspx</a>。
+        </ul>
+      </ul>
+      <h3>1.2原始数据准备</h3>
+      <p>基于水动力模型数据输出的中转数据，数据格式包括*.shp、*.xlsx、*.txt、*csv。</p>
+
+      <h2 class="title"><a name="02a" style="padding-top:100px; margin-top:-100px;"></a>2、基于原始数据生成时序模型瓦片<a
+          name="Summary"></a></h2>
+      <p>SuperMap GIS支持通过点集+约束面或者三角网+要素两种方式生成时序模型瓦片。目前，通常直接采用SuperMap iDestopX通过点集+约束面方式生成时序模型瓦片。</p>
+      <p>只能采用SuperMap iObject Java通过三角网+要素方式生成时序模型瓦片，仅该方式支持多要素追加。</p>
+      <h3>2.1点集+约束面方式生成时序模型瓦片</h3>
+      <p>点集+约束面方式生成时序模型瓦片是指基于原始的时序点位数据及约束面数据生成S3M瓦片数据。如果原始数据包含点数据和约束面数据，可以将点和面数据导入SuperMap iDesktopX后，直接进行瓦片生成操作。</p>
+      <p>如果与本应用示例数据一样，原始数据只有约束面数据，可以按照以下操作方法先从面数据中提取点数据，再进行瓦片生成操作。建议根据具体数据情况合理进行操作。</p>
+      <h4 style=" margin: 18px;">2.1.1点位数据处理</h4>
+      <p>该流程是通过<strong>数据导入</strong>、<strong>坐标设定</strong>、<strong>类型转换</strong>等相关功能，将*.shp格式的原始点位数据导入SuperMap
+        iDesktopX，并转成三维点数据集。具体操作步骤如下： </p>
+      <ul>
+        <ul class="disc">
+          <li>1.<strong>原始数据导入UDB</strong>：</br>
+            （1）打开SuperMap iDesktopX，新建或打开数据源；</br>
+            （2）鼠标右键单击<strong>数据源</strong>，在弹出的右键菜单中选择<strong>导入数据集</strong>命令；</br>
+            （3）在弹出的<strong>数据导入</strong>对话框中，点击<strong>添加文件</strong>按钮，如下图所示，找到*.shp格式的矢量面数据文件；</br>
+            （4）点击<strong>打开</strong>按钮，即可将数据导入软件，得到矢量面数据集。
+            <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs01.jpg">
+              <h4>图2-1导入数据集功能示例</h4>
+            </div>
+          </li>
+
+          <li>2.<strong>矢量面坐标系调整</strong>：</br>
+            通常由于没有对应的坐标系文件，矢量面数据集的坐标系是平面无投影的，这时可以通过配套的地形数据或已知坐标信息来确定数据坐标系，再通过<strong>重新设定坐标系</strong>和<strong>投影转换</strong>功能实现坐标系调整。</br>
+            这里以示例数据为例说明如何调整矢量面数据集坐标系，具体操作步骤如下：</br>
+            （1）通过数据源右键菜单的<strong>导入数据集</strong>命令导入dem地形数据，并且根据示例数据配套的矩形区域_任务范围.kml文件可以确定示例数据的坐标为EPSG Code 4326；</br>
+            （2）鼠标右键单击矢量面数据集，在弹出的菜单栏中选择<strong>属性</strong>命令，在弹出的属性面板中，选择坐标系模块；</br>
+            （3）点击<strong>重新设定坐标系</strong>按钮，在弹出的<strong>坐标系设置</strong>对话框中，将矢量面坐标系设置为EPSG Code 32649；</br>
+            （4）点击<strong>投影转换</strong>按钮，在弹出的<strong>数据集投影转换</strong>对话框中，将数据的坐标系投影转换为EPSG Code 4326。
+            <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs02.jpg">
+              <h4>图2-2坐标系调整示例</h4>
+          </li>
+          <li>3.<strong>矢量面数据集转点数据集</strong>：</br>
+            由于本应用示例数据没有点数据，因此，首先需要通过面转点操作，将矢量面数据集转换为二维点数据集。以下为面转点操作具体步骤：</br>
+            （1）单击<strong>数据</strong>选项卡-><strong>类型转换</strong>下拉按钮-><strong>面转点</strong>功能，弹出的面数据->点数据集对话框。</br>
+            （2）选择上一步得到的矢量面数据集为源数据，内点选择参数设置为子对象内点。设置完成后，单击<strong>运行</strong>即可执行数据转换。
+            <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs03.jpg">
+              <h4>图2-3面转点操作示例</h4>
+            </div>
+          </li>
+          <li>
+            4.<strong>将二维点数据集转成三维点数据集</strong>：该步骤通过<strong>二维点转三维点</strong>操作，将上一步骤得到的二维点数据集转换为三维点数据集，Z坐标需要选择具有高度信息的属性字段，本应用示例数据选择了初始水位。
+            <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs04.jpg">
+              <h4>图2-4二维点转三维点操作示例</h4>
+            </div>
+          </li>
+        </ul>
+      </ul>
+      <h4 style=" margin: 18px;">2.1.2写入点位多时刻水深属性</h4>
+      <p>该流程主要将点数据中多时刻的属性信息写入三维点数据集属性表中。这里是将示例点数据中多时刻的水深信息写入三维点数据集的属性表中。具体操作步骤如下： </p>
+      <ul>
+        <ul class="disc">
+          <li>1.<strong>使用组件代码，将“水深”信息写入三维点数据集的属性表</strong>：</br>
+            首先确定同一点位不同时刻的高度信息来源。</br>
+            例如，示例原始数据中的“模拟结果.txt”文件存储了同一个点位上多时刻的水深信息，并且上一流程得到的三维点数据集属性中的“单元编号”和“模拟结果.txt”文件中“网格编号”是一一对应的。</br>
+            因此，可以通过组件代码，将“水深”信息写入三维点数据集的属性表中。
+            <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs05.jpg">
+              <h4>图2-5多时刻水深信息示例</h4>
+            </div>
+          </li>
+
+          <li>
+            2.<strong>使用DatasetVector.FieldInfos创建不同时刻水深的属性字段</strong>：根据数据的时刻数，通过DatasetVector.FieldInfos创建不同时刻水深的属性字段。关键代码如下图所示。
+            <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs06.jpg">
+              <h4>图2-6通过组件接口创建属性字段的关键代码示例</h4>
+            </div>
+            <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs07.jpg">
+              <h4>图2-7创建属性字段结果示例</h4>
+            </div>
+    </div>
+    </li>
+    <li>3.<strong>将“模拟结果.txt”文件中的水深值，写入属性表</strong>：通过Recordset.SetFieldValue(string name, object
+      value)将“模拟结果.txt”文件中的水深值，写入对应的点位和水深字段里。关键代码如下图所示。
+      <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs08.jpg">
+        <h4>图2-8水深值写入对应属性字段中的关键代码示例</h4>
+      </div>
+      <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs09.jpg">
+        <h4>图2-9水深值写入结果示例</h4>
+      </div>
+    </li>
+    <li>4.<strong>更新“水深1”的字段值</strong>：通过更新列操作为初始时刻的属性值统一赋值。这里将水深1的字段值统一更新为0，以表达初始水位高度。
+      <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs10.jpg">
+        <h4>图2-10初始水位统一赋值示例</h4>
+      </div>
+    </li>
+    </ul>
+    </ul>
+    <p><strong>注意</strong>：</p>
+    <p>（1）当“模拟结果.txt”里没有点的位置信息时，可以通过上述方法，借助组件代码将“水深”信息导入点数据集。</p>
+    <p>（2）如果“模拟结果.txt”记录了点的位置信息，可以直接将其导入成点数据集，并通过追加列的方式将不同时刻的水深值储存到属性表中。</p>
+    <h4 style=" margin: 18px;">2.1.3生成时序模型瓦片</h4>
+    <ul>
+      <ul class="disc">
+        <li>
+          1.<strong>提取淹没区域的范围</strong>：为表示淹没区域范围（即约束面），这里需要将2.1.1中得到的矢量面数据集加载到地图窗口中，并选中所有面对象，单击鼠标右键，在弹出的右键菜单中选择合并”命令，将多个面对象<strong>合并</strong>为一个面对象。如果原始数据本身具有约束面数据可以不进行该操作。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs11.jpg">
+            <h4>图2-11合并面对象示例</h4>
+          </div>
+        </li>
+        <li>2.<strong>瓦片生成操作</strong>：</br>
+          （1）单击<strong>三维数据</strong>选项卡-><strong>瓦片组</strong>-><strong>生成瓦片</strong>下拉按钮-><strong>点集生成时序模型瓦片</strong>功能，弹出<strong>点数据集生成时序模型瓦片</strong>对话框；</br>
+          （2）点数据集设置：选择属性表中存有不同时刻点高度等信息的点数据集。这里选择2.1.2中得到带有不同时刻水深属性的三维点数据集；</br>
+          （3）裁剪数据集设置：选择约束面数据集。这里选择上一步骤得到的面数据集；</br>
+          （4）参数设置：设置线程数、瓦片名称、瓦片路径以及时序字段等参数。其中，时序字段需要选择存有点高度位置信息的属性字段作为时序字段，类型为双精度。这里选择了所有水深字段；</br>
+          （5）设置完成后，单击<strong>运行</strong>即可执行瓦片生成操作。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs12.jpg">
+            <h4>图2-12点数据集生成时序模型瓦片示例</h4>
+          </div>
+      </ul>
+    </ul>
+    <p><strong>注意</strong>：</p>
+    <p>（1）由于原始数据的范围是不规则的，所以生成时序模型瓦片时需要指定瓦片范围进行约束。</p>
+    <p>（2）生成时序模型瓦片时，必须勾选必要的时序字段。</p>
+    <h3>2.2 三角网+要素方式生成时序模型瓦片</h3>
+    <p>该流程首先详细说明了包含矢量数据集的已有数据源的数据组成及操作，然后基于SuperMap iObject Java 11.2.0实现了时序模型瓦片生成和多要素追加。具体操作步骤如下：</p>
+    <h4 style=" margin: 18px;">2.2.1数据组成说明</h4>
+    <p>如果原始数据为NC三角网数据，需要通过自定义开发将NC数据转换为面数据集，并建议将三角网中的点及单个要素信息（例如水深、水温等）存储为单个三维点数据集。 </p>
+    <ul>
+      <ul class="disc">
+        <li>1.<strong>三角网数据</strong>：通过自定义开发在SuperMap iDesktopX中打开解析后的NC三角网数据，并将构成三角网的每个面的结点ID按照顺时针或逆时针方向存入指定字段中。</p>
+          <p>如下图所示的三角面的结点ID分别为28（t1：第一个结点）、43（t2：第二个结点）、42（t3：第三个结点）。</p>
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs13.jpg">
+            <h4>图2-13三角网数据说明示例</h4>
+          </div>
+        </li>
+        <li>2.<strong>三维点数据集</strong>：通过自定义开发工具将组成三角网的各结点输出成三维点数据，每个点数据集具有相同的点位置信息，但具有不同的属性要素信息，例如水温、水深等。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs14.jpg">
+            <h4>图2-14三维点数据集示例</h4>
+          </div>
+        <li>3.<strong>depth数据集</strong>：通过相关操作后，多时序要素值将被存到点的属性表中。如下图“depth”点数据里不同的字段名表达不同的时序，具体字段值表达该时刻的具体水深。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs15.jpg">
+            <h4>图2-15depth数据集属性表示例</h4>
+          </div>
+      </ul>
+    </ul>
+    <h4 style=" margin: 18px;">2.2.2生成时序模型瓦片</h4>
+    <p>该流程主要介绍如何使用11.2.0及更高版本的SuperMap iObject Java生成时序模型瓦片。主要操作步骤及关键代码如下： </p>
+    <ul>
+      <ul class="disc">
+        <li>1.<strong>获取点数据集</strong>：通过如下所示代码打开数据源，获取第一个存有属性要素信息的点数据集。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs16.jpg">
+            <h4>图2-16获取点数据集关键代码示例</h4>
+          </div>
+        </li>
+        <li>2.<strong>获取要素属性</strong>：通过如下所示代码获取第一个属性要素。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs17.jpg">
+            <h4>图2-17获取要素属性关键代码示例</h4>
+          </div>
+        <li>3.<strong>获取时序名称集合</strong>：通过如下代码获取当前属性要素里的时序名称集合。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs18.jpg">
+            <h4>图2-18获取当前要素里的时序名称集合关键代码示例</h4>
+          </div>
+        <li>4.<strong>获取面数据集</strong>：通过如下代码从原始数据中获取三角网（即面数据集）。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs19.jpg">
+            <h4>图2-19获取面数据集关键代码示例</h4>
+          </div>
+        <li>5.<strong>生成时序模型瓦片</strong>：通过以下代码生成时序模型瓦片（关联接口：VectorTemporalCacheBuilder）。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs20.jpg">
+            <h4>图2-20生成时序模型瓦片关键代码示例</h4>
+          </div>
+        <li>6.<strong>追加多要素</strong>：通过以下代码实现多要素追加。
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs21.jpg">
+            <h4>图2-21追加多要素关键代码示例</h4>
+          </div>
+        <li>7.<strong>时序模型瓦片文件示例</strong>
+          <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs22.jpg">
+            <h4>图2-22时序模型瓦片数据结果示例</h4>
+          </div>
+      </ul>
+    </ul>
+    <h2 class="title"><a name="03a" style="padding-top:100px; margin-top:-100px;"></a>3、服务发布及Web端数据可视化<a name="Summary">
+      </a></h2>
+    <h3>3.1保存工作空间</h3>
+    <p>在SuperMap iDesktopX，将章节2中得到的时序模型瓦片数据添加到场景中，并保存场景和工作空间。</p>
+    <h3>3.2发布三维服务</h3>
+    <p>SuperMap iServer将上一步骤得到的工作空间发布为三维服务，具体操作见SuperMap iServer帮助文档。</p>
+    <h3>3.3可视化表达</h3>
+    <p>通过代码在SuperMap iClient3D for WebGL/WebGPU加载上一步发布的三维服务，并采用分层设色的方式进行数据的可视化表达。主要参考代码如下：</p>
+    <pre>
+            	promise.then(function (layers) {
+                layer = layers[0];
+                updateLayerHyp(layer);
+                layer.temporalSetting = new SuperMap3D.TemporalSetting();
+                layer.temporalSetting.location = 0;
+                layer.temporalSetting.changeZValue = true;
+                layer.minTransparentAlpha = 1;
+            </pre>
+
+    <pre>
+            	// 更新图层分层设色函数 
+            function updateLayerHyp(layer, colorIndex = 0, step = 24) { // step 颜色表插入的总数
+                // 图层上的时间总数，11.11 temporalCount,主版本外挂-图层上的时间总数 _temporalInfo
+                let temporalInfo = layer._temporalInfo;
+                temporalCount = temporalInfo.length > 0 ? temporalInfo[colorIndex].count : layer.temporalCount;
+
+                let minValue = layer._hypMinCategory;
+                let maxValue = layer._hypMaxCategory;
+                let hyp = new SuperMap3D.HypsometricSetting();
+                hyp.ColorTable = createColorTable();
+                hyp.DisplayMode = SuperMap3D.HypsometricSettingEnum.DisplayMode.FACE;
+                hyp.Opacity = 1.0;
+                hyp.LineInterval = 1.0;
+                hyp.ColorTableMaxKey = maxValue;
+                hyp.ColorTableMinKey = minValue;
+                //设置非法值颜色
+                hyp.noValueColor = new SuperMap3D.Color(1.0, 0.0, 0.0, 1);
+                hyp.MaxVisibleValue = maxValue;
+                hyp.MinVisibleValue = minValue;
+                hyp.filterMode = SuperMap3D.HypsometricSettingEnum.FilterMode.NEAREST;
+                layer.hypsometricSetting = {
+                    hypsometricSetting: hyp,
+                    analysisMode: SuperMap3D.HypsometricSettingEnum.AnalysisRegionMode.ARM_ALL,
+                };
+            }
+            </pre>
+
+    <pre>
+            // 创建颜色表
+            function createColorTable(keys, colors, alphas) {
+                let colorTable = new SuperMap3D.ColorTable();
+                colorTable.insert(0.0, SuperMap3D.Color.fromCssColorString("#00A2FF").withAlpha(0));
+                colorTable.insert(0.01, SuperMap3D.Color.fromCssColorString("#0082FF").withAlpha(0.3));
+                colorTable.insert(0.05, SuperMap3D.Color.fromCssColorString("#008CFF").withAlpha(0.50));
+                colorTable.insert(0.1, SuperMap3D.Color.fromCssColorString("#0096FF").withAlpha(0.70));
+                colorTable.insert(0.15, SuperMap3D.Color.fromCssColorString("#0096FF").withAlpha(0.70));
+                colorTable.insert(0.30, SuperMap3D.Color.fromCssColorString("#00B9FF").withAlpha(0.70));
+                colorTable.insert(0.40, SuperMap3D.Color.fromCssColorString("#00C4FF").withAlpha(0.70));
+                colorTable.insert(0.48, SuperMap3D.Color.fromCssColorString("#00A0FF").withAlpha(0.80));
+                colorTable.insert(0.56, SuperMap3D.Color.fromCssColorString("#9AFF00").withAlpha(0.80));
+                colorTable.insert(0.60, SuperMap3D.Color.fromCssColorString("#00FF8C").withAlpha(0.80));
+                colorTable.insert(0.64, SuperMap3D.Color.fromCssColorString("#FFC400").withAlpha(0.80));
+                colorTable.insert(0.72, SuperMap3D.Color.fromCssColorString("#FF7B00").withAlpha(0.80));
+                colorTable.insert(0.80, SuperMap3D.Color.fromCssColorString("#0089FF").withAlpha(0.80));
+                colorTable.insert(0.88, SuperMap3D.Color.fromCssColorString("#0089FF").withAlpha(0.80));
+                colorTable.insert(0.96, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.80));
+                colorTable.insert(1.04, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.88));
+                colorTable.insert(1.12, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.90));
+                colorTable.insert(1.20, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.90));
+                colorTable.insert(1.28, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.90));
+                colorTable.insert(1.36, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.90));
+                colorTable.insert(1.44, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.90));
+                colorTable.insert(1.52, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.90));
+                colorTable.insert(1.61, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(0.90));
+                colorTable.insert(10.97198486328125, SuperMap3D.Color.fromCssColorString("#005CE6").withAlpha(1.0));
+                return colorTable
+            }
+            </pre>
+    <h3>3.4多时序模型瓦片加载效果</h3>
+    <p>v11i(2024)正式版产品包里我们提供了<strong>多时序多要素水场</strong>范例可以参考</p>
+    <div class="pageImage"><img src="../images/TopicDOC/temporalHydroAttrs23.jpg">
+      <h4>图2-23Web端加载多时序模型瓦片效果示例</h4>
+    </div>
+    <p><strong>注意</strong>：</p>
+    <p>（1）如果只在SuperMap iClient3D for WebGL/WebGPU 11.1.1中实现数据可视化，建议使用SuperMap iDesktopX 11.1.1生成时序模型瓦片。</p>
+    <p>（2）如果在SuperMap iClient3D for WebGL/WebGPU 11.2.0及以上版本中实现数据可视化， SuperMap iDesktopX的版本不受限制。</p>
+
+
+
+  </div>
+  </div>
+  <!--法律申明-->
+  <div style="background-color: #1c1c1c;color: rgba(222,222,222,0.71)" class="icl-copyright"
+    data-i18n="footer.copyright">
+    版权所有 © 2000-2025 北京超图软件股份有限公司 京ICP备11032883号-8
+    京公网安备11010502008721 甲测资字11002074
+  </div>
+  <!--footer end-->
+  <script type="text/javascript" src="../js/utils.js"></script>
+</body>
+
+</html>

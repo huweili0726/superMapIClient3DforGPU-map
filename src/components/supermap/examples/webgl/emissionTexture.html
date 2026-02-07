@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>动态自发光纹理</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script type="text/javascript" src="./js/jquery.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/tooltip.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="params-setting-container">
+        <div class="params-setting-anchor" title="显示/隐藏参数面板"><span class="fui-expand"></span></div>
+        <div class="params-setting">
+            <div class="param-item">
+                <label for="bloomShow">开启泛光</label>
+                <input type="checkbox" id="bloomShow">
+            </div>
+            <div class="param-item">
+                <label>亮度阈值</label>
+                <input type="range" id="bloom-threshold" min="0" max="1" value="1" step="0.1" style="width: 140px">
+            </div>
+            <div class="param-item">
+                <label>泛光强度</label>
+                <input type="range" id="bloom-intensity" min="0" max="10" value="1" step="0.1" style="width: 140px">
+            </div>
+            <div class="param-item">
+                <label for="hdrShow">开启HDR</label>
+                <input type="checkbox" id="hdrShow">
+            </div>
+            <div class="param-item">
+                <label for="startNight">开启夜景</label>
+                <input type="checkbox" id="startNight">
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        function onload(SuperMap3D) {
+            var EngineType = getEngineType();
+            var viewer = new SuperMap3D.Viewer('Container', {
+                timeline: true,
+                contextOptions: {
+                    contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+        function init(SuperMap3D, scene, viewer) {
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+            viewer.resolutionScale = window.devicePixelRatio;
+            scene.globe.show = true;
+            scene.sun.show = true;
+            scene.bloomEffect.show = false;
+            scene.hdrEnabled = false;
+
+            var pointLight3, pointLight4, pointLight5, pointLight7, pointLight8;
+
+            function switchLight(isNightLight) {
+                pointLight3 && scene.removeLightSource(pointLight3)
+                pointLight4 && scene.removeLightSource(pointLight4)
+                pointLight5 && scene.removeLightSource(pointLight5)
+                pointLight7 && scene.removeLightSource(pointLight7)
+                pointLight8 && scene.removeLightSource(pointLight8)
+                if (isNightLight) {
+                    //设置环境光(夜晚)
+                    scene.lightSource.ambientLightColor = new SuperMap3D.Color(0.15, 0.15, 0.15, 1);
+
+                    // 新增标识点光源-建筑1
+                    var pointLightPos3 = new SuperMap3D.Cartesian3.fromDegrees(106.571285893056, 29.560471562369, 360);
+                    var pointLightOptions3 = {
+                        cutoffDistance: 2000,
+                        color: new SuperMap3D.Color(0.6, 0.3, 0.1, 1.0),
+                        intensity: 1.5
+                    };
+                    pointLight3 && scene.removeLightSource(pointLight3)
+                    pointLight3 = new SuperMap3D.PointLight(pointLightPos3, pointLightOptions3);
+                    scene.addLightSource(pointLight3);
+
+                    // 新增标识点光源-建筑2
+                    var pointLightPos4 = new SuperMap3D.Cartesian3.fromDegrees(106.440835888168, 29.5860776240763, 200);
+                    var pointLightOptions4 = {
+                        cutoffDistance: 3000,
+                        color: new SuperMap3D.Color(0.9, 0.3, 0.3, 1.0),
+                        intensity: 2.5
+                    };
+                    pointLight4 && scene.removeLightSource(pointLight4)
+                    pointLight4 = new SuperMap3D.PointLight(pointLightPos4, pointLightOptions4);
+                    scene.addLightSource(pointLight4);
+
+                    // 新增标识点光源-建筑3
+                    var pointLightPos5 = new SuperMap3D.Cartesian3.fromDegrees(106.595770644757, 29.6701144056505, 200);
+                    var pointLightOptions5 = {
+                        cutoffDistance: 3000,
+                        color: new SuperMap3D.Color(0.6, 0.3, 0.1, 1.0),
+                        intensity: 2.5
+                    };
+                    pointLight5 && scene.removeLightSource(pointLight5)
+                    pointLight5 = new SuperMap3D.PointLight(pointLightPos5, pointLightOptions5);
+                    scene.addLightSource(pointLight5);
+                    // 新增标识点光源-建筑5
+                    var pointLightPos7 = new SuperMap3D.Cartesian3.fromDegrees(106.434327803494, 29.504044534872, 200);
+                    var pointLightOptions7 = {
+                        cutoffDistance: 3000,
+                        color: new SuperMap3D.Color(0.6, 0.6, 0.1, 1.0),
+                        intensity: 2.5
+                    };
+                    pointLight7 && scene.removeLightSource(pointLight7)
+                    pointLight7 = new SuperMap3D.PointLight(pointLightPos7, pointLightOptions7);
+                    scene.addLightSource(pointLight7);
+
+                    // 新增标识点光源-建筑6
+                    var pointLightPos8 = new SuperMap3D.Cartesian3.fromDegrees(106.596187330546, 29.4309579929797, 200);
+                    var pointLightOptions8 = {
+                        cutoffDistance: 2000,
+                        color: new SuperMap3D.Color(0.2, 0.6, 0.1, 1.0),
+                        intensity: 2.5
+                    };
+                    pointLight8 && scene.removeLightSource(pointLight8)
+                    pointLight8 = new SuperMap3D.PointLight(pointLightPos8, pointLightOptions8);
+                    scene.addLightSource(pointLight8);
+                } 
+            }
+
+            var promise = scene.open(URL_CONFIG.SCENE_CHONGQING_TX);
+            promise.then(function (layers) {
+                var layer = scene.layers.find("wireFrame");
+
+                //修改线框
+                layer.style3D.lineWidth = 1.5;
+                layer.style3D.lineColor = new SuperMap3D.Color(0 / 255, 0 / 255, 0 / 255, 1);
+                layer.style3D.fillStyle = SuperMap3D.FillStyle.Fill_And_WireFrame;
+                layer.wireFrameMode = SuperMap3D.WireFrameType.EffectOutline;
+
+                var hyp = new SuperMap3D.HypsometricSetting();
+
+                //设置自发光纹理
+                function setHypsometric(layer) {
+                    hyp.emissionTextureArray = [
+                        {
+                            url: "./images/Texture03.jpg",
+                            USpeed: 0,
+                            VSpeed: 0,
+                            UTiling: 100,
+                            VTiling: 100
+                        },
+                        {
+                            url: "./images/Texture04.jpg",
+                            USpeed: 0,
+                            VSpeed: 0,
+                            UTiling: 80,
+                            VTiling: 80
+                        },
+                        {
+                            url: "./images/Texture03.jpg",
+                            USpeed: 0,
+                            VSpeed: 0,
+                            UTiling: 100,
+                            VTiling: 100
+                        },
+                        {
+                            url: "./images/Texture03.jpg",
+                            USpeed: 0,
+                            VSpeed: 0,
+                            UTiling: 100,
+                            VTiling: 100
+                        },
+                        {
+                            url: "./images/Texture05.jpg",
+                            USpeed: 0.5,
+                            VSpeed: 0,
+                            UTiling: 50,
+                            VTiling: 50
+                        },
+                        {
+                            url: "./images/Texture01.jpg",
+                            USpeed: 0.5,
+                            VSpeed: 0,
+                            UTiling: 30,
+                            VTiling: 30
+                        },
+                        {
+                            url: "./images/Texture01.jpg",
+                            USpeed: 0.5,
+                            VSpeed: 0,
+                            UTiling: 20,
+                            VTiling: 20
+                        },
+                        {
+                            url: "./images/Texture03.jpg",
+                            USpeed: 0,
+                            VSpeed: 0,
+                            UTiling: 100,
+                            VTiling: 100
+                        },
+                        {
+                            url: "./images/Texture04.jpg",
+                            USpeed: 0,
+                            VSpeed: 0,
+                            UTiling: 70,
+                            VTiling: 70
+                        },
+                        {
+                            url: "./images/Texture02.jpg",
+                            USpeed: 0,
+                            VSpeed: 0,
+                            UTiling: 70,
+                            VTiling: 70
+                        }
+                    ]
+                    layer.hypsometricSetting = {
+                        hypsometricSetting: hyp,
+                    }
+
+                };
+                //泛光开关
+                $("#bloomShow").on("input change", function () {
+                    viewer.scene.bloomEffect.show = this.checked;
+                    viewer.scene.bloomEffect.threshold = $("#bloom-threshold").val();
+                    viewer.scene.bloomEffect.bloomIntensity = $("#bloom-intensity").val();
+                });
+                //泛光阈值
+                $("#bloom-threshold").on("input change", function () {
+                    $("#bloom-threshold-label").text(this.value);
+                    viewer.scene.bloomEffect.threshold = this.value;
+                });
+                //泛光强度
+                $("#bloom-intensity").on("input change", function () {
+                    $("#bloom-intensity-label").text(this.value);
+                    viewer.scene.bloomEffect.bloomIntensity = this.value;
+                });
+                //HDR开关
+                $("#hdrShow").on("input change", function () {
+                    viewer.scene.hdrEnabled = this.checked;
+                    viewer.scene.scanEffect.show = false;
+                });
+                $(".params-setting-anchor").click(function () {
+                    $(".params-setting").toggleClass("params-setting-hide");
+                });
+
+                var imageLayer;
+                // 开启夜景
+                $("#startNight").on("input", function (e) {
+                    if (!$(this).prop('checked')) {
+                        viewer.clock.currentTime = SuperMap3D.JulianDate.fromDate(new Date(2022, 10, 18, 14)); // 白天
+                        roadArr.forEach(function (e) {
+                            e.show = false;
+                        });
+                        layer.hypsometricSetting = {
+                            hypsometricSetting: undefined,
+                        }
+                        layer.style3D.fillStyle = SuperMap3D.FillStyle.Fill_And_WireFrame;
+                        // 刷新场景
+                        layer.refresh();
+                        scene.skyAtmosphere.show = true;
+                        viewer.scene.hdrEnabled = false;
+                        viewer.scene.bloomEffect.show = false;
+                        switchLight(false); // 白天
+                        viewer.imageryLayers.remove(imageLayer);
+                        return;
+                    } else {
+                        viewer.clock.currentTime = SuperMap3D.JulianDate.fromDate(new Date(2022, 10, 18, 21)); // 黑夜
+                        roadArr.forEach(function (e) {
+                            e.show = true;
+                        });
+                        switchLight(true); // 黑夜
+                        scene.skyAtmosphere.show = false;
+
+                        setHypsometric(layer);//夜景
+                        imageLayer = viewer.imageryLayers.addImageryProvider(new SuperMap3D.SingleTileImageryProvider({
+                            url: './images/BlackMarble_2016-1.jpg'
+                        }));
+
+                        // 关掉边框线
+                        layer.style3D.fillStyle = SuperMap3D.FillStyle.Fill;
+                        // 刷新场景
+                        layer.refresh();
+                    }
+                });
+            });
+
+            var roadArr = [];
+            //加载线数据
+            var roadLine1 = SuperMap3D.GeoJsonDataSource.load('./data/json/lineback_1.json');
+            roadLine1.then(function (dataSource) {
+                viewer.dataSources.add(dataSource);
+                dataSource.show = false;
+                roadArr.push(dataSource);
+                var lines_1 = dataSource.entities.values;
+                for (var i = 0; i < lines_1.length; i++) {
+                    var line = lines_1[i];
+                    line.polyline.material = new SuperMap3D.PolylineGlowMaterialProperty({ //设置Glow材质
+                        glowPower: 0.005,
+
+                        color: new SuperMap3D.Color(8, 5, 0, 1)
+                    });
+                    line.polyline.width = 5;
+                }
+
+            }).catch((err) => console.log('rejected', err));
+
+            var roadLine2 = SuperMap3D.GeoJsonDataSource.load('./data/json/lineback2_1.json');
+            roadLine2.then(function (dataSource) {
+                roadArr.push(dataSource);
+                dataSource.show = false;
+                viewer.dataSources.add(dataSource);
+                var lines_2 = dataSource.entities.values;
+                for (var i = 0; i < lines_2.length; i++) {
+                    var line = lines_2[i];
+                    line.polyline.material = new SuperMap3D.PolylineGlowMaterialProperty({ //设置Glow材质
+                        glowPower: 0.005,
+                        color: new SuperMap3D.Color(8, 5, 0, 1)
+                    });
+                    line.polyline.width = 5;
+                }
+            }).catch((err) => console.log('rejected', err));
+
+            var roadLine3 = SuperMap3D.GeoJsonDataSource.load('./data/json/lineback3_1.json');
+            roadLine3.then(function (dataSource) {
+                viewer.dataSources.add(dataSource);
+                var lines_3 = dataSource.entities.values;
+                for (var i = 0; i < lines_3.length; i++) {
+                    var line = lines_3[i];
+                    line.polyline.material = new SuperMap3D.PolylineGlowMaterialProperty({ //设置Glow材质
+                        glowPower: 0.005,
+                        color: new SuperMap3D.Color(8, 5, 0, 1)
+                    });
+                    line.polyline.width = 5;
+                }
+            }).catch((err) => console.log('rejected', err));
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

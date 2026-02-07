@@ -1,0 +1,865 @@
+<!--********************************************************************
+* Copyright© 2000 - 2020 SuperMap Software Co.Ltd. All rights reserved.
+*********************************************************************-->
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>SuperMap iClient3D for WebGL/WebGPU 开发指南</title>
+		<link rel="shortcut icon" type="image/x-icon" href="../img/favicon.ico" />
+		<link rel="stylesheet" href="../css/develop.css">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+		<script type="text/javascript" include='isIntroduction,lazyload' src="../js/include.js"></script>
+		<script src=""></script>
+	</head>
+
+	<body class="hold-transition skin-blue">
+
+		<!--顶部导航-->
+		<header class="header-wrapper main-header icl-header"></header>
+		<script>
+			var identification = {
+				name: "WebGL"
+			};
+			var navigation = {
+				nav: {
+					title: "2025",
+					path: "../../web/",
+					isLocal: window.isLocal
+				}
+			};
+			utils.loadTemplate(".icl-header", "../template/header.html", navigation);
+		</script>
+		<!--顶部导航 end-->
+
+		<!--内容区-->
+		<div>
+			<div class="row">
+				<!--左侧导航-->
+				<div class="leftnav" role="complementary">
+					<nav class="icl-docs-sidebar hidden-print hidden-xs hidden-sm affix-top">
+						<ul class="nav icl-docs-sidenav">
+							<li>
+								<a href="#Ready">准备</a>
+								<ul class="nav">
+									<li>
+										<a href="#GetLibs">获取SuperMap iClient3D for WebGL/WebGPU</a>									</li>
+									<li>
+										<a href="#Import">引入</a>									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="#createMap">创建三维场景</a>
+								<ul class="nav">
+									<li>
+										<a href="#iServerMap">初始化三维球</a>									</li>
+									<li>
+										<a href="#thirdMap">设置地图风格</a>									</li>
+								</ul>
+							</li>
+
+							<li>
+								<a href="#multiProjection">添加图层</a>
+								<ul class="nav">
+									<li>
+										<a href="#addTerrain">添加地形图层</a>									</li>
+									<li><a href="#WebGL">（1）选择使用WebGL方式加载</a></li>
+									<li><a href="#WebGPU">（2）选择使用WebGPU方式加载</a></li>
+									<li>
+										<a href="#addImage">添加影像图层</a>									</li>
+									<li>
+										<a href="#addS3M">添加S3M图层</a>									</li>
+									<li>
+										<a href="#addMVT">添加MVT图层</a>									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="#SetScene">场景设置</a>
+								<ul class="nav">
+									<li>
+										<a href="#SetColor">颜色设置</a>									</li>
+									<li>
+										<a href="#SetBloomEffect">泛光效果设置</a>									</li>
+									<li>
+										<a href="#MultiViewer">分屏显示</a>									</li>
+									<li>
+										<a href="#OutPutScene">场景出图</a>									</li>
+								</ul>
+							</li>
+
+							<li>
+								<a href="#Query">查询</a>
+								<ul class="nav">
+									<li>
+										<a href="#SpatialQuery">空间查询</a>									</li>
+									<li>
+										<a href="#AttQuery">属性查询</a>									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="#Measure">量算</a>							</li>
+							<li>
+								<a href="#DrawHandler">绘制</a>							</li>
+							<li>
+								<a href="#Analysis">三维空间分析</a>
+								<ul class="nav">
+									<li>
+										<a href="#SightLine">通视分析</a>									</li>
+									<li>
+										<a href="#viewshed3D">可视域分析</a>									</li>
+									<li>
+										<a href="#ShadowQuery">阴影分析</a>									</li>
+									<li>
+										<a href="#SkyLine">天际线分析</a>									</li>
+								</ul>
+							</li>
+						</ul>
+						<a class="back-to-top" href="#top">
+							返回顶部						</a>					</nav>
+				</div>
+				<!--右侧内容区-->
+				<div class="col-md-9" id="main-content" role="main">
+					<div class="icl-docs-header">
+						<h2 class="product">SuperMap iClient3D for WebGL/WebGPU开发指南</h2>
+					</div>
+					<p class="lead">主要介绍 SuperMap iClient3D for WebGL/WebGPU的入门用法，详细的接口参数请参考
+						<a href="../apis/3dwebgl.html">
+							API</a>页面。
+					</p>
+					<!-- 1 准备 -->
+					<div class="section icl-docs-section">
+						<h2 id="Ready" class="section-title">准备</h2>
+						<div class="section section-level-2">
+							<div class="section section-level-2">
+								<h3 id="GetLibs" class="section-title">获取</h3>
+								<p>开发时需要引入SuperMap iClient3D for WebGL/WebGPU。其中包括必备的CSS文件和JS文件，你可以通过<a href="https://support.supermap.com/DownloadCenter/ProductPlatform.aspx" target="_blank">SuperMap技术资源中心</a>下载最新版本。
+								</p>
+								<ul>
+							</div>
+							<!-- 1.2 引入 -->
+							<div>
+								<h3 id="Import" class="section-title">引入</h3>
+								<p>（1) 将获取版本解压缩后，在examples/Webgl文件夹下新建HTML文件，在文件中通过&lt;script&gt; 标签将SuperMap3D.js文件引入:</p>
+								<figure class="highlight">
+									<pre class="javascript">
+                                        <code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;/html&gt;</code>
+                                    </pre>
+								</figure>
+								<p>（2) 同时应该根据需要在 &lt;head&gt; 标签中引入的其他CSS文件和JS文件，如下：</p>
+								<figure class="highlight">
+									<pre class="javascript">
+                                        <code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head>
+    &lt;meta charset="utf-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    &lt;link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet"&gt;
+    &lt;link href="./css/pretty.css" rel="stylesheet"&gt;
+    &lt;script src="./js/jquery.min.js"&gt;&lt;/script&gt
+    &lt;script src="./js/config.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"&gt;&lt;/script&gt;
+    
+&lt;/head&gt;
+&lt;/html&gt;</code>
+                                    </pre>
+								</figure>
+
+								</figure>
+							</div>
+						</div>
+					</div>
+					<!-- 1.3 模块化开发 -->
+					<div>
+					</div>
+					<!-- 1.4 兼容ie8 -->
+
+					<!-- 2 创建一幅地图-->
+					<div class="section icl-docs-section">
+						<h2 id="createMap" class="section-title" style="padding-top:100px; margin-top:-100px;">创建三维场景</h2>
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<!-- 2.1 SuperMap iServer 发布的地图 -->
+							<h3 id="iServerMap" class="section-title" style="padding-top:100px; margin-top:-100px;">初始化三维球</h3>
+							<p>在上述准备章节中，已经新建了一个 HTML 页面，接下来在页面中继续添加代码以初始化三维球，如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                    <code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head>
+    &lt;meta charset="utf-8"&gt;
+    &lt;meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    &lt;link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet"&gt;
+    &lt;link href="./css/pretty.css" rel="stylesheet"&gt;
+    &lt;script src="./js/jquery.min.js"&gt;&lt;/script&gt
+    &lt;script src="./js/config.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id="Container"&gt;&lt;/div&gt;
+&lt;script&gt;
+    function onload(SuperMap3D) {
+        var viewer = new SuperMap3D.Viewer('Container');
+		viewer.scenePromise.then(function(scene){
+			//scene需在scenePromise的回调中获取
+		});
+    }
+&lt;/html&gt;
+</code>
+                            </pre>
+							</figure>
+							<h3 id="thirdMap" class="section-title" style="padding-top:100px; margin-top:-100px;">设置地图风格</h3>
+							<p>在初始化时，三维球上可以叠加<strong>本地图片</strong>作为影像。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>
+    function onload(SuperMap3D) {
+        var viewer = new SuperMap3D.Viewer('Container');
+            //使用本地的一张图片初始化地球，建议图片长宽比2:1
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.SingleTileImageryProvider({
+            url :  './images/worldimage.jpg'
+        }));
+    }</code>
+                            </pre>
+							<a href="../../examples/webgl/image.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+							<p><strong>引用在线地图：</strong>SuperMap iClient3D for WebGL/WebGPU对多种互联网地图信息进行了封装，例如高德地图、天地图等，并分别为其提供了影像添加接口
+								<code>UrlTemplateImageryProvider</code>和<code>TiandituImageryProvider</code></p>
+							<p>添加高德影像作为底图。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>
+    function onload(SuperMap3D) {
+        var viewer = new SuperMap3D.Viewer('Container');
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+            url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+            minimumLevel: 3,
+            maximumLevel: 18,
+        }));
+    }</code>
+                            </pre>
+							<a href="../../examples/webgl/gaodeMap.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+
+							<p>添加天地图影像作为底图。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>
+    function onload(SuperMap3D) {
+        var viewer = new SuperMap3D.Viewer('Container');
+        var labelImagery = new SuperMap3D.TiandituImageryProvider({
+            mapStyle: SuperMap3D.TiandituMapsStyle.CIA_C,//天地图全球中文注记服务
+            token: TOKEN_TIANDITU //由天地图官网申请的密钥
+        });
+        viewer.imageryLayers.addImageryProvider(labelImagery);
+    }</code>
+                            </pre>
+							<a href="../../examples/webgl/tianditu.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+
+							<!--分割线-->
+						</div>
+					</div>
+
+					<!-- 3 添加图层 -->
+					<div class="section icl-docs-section">
+						<h2 id="multiProjection" class="section-title" style="padding-top:100px; margin-top:-100px;">添加图层</h2>
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<p>SuperMap iClient3D for WebGL/WebGPU提供多种接口，支持在创建好的三维场景中添加种类丰富的数据图层。在此以添加地形图层为例介绍使用WebGPU方式加载的方法。</p>
+							<p id="addTerrain"><strong>添加地形图层：</strong></p>
+							<p id="WebGL" style="padding-top:100px; margin-top:-100px;">（1）选择使用WebGL方式加载（默认WebGL2）。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                            <code> var viewer = new SuperMap3D.Viewer('Container',{
+        //创建地形服务提供者的实例，url为SuperMap iServer发布的TIN地形服务
+        terrainProvider : new SuperMap3D.SuperMapTerrainProvider({
+            url : URL_CONFIG.SiChuan_TERRAIN,
+            isSct : true,//地形服务源自SuperMap iServer发布时需设置isSct为true
+            invisibility:true
+        }),
+    });
+    viewer.resolutionScale = window.devicePixelRatio;
+	viewer.scene.camera.setView({
+        destination : new SuperMap3D.Cartesian3(-1206939.1925299785, 5337998.241228442, 3286279.2424502545),
+        orientation : {
+            heading : 1.4059101895600987,
+            pitch : -0.20917672793046682,
+            roll : 2.708944180085382e-13
+        }
+    });</code>
+                            </pre>
+							</figure>
+							<p id="WebGPU"style="padding-top:60px; margin-top:-60px;">（2）选择使用WebGPU方式加载。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                            <code>var viewer = new SuperMap3D.Viewer('Container',{
+        //创建地形服务提供者的实例，url为SuperMap iServer发布的TIN地形服务
+        terrainProvider : new SuperMap3D.SuperMapTerrainProvider({
+            url : URL_CONFIG.SiChuan_TERRAIN,
+            isSct : true,//地形服务源自SuperMap iServer发布时需设置isSct为true
+            invisibility:true
+        }),
+        //使用WebGPU方式加载（若不开启此属性，则默认以WebGL2.0方式加载）
+        contextOptions: {
+            contextType : SuperMap3D.ContextType.WebGPU,
+        }
+    });
+    viewer.resolutionScale = window.devicePixelRatio;
+    viewer.scenePromise.then(function(scene){
+    	//初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）
+        init(SuperMap3D, scene, viewer);
+    });
+    function init(SuperMap3D, scene, viewer){
+	    viewer.scene.camera.setView({
+	        destination : new SuperMap3D.Cartesian3(-1206939.1925299785, 5337998.241228442, 3286279.2424502545),
+	        orientation : {
+	            heading : 1.4059101895600987,
+	            pitch : -0.20917672793046682,
+	            roll : 2.708944180085382e-13
+	        }
+	    });
+}
+                            </code>
+                            </pre>
+							</figure>
+							<p id="addImage"><strong>添加影像图层。代码如下：</strong></p>
+							<figure class="highlight">
+								<pre class="javascript">
+                            <code> var layer = new SuperMap3D.SuperMapImageryProvider({
+    url : TEST_IMG  //影像服务的地址
+});
+var imgLayer = viewer.imageryLayers.addImageryProvider(layer)</code>
+                            </pre>
+							</figure>
+							<p id="addS3M"><strong>添加S3M图层：</strong>对于在SuperMap iServer上发布的S3M服务，可以通过以下两种方式打开。</p>
+							<p>（1）通过open接口将整个场景打开，这种方法简单易操作且不易出现遗漏图层的情况。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                            <code>
+var promise = scene.open("http://localhost:8090/iserver/services/3D-test/rest/realspace");  //url为在SuperMap iServer上发布的服务地址</code>
+                            </pre>
+							</figure>
+							<p>（2）通过<code>addS3MTilesLayerByScp</code>接口进行添加，该方式的优势是，可以根据自己的需要选择部分图层添加到场景中，提高加载性能，但需要加载多图层的整个场景时，不如scene.open方便。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var promise = scene.addS3MTilesLayerByScp('http://localhost:8090/iserver/services/3D-test/rest/realspace/datas/zj/config',
+    {
+        name : "base",
+        cacheKey: "123456"  //三维缓存密钥，由SuperMap iServer设置和获取
+    });
+promise.then(function(layer){
+    layer.visible = true;
+});</code>
+                            </pre>
+							</figure>
+
+							<p id="addMVT"><strong>添加MVT图层：</strong>在SuperMap桌面产品中将生成好的矢量瓦片地图通过SuperMap iServer发布成矢量瓦片或三维服务后，在SuperMap iClient3D for WebGL/WebGPUL中利用接口addVectorTilesMap将MVT图层服务添加到场景中。代码如下：
+							</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var mvtMap = scene.addVectorTilesMap({
+    url: url,  //MVT的服务地址
+    canvasWidth: 512,
+    name: 'testMVT',
+    viewer: viewer
+});</code>
+                            </pre>
+							</figure>
+
+						</div>
+					</div>
+
+					<!-- 4 场景风格 -->
+					<div class="section icl-docs-section">
+						<h2 id="SetScene" class="section-title" style="padding-top:100px; margin-top:-100px;">场景设置</h2>
+						<p>SuperMap iClient3D for WebGL/WebGPU提供了多种接口，方便用户对场景进行个性化设置。</p>
+						<div class="section section-level-2">
+							<h3 id="SetColor" class="section-title" style="padding-top:100px; margin-top:-100px;">颜色设置</h3>
+							<p>SuperMap iClient3D for WebGL/WebGPU支持对场景的颜色进行设置。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>viewer.scene.colorCorrection.show = true;
+viewer.scene.colorCorrection.saturation = $("#saturation").val();
+viewer.scene.colorCorrection.brightness = $("#brightness").val();
+viewer.scene.colorCorrection.contrast = $("#contrast").val();
+viewer.scene.colorCorrection.hue = $("#hue").val();
+    //颜色校正开关
+$("#colorCorrectionShow").on("input change", function() {
+viewer.scene.colorCorrection.show = this.checked;
+});
+    //调节饱和度
+$("#saturation").on("input change", function() {
+	viewer.scene.colorCorrection.saturation = this.value;
+});
+    //调节亮度
+$("#brightness").on("input change", function() {
+viewer.scene.colorCorrection.brightness = this.value;
+});
+    //调节对比度
+$("#contrast").on("input change", function() {
+viewer.scene.colorCorrection.contrast = this.value;
+});
+    //调节色调
+$("#hue").on("input change", function() {
+viewer.scene.colorCorrection.hue = this.value;
+});</code>
+                            </pre>
+							<a href="../../examples/webgl/colorCorrection.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+						</div>
+
+						<div class="section section-level-2">
+							<h3 id="SetBloomEffect" class="section-title" style="padding-top:100px; margin-top:-100px;">泛光效果设置</h3>
+							<p>SuperMap iClient3D for WebGL/WebGPU支持在场景中开启泛光，并支持对泛光效果进行设置。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>//泛光效果开关
+viewer.scene.bloomEffect.show = this.checked;
+//调节亮度阈值
+$("#bloom-threshold").on("input change", function() {
+    viewer.scene.bloomEffect.threshold = parseFloat(this.value);
+});
+//调节泛光强度
+$("#bloom-intensity").on("input change", function() {
+viewer.scene.bloomEffect.bloomIntensity = parseFloat(this.value);
+});</code>
+                            </pre>
+							<a href="../../examples/webgl/airlinesTrailLines.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+						</div>
+
+						<div class="section section-level-2">
+							<h3 id="MultiViewer" class="section-title" style="padding-top:100px; margin-top:-100px;">分屏显示</h3>
+							<p>支持对场景进行分屏显示，在不同的视口中对场景中的数据进行不同的操作，目前SuperMap iClient3D for WebGL/WebGPU支持设置“NONE”、“HORIZONTAL”、“TRIPLE”、“VERTICAL”、“VerticalTrisection”和“QUAD”等11种模式。代码如下：
+							</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>scene.multiViewportMode = SuperMap3D.MultiViewportMode[value];</code>
+                            </pre>
+							<a href="../../examples/webgl/multiViewport.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+						</div>
+						<div class="section section-level-2">
+							<h3 id="OutPutScene" class="section-title" style="padding-top:100px; margin-top:-100px;">场景出图</h3>
+							<p>SuperMap iClient3D for WebGL/WebGPU支持在浏览器中将指定场景的某一角度作为图片保存至本地。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>//根据图片生成画布
+    function convertImageToCanvas(image) {
+        var canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        return canvas;
+    }；
+//将图片保存至本地
+    function download(base64data) {
+        var image = new Image();
+        image.src = base64data;
+        image.onload = function() {
+            var canvas = convertImageToCanvas(image);
+            url = canvas.toDataURL("image/jpeg");
+            var a = document.createElement('a');
+            var event = new MouseEvent('click');
+            a.download = (new Date()).getTime() + ".jpg"; // 指定下载图片的名称
+            a.href = url;
+            a.dispatchEvent(event); // 触发超链接的点击事件
+        }
+    } </code>
+                            </pre>
+							<a href="../../examples/webgl/outputScene.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+						</div>
+
+					</div>
+
+					<!-- 5 查询-->
+					<div class="section icl-docs-section">
+						<h2 id="Query" class="section-title" style="padding-top:100px; margin-top:-100px;">查询</h2>
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<h3 id="SpatialQuery" class="section-title" style="padding-top:100px; margin-top:-100px;">空间查询</h3>
+							<p>SuperMap iClient3D for WebGL/WebGPU提供了丰富的接口，支持场景模型的空间位置信息查询和GPU空间查询等功能。</p>
+							<p><strong>空间位置信息查询：</strong>实时获取鼠标点击位置的空间信息。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var handler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+
+    //设置鼠标左键单击回调事件
+    handler.setInputAction(function(e) {
+        //首先移除之前添加的点
+        viewer.entities.removeAll();
+        //获取点击位置笛卡尔坐标
+        var position = scene.pickPosition(e.position);
+
+        //将笛卡尔坐标转化为经纬度坐标
+        var cartographic = SuperMap3D.Cartographic.fromCartesian(position);
+        var longitude = SuperMap3D.Math.toDegrees(cartographic.longitude);
+        var latitude = SuperMap3D.Math.toDegrees(cartographic.latitude);
+        var height = cartographic.height;
+        if(height < 0) {
+            height = 0;
+        }
+
+        //创建弹出框信息，即时查看获取的位置信息
+        var entity = new SuperMap3D.Entity({
+            name : "位置信息",
+            description : createDescription(SuperMap3D, [longitude, latitude, height])
+        });
+        viewer.selectedEntity = entity;
+
+        //为更直观地展示查询的位置，在点击处添加对应点
+        viewer.entities.add(new SuperMap3D.Entity({
+            point : new SuperMap3D.PointGraphics({
+                color : new SuperMap3D.Color(1, 1, 0),
+                pixelSize : 10,
+                outlineColor : new SuperMap3D.Color(0, 1, 1)
+            }),
+            position : SuperMap3D.Cartesian3.fromDegrees(longitude, latitude , height + 0.5)
+        }));
+    }, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);</code>
+                                </pre>
+								<a href="../../examples/webgl/getFeatureByGeometry.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+							<p><strong>GPU空间查询：</strong>在场景中创建查询对象，通过GPU空间分析，获取查询对象与模型或模型子对象的空间关系。目前查询对象支持GeoCone、 GeoBox、GeoCylinder、GeoEllipsoid和GeoSphere等几类。代码如下：
+							</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                    <code>var geometry = undefined;
+var pos = undefined;
+var mode = SuperMap3D.PositionMode.Intersects
+var spatialQuery = new SuperMap3D.SpatialQuery3D(scene);
+var handler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+
+handler.setInputAction(function (evt) {
+    var length = 100;
+    var width = 100;
+    var height = 100;
+    // 获取鼠标点击的笛卡尔坐标
+    var cartesian = scene.pickPosition(evt.position);
+    var cartographic = SuperMap3D.Cartographic.fromCartesian(cartesian);
+    pos = new SuperMap3D.Point3D(SuperMap3D.Math.toDegrees(cartographic.longitude), SuperMap3D.Math.toDegrees(cartographic.latitude), cartographic.height);
+    geometry = new SuperMap3D.GeoBox(length, width, height);
+    geometry.geoPosition = pos;
+    spatialQuery.geometry = geometry;
+    spatialQuery.positionMode = mode;
+    spatialQuery.layers = layerSelect;
+    spatialQuery.outlineColor = SuperMap3D.Color.CORNFLOWERBLUE;
+    spatialQuery.fillStyle = SuperMap3D.FillStyle.Fill_And_WireFrame
+
+    spatialQuery.build();
+    tooltip.setVisible(false);
+    handler.removeInputAction(SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE)  //移除鼠标移动事件监听
+}, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);</code>
+                            </pre>
+							<a href="../../examples/webgl/spatialQuery3D.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+						</div>
+
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<h3 id="AttQuery" class="section-title" style="padding-top:100px; margin-top:-100px;">属性查询</h3>
+							<p>属性查询是指在场景中对S3M模型的图层或对象属性进行查询。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                    <code>function doSqlQuery(SQL) {
+    var getFeatureParam;
+    getFeatureParam = new SuperMap.REST.FilterParameter({
+        attributeFilter: SQL //SQL为查询条件
+});</code>
+                            </pre>
+							<a href="../../examples/webgl/getFeatureBySQL.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+							</figure>
+						</div>
+					</div>
+					<!--6 量算-->
+					<div class="section icl-docs-section">
+						<h2 id="Measure" class="section-title" style="padding-top:100px; margin-top:-100px;">量算</h2>
+						<p>SuperMap iClient3D for WebGL/WebGPU提供了量算功能，支持在前端对地形或S3M模型进行距离、面积和高差等指标的实时量算，并支持贴地距离和贴地面积的量算，以测距为例代码如下：
+						</p>
+						<figure class="highlight">
+							<pre class="javascript">
+                                <code>var handlerDis;
+//初始化测量距离
+    handlerDis = new SuperMap3D.MeasureHandler(viewer, SuperMap3D.MeasureMode.Distance, clampMode);
+//注册测距功能事件
+    handlerDis.measureEvt.addEventListener(function (result) {
+    var dis = Number(result.distance);
+    var selOptV = $("#selOpt").val();
+    var positions = result.positions;
+    if (selOptV == 3 || selOptV == 4) {
+        dis = Number(calcClampDistance(positions));
+    }
+    var distance = dis > 1000 ? (dis / 1000).toFixed(2) + 'km' : dis.toFixed(2) + 'm';
+    handlerDis.disLabel.text = '距离:' + distance;
+});</code>
+                            </pre>
+							<a href="../../examples/webgl/measureHandler.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+						</figure>
+					</div>
+
+					<div class="section icl-docs-section">
+						<h2 id="DrawHandler" class="section-title" style="padding-top:100px; margin-top:-100px;">绘制</h2>
+						<p>SuperMap iClient3D for WebGL/WebGPU支持在前端实时进行点、线、面的绘制，以绘制线为例代码如下：</p>
+						<figure class="highlight">
+							<pre class="javascript">
+                                <code>var handlerLine = new SuperMap3D.DrawHandler(viewer,SuperMap3D.DrawMode.Line);
+handlerLine.activeEvt.addEventListener(function(isActive){
+    if(isActive == true){
+        viewer.enableCursorStyle = false;
+        viewer._element.style.cursor = '';
+        $('body').removeClass('drawCur').addClass('drawCur');
+    }
+    else{
+        viewer.enableCursorStyle = true;
+        $('body').removeClass('drawCur');
+    }
+});
+handlerLine.movingEvt.addEventListener(function(windowPosition){
+    if(handlerLine.isDrawing){
+        tooltip.showAt(windowPosition,'&lt;p&gt;左键点击确定折线中间点&lt;/p&gt;&lt;p&gt;右键单击结束绘制&lt;/p&gt;');
+    }
+    else{
+        tooltip.showAt(windowPosition,'&lt;p&gt;点击绘制第一个点&lt;/p&gt;');
+    }
+});
+handlerLine.drawEvt.addEventListener(function(result){
+    tooltip.setVisible(false);
+});</code>
+                            </pre>
+							<a href="../../examples/webgl/drawHandler.html" target="_blank" style="font-size: 10px;float:right;margin-top:-14px;">查看范例&nbsp;»</a>
+						</figure>
+					</div>
+					<!--三维空间分析-->
+					<div class="section icl-docs-section">
+						<h2 id="Analysis" class="section-title" style="padding-top:100px; margin-top:-100px;">三维空间分析</h2>
+						<p>SuperMap iClient3D for WebGL/WebGPU支持对三维场景进行一系列的空间分析。</p>
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<h3 id="SightLine" class="section-title" style="padding-top:100px; margin-top:-100px;">通视分析</h3>
+							<p>通视分析是指对场景中的指定两个点之间的通视性进行分析，具体步骤如下：</p>
+							<p>（1）打开三维场景或添加三维图层，此步骤可参考
+								<a href="#multiProjection">“添加图层”</a>中的"叠加S3M图层。</p>
+							<p>（2）将获取的点位坐标转为经纬度坐标，进行通视分析。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var cartographic = SuperMap3D.Cartographic.fromCartesian(position);
+var longitude = SuperMap3D.Math.toDegrees(cartographic.longitude);
+var latitude = SuperMap3D.Math.toDegrees(cartographic.latitude);
+var height = cartographic.height;</code>
+                            </pre>
+							</figure>
+							<p>（3）添加观察点和目标点，进行通视分析。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>//设置观察点
+sightline.viewPosition = [longitude, latitude, height];</code>
+                                </pre>
+							</figure>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>//添加目标点
+sightline.addTargetPoint({
+    position : [longitude, latitude, height],
+    name : "point" + new Date()
+});</code>
+                            </pre>
+							</figure>
+							<p>如有疑问请参考范例代码<a href="../../examples/webgl/sightline.html" target="_blank">通视分析</a>。</p>
+						</div>
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<h3 id="viewshed3D" class="section-title" style="padding-top:100px; margin-top:-100px;">可视域分析</h3>
+							<p>可视域分析是指在三维场景中，基于指定观察点，对一定视域内对象的可见性进行分析。主要步骤有：</p>
+							<p>（1）打开三维场景。</p>
+							<p>（2）创建可视域分析对象，并指定可视区域和不可视区域的显示样式。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var viewshed3D = new SuperMap3D.ViewShed3D(scene);
+var colorStr1 = viewshed3D.visibleAreaColor.toCssColorString();
+var colorStr2 = viewshed3D.hiddenAreaColor.toCssColorString();
+$("#colorPicker1").spectrum({
+    color: colorStr1,
+    showPalette: true,
+    showAlpha: true,
+    localStorageKey: "spectrum.demo",
+    palette: palette
+});
+$('#colorPicker2').spectrum({
+    color: colorStr2,
+    showPalette: true,
+    showAlpha: true,
+    localStorageKey: "spectrum.demo",
+    palette: palette
+});</code>
+                            </pre>
+							</figure>
+							<p>（3）设置视口位置。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var viewPosition;
+viewshed3D.viewPosition = [longitude, latitude, height];</code>
+                            </pre>
+							</figure>
+							<p>（4）以观察者位置（视口位置点）为球心，在场景中拾取一个点，将以观察者位置与该点的连线为半径绘制三维的可视域。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>//计算该点与视口位置点坐标的距离
+var distance = SuperMap3D.Cartesian3.distance(viewPosition, last);
+if (distance > 0) {
+    // 将鼠标当前点坐标转化成经纬度
+    var cartographic = SuperMap3D.Cartographic.fromCartesian(last);
+    var longitude = SuperMap3D.Math.toDegrees(cartographic.longitude);
+    var latitude = SuperMap3D.Math.toDegrees(cartographic.latitude);
+    var height = cartographic.height;
+    // 通过该点设置可视域分析对象的距离及方向
+    viewshed3D.setDistDirByPoint([longitude, latitude, height]);
+}</code>
+                            </pre>
+							</figure>
+							<p>（5）进行可视域分析。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>viewshed3D.build()；</code>
+                            </pre>
+							</figure>
+							<p>如有疑问请参考范例代码<a href="../../examples/webgl/viewshed3D.html" target="_blank">可视域分析</a>。</p>
+						</div>
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<h3 id="ShadowQuery" class="section-title" style="padding-top:100px; margin-top:-100px;">阴影分析</h3>
+							<p>阴影分析是指对场景中指定区域在指定时间段内的阴影率进行分析。主要步骤有：</p>
+							<p>（1）打开三维场景，需要注意的是在创建Viewer时，应将阴影开启，确保阴影可用。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var viewer = new SuperMap3D.Viewer('Container', {
+    shadows : true
+});</code>
+                                </pre>
+							</figure>
+							<p>（2）创建阴影查询对象，并设置图层的阴影模式。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>//创建阴影查询对象
+var shadowQuery = new SuperMap3D.ShadowQueryPoints(scene);
+//设置图层的阴影模式
+layers[0].shadowType = 2; //2表示图层上的所有模型都产生阴影
+layers[1].shadowType = 2;</code>
+                                </pre>
+							</figure>
+							<p>（3）绘制阴影分析区域。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var handlerPolygon = new SuperMap3D.DrawHandler(viewer,SuperMap3D.DrawMode.Polygon,0);
+handlerPolygon.activeEvt.addEventListener(function(isActive){
+    if(isActive == true){
+    viewer.enableCursorStyle = false;
+    viewer._element.style.cursor = '';
+    $('body').removeClass('drawCur').addClass('drawCur');
+    }
+    else{
+    viewer.enableCursorStyle = true;
+    $('body').removeClass('drawCur');
+    }
+});</code>
+                                </pre>
+							</figure>
+
+							<p>（4）阴影分析完成后，还可以获取分析区域内空间位置上的阴影率。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var shadowRadio=shadowQuery.getShadowRadio(cartographic);</code>
+                                </pre>
+							</figure>
+							<p>（5）执行阴影分析。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>shadowQuery.build();</code>
+                                </pre>
+							</figure>
+							<p>如有疑问请参考范例代码<a href="../../examples/webgl/shadowQuery.html" target="_blank">阴影分析</a>。</p>
+						</div>
+
+						<p class="lead"></p>
+						<div class="section section-level-2">
+							<h3 id="SkyLine" class="section-title" style="padding-top:100px; margin-top:-100px;">天际线分析</h3>
+							<p>天际线分析是指对三维场景的天际线进行绘制和分析。主要步骤有：</p>
+							<p>（1）打开三维场景。</p>
+							<p>（2）创建天际线分析对象。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var skyline = new SuperMap3D.Skyline(scene);</code>
+                                </pre>
+							</figure>
+							<p>（3）为使结果直观，将当前相机位置设置为天际线分析的视口。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code> //天际线分析的视口位置设置成当前相机位置
+skyline.viewPosition = [longitude, latitude, height];
+//设置俯仰和方向
+skyline.pitch = SuperMap3D.Math.toDegrees(scene.camera.pitch);
+skyline.direction = SuperMap3D.Math.toDegrees(scene.camera.heading);
+skyline.radius = 10000; // 设置天际线分析半径，单位：米
+</code>
+                                </pre>
+							</figure>
+							<p>（4）执行天际线分析。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>skyline.build();</code>
+                                </pre>
+							</figure>
+							<p>（5）提取二维天际线。代码如下：</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>var object = skyline.getSkyline2D();</code>
+                                </pre>
+							</figure>
+							<p>（6）此外，SuperMap iClient3D for WebGL/WebGPU还支持绘制限高体以辅助规划和建设部门的决策。 限高体的含义是在当前视口下，为保持当前的天际线不变，在指定区域内修建的建筑高度不能超过该限高体的高度。代码如下：
+							</p>
+							<figure class="highlight">
+								<pre class="javascript">
+                                <code>skyline.addLimitbody({
+        position: arr,
+        name: "limitBody"
+    });</code>
+                                </pre>
+							</figure>
+							<p>如有疑问请参考范例代码<a href="../../examples/webgl/skyline.html" target="_blank">天际线分析</a>。</p>
+						</div>
+					</div>
+
+				</div>
+
+			</div>
+		</div>
+		<!--内容区 end-->
+
+		<!--footer-->
+		<div class="footer-box">
+			<footer class="main-footer icl-footer"></footer>
+		</div>
+		<script>
+			utils.loadTemplate(".icl-footer", "../template/footer.html", navigation);
+		</script>
+		<!--footer end-->
+
+		<script type="text/javascript" src="../js/common.js"></script>
+		<script>
+			var myLazyLoad = new LazyLoad({
+				elements_selector: "iframe"
+			});
+		</script>
+	</body>
+
+</html>

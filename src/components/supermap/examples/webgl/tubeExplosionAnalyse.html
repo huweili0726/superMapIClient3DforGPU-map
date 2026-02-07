@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>爆管分析</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./style/tubeExplosionAnalyse.css" rel="stylesheet">
+    <link href="./js/layerTree/icons/iconfont.css" rel="stylesheet">
+    <script src="./js/layerTree/vue.global.js"></script>
+    <script src="./js/layerTree/naive-ui.min.js"></script>
+    <script src="./js/layerTree/axios.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container" id="add-symbol-container" style="display: none;">
+        <div id="app">
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-header-title">爆管分析</div>
+                    <span class="panel-header-close" id="close">X</span>
+                </div>
+
+                <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false"
+                    @click="addExplosionAnalysisPoint" style="margin-right: 10px">添加爆管地点</n-button>
+                <n-button :focusable="false" text-color="#fff" @click="clear">清除查询结果</n-button>
+                <br/>
+                <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false" @click="findUpstream"
+                    style="margin-right: 10px">查找上游设施</n-button>
+                <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false" @click="findDownstream"
+                    style="margin-right: 10px">查找下游设施</n-button>
+                <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false" @click="searchNearestValve"
+                    style="margin-right: 10px">查找最近阀门</n-button>
+                <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false" @click="searchNearestMeeting"
+                    style="margin-right: 10px">查找最近汇点
+                </n-button>
+
+            </div>
+        </div>
+    </div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <script type="module">
+        import DrawHandler from "./js/lib/DrawHandler.js";
+        import ParticleEffect from "./js/lib/ParticleEffect.js";
+
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                timeline: true,
+                infoBox: false,
+                contextOptions: {
+                    contextType: Number(2)  // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer, undefined);
+            });
+        }
+
+        async function init(SuperMap3D, scene, viewer) {
+            window.viewer = viewer;
+            viewer.resolutionScale = window.devicePixelRatio;
+            viewer.scene.globe.show = false; // 关闭地下
+
+            // // 加载高德影像地图
+            // viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+            //     url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+            //     minimumLevel: 3,
+            //     maximumLevel: 18,
+            // }));
+
+            viewer.camera.setView({
+                "destination": {
+                    "x": -2174989.3097650777,
+                    "y": 4383312.953511615,
+                    "z": 4077305.4156053024
+                },
+                "orientation": {
+                    "heading": 0.05956984825376743,
+                    "pitch": -0.4180292408583717,
+                    "roll": 6.2831853062660095
+                }
+            });
+
+            // 打开场景: 场景服务和三维网络分析服务均由supermap-iserver-10.2.0-win64发布
+            const promise = scene.open("http://localhost:8090/iserver/services/3D-Pipe3D/rest/realspace", undefined, { autoSetView: false });
+            promise.then(function (layers) {
+                document.getElementById('loadingbar').style.display = 'none';
+                document.getElementById('add-symbol-container').style.display = 'block';
+
+                // 初始化Vue组件
+                initVueComponents(scene, viewer);
+            })
+        }
+
+        // 初始化Vue组件
+        function initVueComponents(scene, viewer) {
+            const { reactive } = Vue; // 对象解构
+            const state = reactive({}); // 初始化变量
+
+            const particleEffect = new ParticleEffect(viewer); // 粒子系统
+            const drawHandler = new DrawHandler(viewer, {  // 绘制类
+                openMouseTip: true,
+                useDefaultTip: false,
+                tipContent: {
+                    pointMoving: '左键点击添加爆管点，点击右键可关闭添加',
+                }
+            });
+
+            const tubeLineLayer = viewer.scene.layers.find('NetWork@Pipe3D');
+            const tubeNodeLayer = viewer.scene.layers.find('NetWork_Node@Pipe3D');
+
+            // 添加爆管点
+            const waterUrl = './data/particle/fountainStart.json'; // 需设置粒子JSON中的 "preventAutoStart": false
+            const addExplosionAnalysisPoint = async function () {
+                const position = await drawHandler.startPoint();
+                if(!viewer.selectedEntity) return; // 未选择到管点或管线实体，不添加爆管点
+                clear(); // 清除上一次查询结果
+                particleEffect.createWater(waterUrl, position);
+            }
+
+
+            // 获取当前选择的实体ID
+            function getSelection() {
+                const lineSelection = tubeLineLayer.getSelection();
+                const nodeSelection = tubeNodeLayer.getSelection();
+                if (lineSelection.length === 0 && nodeSelection.length === 0) return;
+                const selection = lineSelection.length > 0 ? lineSelection : nodeSelection;
+                return selection[0];
+            }
+
+            // 构造查询参数
+            function createQueryObj(selectionID) {
+                if (!selectionID) return;
+                const queryObj = {
+                    edgeID: selectionID,
+                    isUncertainDirectionValid: true,
+                    weightName: "SmLength",
+                };
+                return queryObj;
+            }
+
+            // 查找上游设施
+            const upStreamServiceUrl = 'http://localhost:8090/iserver/services/networkAnalyst3D-Pipe3D-2/rest/facilityanalyst3d/NetWork@Pipe3D/traceupresult.json';
+            const findUpstream = async function () {
+                const selectionID = getSelection();
+                const queryObj = createQueryObj(selectionID);
+                if (!queryObj) return;
+
+                axios.get(upStreamServiceUrl, { params: queryObj }).then(response => {
+                    if (!response || !response.data) return;
+                    const data = response.data;
+                    if (data.edges.length > 0) tubeLineLayer.setObjsColor(data.edges, SuperMap3D.Color.RED.withAlpha(0.5)); // 管线
+                    if (data.nodes.length > 0) tubeNodeLayer.setObjsColor(data.nodes, SuperMap3D.Color.RED.withAlpha(0.5)); // 管点
+                })
+            }
+
+            // 查找下游设施
+            const downStreamServiceUrl = 'http://localhost:8090/iserver/services/networkAnalyst3D-Pipe3D-2/rest/facilityanalyst3d/NetWork@Pipe3D/tracedownresult.json';
+            const findDownstream = function () {
+                const selectionID = getSelection();
+                const queryObj = createQueryObj(selectionID);
+                if (!queryObj) return;
+
+                axios.get(downStreamServiceUrl, { params: queryObj }).then(response => {
+                    if (!response || !response.data) return;
+                    const data = response.data;
+                    if (data.edges.length > 0) tubeLineLayer.setObjsColor(data.edges, SuperMap3D.Color.BLUE.withAlpha(0.5));
+                    if (data.nodes.length > 0) tubeNodeLayer.setObjsColor(data.nodes, SuperMap3D.Color.BLUE.withAlpha(0.5));
+                })
+            }
+
+            // 查找最近阀门
+            const nearestValveServiceUrl = 'http://localhost:8090/iserver/services/networkAnalyst3D-Pipe3D-2/rest/facilityanalyst3d/NetWork@Pipe3D/sources.json';
+            const searchNearestValve = function () {
+                const selectionID = getSelection();
+                const queryObj = createQueryObj(selectionID);
+                if (!queryObj) return;
+
+                axios.get(nearestValveServiceUrl, { params: queryObj }).then(response => {
+                    if (!response || !response.data) return;
+                    const data = response.data;
+                    if (data.edges.length > 0) tubeLineLayer.setObjsColor(data.edges, SuperMap3D.Color.RED.withAlpha(0.5));
+                    if (data.nodes.length > 0) tubeNodeLayer.setObjsColor(data.nodes, SuperMap3D.Color.RED.withAlpha(0.5));
+                })
+            }
+
+            // 查找最近汇点
+            const nearestMeetingServiceUrl = 'http://localhost:8090/iserver/services/networkAnalyst3D-Pipe3D-2/rest/facilityanalyst3d/NetWork@Pipe3D/sinks.json';
+            const searchNearestMeeting = function () {
+                const selectionID = getSelection();
+                const queryObj = createQueryObj(selectionID);
+                if (!queryObj) return;
+
+                axios.get(nearestMeetingServiceUrl, { params: queryObj }).then(response => {
+                    if (!response || !response.data) return;
+                    const data = response.data;
+                    if (data.edges.length > 0) tubeLineLayer.setObjsColor(data.edges, SuperMap3D.Color.BLUE.withAlpha(0.5));
+                    if (data.nodes.length > 0) tubeNodeLayer.setObjsColor(data.nodes, SuperMap3D.Color.BLUE.withAlpha(0.5));
+                })
+            }
+
+            // 清除查询结果
+            const clear = function () {
+                particleEffect.clearWater();
+                tubeLineLayer.removeAllObjsColor(); // 移除通过IDs设置的构件颜色
+                tubeNodeLayer.removeAllObjsColor();
+                // tubeLineLayer.releaseSelection(); // 释放选择集,即图层上选择的模型
+                // tubeNodeLayer.releaseSelection();
+            }
+
+            // 创建Vue
+            const App = {
+                setup() {
+                    return {
+                        addExplosionAnalysisPoint,
+                        findUpstream,
+                        findDownstream,
+                        searchNearestValve,
+                        searchNearestMeeting,
+                        clear
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>
