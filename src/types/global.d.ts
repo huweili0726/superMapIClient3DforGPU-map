@@ -1,0 +1,1 @@
+declare const SuperMap3D: any;
