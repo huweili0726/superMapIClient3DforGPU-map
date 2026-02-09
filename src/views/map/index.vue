@@ -1,11 +1,15 @@
 <template>
   <div class="home-container">
-    <SuperMap />
+    <SuperMap 
+      :mapConfigUrl="mapConfigUrl"/>
   </div>
 </template>
 
 <script setup lang="ts">
 import SuperMap from '@/components/supermap/index.vue'
+
+const mapConfigUrl = `${process.env.BASE_URL}/config/mapConfig.jsonc?time=${new Date().getTime()}`
+
 </script>
 
 <style scoped lang="less">

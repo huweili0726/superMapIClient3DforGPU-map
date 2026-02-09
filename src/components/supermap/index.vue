@@ -5,19 +5,30 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 
+const props = withDefaults(
+  defineProps<{
+    mapConfigUrl?: string // 传入的地图构造参数url，可为空，只传options
+    options?: any // 传入的地图构造参数options，可覆盖url内的参数
+  }>(),
+  {
+    mapConfigUrl: undefined, 
+    options: undefined
+  }
+)
+
 // 容器引用
 const containerRef = ref<HTMLElement | null>(null);
 // 场景实例
-let viewer: any = null;
+let map: any = null;
 
-onMounted(() => {
+const initSuperMap3D = async () => {
   if (!containerRef.value) return;
 
   // 启用 WebGPU 渲染引擎
   (window as any).EngineType = 3; // 3 = WebGPU, 2 = WebGL2
 
   // 初始化 3D 场景（关闭默认底图）
-  viewer = new SuperMap3D.Viewer(containerRef.value, {
+  map = new SuperMap3D.Viewer(containerRef.value, {
     contextOptions: {
       webgl: { alpha: false }
     },
@@ -46,10 +57,10 @@ onMounted(() => {
 
   // 将高德瓦片作为底图添加到场景
   const gaodeLayer = new SuperMap3D.ImageryLayer(gaodeImageryProvider);
-  viewer.imageryLayers.add(gaodeLayer);
+  map.imageryLayers.add(gaodeLayer);
 
   // 可选：设置相机初始视角（比如定位到北京）
-  viewer.camera.setView({
+  map.camera.setView({
     destination: SuperMap3D.Cartesian3.fromDegrees(117.229619, 31.726288, 5000), // 经纬度 + 高度
     orientation: {
       heading: SuperMap3D.Math.toRadians(359.2),   // 水平旋转
@@ -57,13 +68,17 @@ onMounted(() => {
       roll: 0
     }
   });
+}
+
+onMounted(() => {
+  initSuperMap3D();
 });
 
 onUnmounted(() => {
   // 销毁场景，释放资源
-  if (viewer) {
-    viewer.destroy();
-    viewer = null;
+  if (map) {
+    map.destroy();
+    map = null;
   }
 });
 </script>
