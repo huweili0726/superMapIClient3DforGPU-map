@@ -30,7 +30,7 @@
     "timeline": true,  // 是否显示时间线控件
     "infoBox": true,  // 是否显示信息框控件
     "fullscreenButton": true,  // 是否显示全屏按钮
-    "vrButton": false,  // 是否显示 VR 按钮
+    "vrButton": false  // 是否显示 VR 按钮
   },
   "terrain": {
     "url": "http://data.mars3d.cn/terrain",  // 地形数据 URL
@@ -39,7 +39,7 @@
     "coastlineData": true,  // 是否显示海岸线数据
     "lightingData": true,  // 是否显示光照数据
     "maximumScreenSpaceError": 2, // 地形精度（默认2，建议2-4，根据场景复杂度调整）
-    "showSkirts": true, // 消除地形裂缝（信创场景必开）
+    "showSkirts": true // 消除地形裂缝（信创场景必开）
   },
   "basemaps": [
     {

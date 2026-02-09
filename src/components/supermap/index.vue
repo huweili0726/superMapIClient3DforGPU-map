@@ -4,8 +4,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, toRaw } from 'vue';
+import { useMapStore } from '@/stores/modules/mapStore'
 import { jsonUtils } from '@/utils/json'
 import { objectUtils } from '@/utils/object'
+
+const mapStore = useMapStore()
 
 // onload事件将在地图渲染后触发
 const emit = defineEmits(["onload"])
@@ -73,7 +76,6 @@ const initSuperMap3D = async () => {
     terrainProvider: await initTerrain(mapOptions), // 加载自定义地形服务
   });
 
-
   map.resolutionScale = window.devicePixelRatio; // 分辨率缩放比例，默认 1.0，根据设备像素比调整，避免模糊
 
   //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
@@ -109,6 +111,14 @@ const initSuperMap3D = async () => {
 
     checkWebGPUStatus(map); // 检测 WebGPU 状态
 
+    // 保存地图中心点、旋转角度、俯仰角度
+    mapStore.setMapInfo('center', {
+      heading: mapOptions.scene.center.heading,
+      pitch: mapOptions.scene.center.pitch,
+      roll: mapOptions.scene.center.roll,
+      duration: mapOptions.scene.center.duration,
+      alt: mapOptions.scene.center.alt,
+    })
     // 可选：设置相机初始视角
     // 使用 flyTo 替代 setView - setView 是瞬时定位，不支持动画； flyTo 支持平滑飞行效果
     map.scene.camera.flyTo({
