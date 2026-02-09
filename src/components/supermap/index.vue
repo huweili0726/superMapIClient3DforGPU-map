@@ -71,7 +71,7 @@ const initSuperMap3D = async () => {
   });
 
 
-  map.resolutionScale = window.devicePixelRatio;
+  map.resolutionScale = window.devicePixelRatio; // 分辨率缩放比例，默认 1.0，根据设备像素比调整，避免模糊
 
   //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
   map.scenePromise.then(() => {
