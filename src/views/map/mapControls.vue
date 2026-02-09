@@ -16,6 +16,7 @@
         <div v-if="isImgPointControlsOpen" class="controls-content">
           <button @click="toSetPointEntityByImg" class="control-btn">set entity点位(img)</button>
           <button @click="toSetPointPrimitiveByImg" class="control-btn">set primitive点位(img)</button>
+          <button @click="toMovePointByImg" class="control-btn">move点位(img)</button>
         </div>
       </div>
     </div>
@@ -26,6 +27,8 @@
 import { ref, onBeforeUnmount } from 'vue'
 import { useMapStore } from '@/stores/modules/mapStore'
 import { setPoint } from '@/components/supermap/ts/setPoint'
+import { movePointConfig } from '@/components/supermap/ts/movePoint'
+
 
 // 获取store实例，保持响应性
 const mapStore = useMapStore()
@@ -80,10 +83,25 @@ const toSetPointPrimitiveByImg = () => {
   setPointPrimitiveByImg({id: `point-primitive-1`, lng: 117.229629, lat: 31.716888, name: `雷达位置`, imageUrl: new URL('@/assets/img/point1.png', import.meta.url).href});
 }
 
+// 移动点位 （通过提供的图片设置点位）
+const toMovePointByImg = () => {
+  // 在原位置附近随机生成新的坐标
+  const newLng = 117.236334 + (Math.random() - 0.5) * 0.01;
+  const newLat = 31.715287 + (Math.random() - 0.5) * 0.01;
+  const newHeight =  0;
+  
+  // 移动点位 （通过提供的图片设置点位）
+  movePoint({pointId: '1', lng: newLng, lat: newLat, height: newHeight});
+}
+
 const {
   setPointEntityByImg,
   setPointPrimitiveByImg
 } = setPoint(process.env.BASE_URL)
+
+const {
+  movePoint
+} = movePointConfig(process.env.BASE_URL)
 </script>
 
 <style scoped lang="less">
