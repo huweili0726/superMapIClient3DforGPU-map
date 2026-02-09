@@ -3,7 +3,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, toRaw } from 'vue';
+import { jsonUtils } from '@/utils/json'
+import { objectUtils } from '@/utils/object'
 
 const props = withDefaults(
   defineProps<{
@@ -23,6 +25,29 @@ let map: any = null;
 
 const initSuperMap3D = async () => {
   if (!containerRef.value) return;
+
+  // 获取配置
+  let mapOptions
+  if (props.mapConfigUrl) {
+    mapOptions = await getJsonFile(props.mapConfigUrl)
+  }
+
+  if (props.options) {
+    // 存在叠加的属性时
+    let exOptions
+    if (props.options.then) {
+      exOptions = toRaw(await props.options)
+    } else {
+      exOptions = toRaw(props.options)
+    }
+
+    if (mapOptions) {
+      mapOptions = merge(mapOptions, exOptions) // 合并配置
+    } else {
+      mapOptions = exOptions
+    }
+  }
+
 
   // 启用 WebGPU 渲染引擎
   (window as any).EngineType = 3; // 3 = WebGPU, 2 = WebGL2
@@ -61,11 +86,11 @@ const initSuperMap3D = async () => {
 
   // 可选：设置相机初始视角（比如定位到北京）
   map.camera.setView({
-    destination: SuperMap3D.Cartesian3.fromDegrees(117.229619, 31.726288, 5000), // 经纬度 + 高度
+    destination: SuperMap3D.Cartesian3.fromDegrees(mapOptions.scene.center.lng, mapOptions.scene.center.lat, mapOptions.scene.center.alt), // 经纬度 + 高度
     orientation: {
-      heading: SuperMap3D.Math.toRadians(359.2),   // 水平旋转
-      pitch: SuperMap3D.Math.toRadians(-39.5),   // 俯仰角度
-      roll: 0
+      heading: SuperMap3D.Math.toRadians(mapOptions.scene.center.heading),   // 水平旋转
+      pitch: SuperMap3D.Math.toRadians(mapOptions.scene.center.pitch),   // 俯仰角度
+      roll: SuperMap3D.Math.toRadians(mapOptions.scene.center.roll)   // 翻滚角度
     }
   });
 }
@@ -81,6 +106,9 @@ onUnmounted(() => {
     map = null;
   }
 });
+
+const { getJsonFile } = jsonUtils()
+const { merge } = objectUtils()
 </script>
 
 <style scoped lang="less">
