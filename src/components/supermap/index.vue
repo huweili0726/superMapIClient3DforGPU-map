@@ -26,19 +26,6 @@ let map: any = null;
 const initSuperMap3D = async () => {
   if (!containerRef.value) return;
 
-    // ========== 新增：强制启用 WebGPU（关键修复） ==========
-  // ========== 兼容版：强制启用 WebGPU（替换原有2行） ==========
-  // 1. 全局 EngineType 用数字兜底（3 = WebGPU，2 = WebGL2）
-  // (window as any).EngineType = 3; 
-  // // 2. 兼容检测 ConfigurationOptions 和 EngineType
-  // if (SuperMap3D.ConfigurationOptions && SuperMap3D.EngineType) {
-  //   // 高版本包：用枚举值
-  //   SuperMap3D.ConfigurationOptions.engineType = SuperMap3D.EngineType.WebGPU || 3;
-  // } else if (SuperMap3D.ConfigurationOptions) {
-  //   // 中版本包：直接设数字
-  //   SuperMap3D.ConfigurationOptions.engineType = 3;
-  // }
-
   // 获取配置
   let mapOptions
   if (props.mapConfigUrl) {
@@ -60,18 +47,7 @@ const initSuperMap3D = async () => {
       mapOptions = exOptions
     }
   }
-
-  console.log('SuperMap3D 版本:', (SuperMap3D as any).VERSION || '未知');
-  console.log('SuperMap3D.ContextType:', SuperMap3D.ContextType);
-  console.log('WebGPU 枚举值:', SuperMap3D.ContextType?.WebGPU);
   
-  // // 检查浏览器 WebGPU 支持
-  // if (navigator.gpu) {
-  //   console.log('✅ 浏览器支持 WebGPU');
-  // } else {
-  //   console.log('❌ 浏览器不支持 WebGPU');
-  // }
-
   // 初始化 3D 场景（启用 WebGPU 渲染引擎）
   map = new SuperMap3D.Viewer(containerRef.value, {
     //使用WebGPU方式加载（若不开启此属性，则默认以WebGL2.0方式加载）
@@ -83,41 +59,14 @@ const initSuperMap3D = async () => {
     imageryProvider: false
   });
 
-  map.scenePromise.then(function(scene){
-    if (scene.context?.contextType) {
-      console.log('ContextType:', scene.context.contextType);
-      if (scene.context.contextType === 3) {
-        console.log('✅ WebGPU 已启用（ContextType: 3）');
-      } else {
-        console.log('❌ WebGPU 未启用，ContextType:', scene.context.contextType);
-      }
-    }
-    
+  map.scenePromise.then(() => {
     //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
-    init(SuperMap3D, scene, map, mapOptions);
+    initSceneCallback(SuperMap3D, map, mapOptions);
   });
 }
 
-const init = (SuperMap3D, scene, map, mapOptions) => {
-
-//   async function check() {
-//   if (!navigator.gpu) {
-//     console.log("浏览器不支持 WebGPU");
-//     return;
-//   }
-//   const adapter = await navigator.gpu.requestAdapter();
-//   if (!adapter) {
-//     console.log("显卡不支持 WebGPU");
-//   } else {
-//     console.log("浏览器+显卡支持 WebGPU");
-//   }
-// }
-// check();
-
-
-
-
-  // ========== 加载高德瓦片地图（核心代码）==========
+const initSceneCallback = (SuperMap3D: any, map: any, mapOptions: any) => {
+  // 加载高德瓦片地图
   const gaodeImageryProvider = new SuperMap3D.UrlTemplateImageryProvider({
     // 高德瓦片地址模板（{s} 用于多域名负载均衡）
     url: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
@@ -139,10 +88,21 @@ const init = (SuperMap3D, scene, map, mapOptions) => {
   const gaodeLayer = new SuperMap3D.ImageryLayer(gaodeImageryProvider);
   map.imageryLayers.add(gaodeLayer);
 
+  checkWebGPUStatus(map); // 检测 WebGPU 状态
 
+  // 可选：设置相机初始视角（比如定位到北京）
+  map.scene.camera.setView({
+    destination: SuperMap3D.Cartesian3.fromDegrees(mapOptions.scene.center.lng, mapOptions.scene.center.lat, mapOptions.scene.center.alt), // 经纬度 + 高度
+    orientation: {
+      heading: SuperMap3D.Math.toRadians(mapOptions.scene.center.heading),   // 水平旋转
+      pitch: SuperMap3D.Math.toRadians(mapOptions.scene.center.pitch),   // 俯仰角度
+      roll: SuperMap3D.Math.toRadians(mapOptions.scene.center.roll)   // 翻滚角度
+    }
+  });
+}
 
-  // 检测 WebGPU 状态的函数
-const checkWebGPUStatus = (mapInstance) => {
+// 检测 WebGPU 状态的函数
+const checkWebGPUStatus = (mapInstance: any) => {
   if (!mapInstance) {
     console.log('❌ 地图实例不存在');
     return false;
@@ -186,18 +146,6 @@ const checkWebGPUStatus = (mapInstance) => {
   console.log('❌ 无法检测 WebGPU 状态');
   return false;
 };
-  checkWebGPUStatus(map);
-
-  // 可选：设置相机初始视角（比如定位到北京）
-  map.camera.setView({
-    destination: SuperMap3D.Cartesian3.fromDegrees(mapOptions.scene.center.lng, mapOptions.scene.center.lat, mapOptions.scene.center.alt), // 经纬度 + 高度
-    orientation: {
-      heading: SuperMap3D.Math.toRadians(mapOptions.scene.center.heading),   // 水平旋转
-      pitch: SuperMap3D.Math.toRadians(mapOptions.scene.center.pitch),   // 俯仰角度
-      roll: SuperMap3D.Math.toRadians(mapOptions.scene.center.roll)   // 翻滚角度
-    }
-  });
-}
 
 onMounted(() => {
   initSuperMap3D();
