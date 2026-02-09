@@ -48,20 +48,24 @@ const initSuperMap3D = async () => {
     }
   }
 
-
-  // 启用 WebGPU 渲染引擎
-  (window as any).EngineType = 3; // 3 = WebGPU, 2 = WebGL2
-
-  // 初始化 3D 场景（关闭默认底图）
+  // 初始化 3D 场景（启用 WebGPU 渲染引擎）
   map = new SuperMap3D.Viewer(containerRef.value, {
+    //使用WebGPU方式加载（若不开启此属性，则默认以WebGL2.0方式加载）
     contextOptions: {
-      webgl: { alpha: false }
+      contextType: SuperMap3D.ContextType.WebGPU 
     },
-    baseLayerPicker: false, // 关闭底图选择器
-    terrainProvider: null,  // 关闭默认地形
-    imageryProvider: false  // 禁用默认底图
+    baseLayerPicker: false,
+    terrainProvider: null,
+    imageryProvider: false
   });
 
+  map.scenePromise.then(function(scene){
+    //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
+    init(SuperMap3D, scene, map, mapOptions);
+  });
+}
+
+const init = (SuperMap3D, scene, map, mapOptions) => {
   // ========== 加载高德瓦片地图（核心代码）==========
   const gaodeImageryProvider = new SuperMap3D.UrlTemplateImageryProvider({
     // 高德瓦片地址模板（{s} 用于多域名负载均衡）
@@ -73,7 +77,7 @@ const initSuperMap3D = async () => {
     // 瓦片层级范围
     minimumLevel: 0,
     maximumLevel: 18,
-    // 瓦片大小
+    // 瓦片大小 （默认256，行业标准 ：几乎所有主流地图服务（包括高德地图）都使用 256x256 的瓦片大小）
     tileWidth: 256,
     tileHeight: 256,
     // 避免跨域问题（如果部署后报跨域，需要后端代理）
