@@ -52,12 +52,24 @@ const initSuperMap3D = async () => {
   map = new SuperMap3D.Viewer(containerRef.value, {
     //使用WebGPU方式加载（若不开启此属性，则默认以WebGL2.0方式加载）
     contextOptions: {
-      contextType: SuperMap3D.ContextType.WebGPU
+      contextType: SuperMap3D.ContextType.WebGPU,
+      requestWebgl: false, // 禁用 WebGL
+      requestWebgpu: true  // 启用 WebGPU
     },
     baseLayerPicker: false,
     terrainProvider: null,
-    imageryProvider: false
+    imageryProvider: false,
+    timeline: true, // 开启时间线控件（不受 WebGPU 影响）
+    animation: true,// 同时开启动画控件（和时间线配套使用）
+    geocoder: mapOptions.control.geocoder, // 地址搜索控件
+    homeButton: mapOptions.control.homeButton, // 返回首页控件
+    sceneModePicker: mapOptions.control.sceneModePicker, // 场景模式选择器（2D/3D 切换）
+    navigationHelpButton: mapOptions.control.navigationHelpButton, // 导航帮助按钮
+    infoBox: mapOptions.control.infoBox, // 信息框
+    fullscreenButton: mapOptions.control.fullscreenButton, // 全屏按钮
+    vrButton: mapOptions.control.vrButton // VR 按钮
   });
+
 
   map.resolutionScale = window.devicePixelRatio;
 
@@ -116,6 +128,8 @@ const initSuperMap3D = async () => {
     map.scene.globe.depthTestAgainstTerrain = mapOptions.scene.globe.depthTestAgainstTerrain;
     // 配置地形瓦片缓存大小
     map.scene.globe.tileCacheSize = mapOptions.scene.globe.tileCacheSize;
+
+    console.log('control:', map.control);
   });
 }
 
