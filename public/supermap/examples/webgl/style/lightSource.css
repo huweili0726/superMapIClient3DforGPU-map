@@ -1,0 +1,10 @@
+label {
+    display: inline-block;
+    margin-right: 1rem;
+}
+
+label>input,
+label>span {
+    display: inline-block;
+    vertical-align: middle;
+}

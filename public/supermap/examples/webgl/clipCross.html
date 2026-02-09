@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+	<title>Cross裁剪</title>
+	<link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+	<link href="./css/pretty.css" rel="stylesheet">
+	<link href="./style/clipCross.css" rel="stylesheet">
+	<script src="./js/jquery.min.js"></script>
+	<script src="./js/config.js"></script>
+	<script src="./js/tooltip.js"></script>
+	<script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+	<div id="Container"></div>
+	<div id="toolbar" class="params-setting-container">
+		<div class="params-setting-anchor" title="显示/隐藏参数面板"><span class="fui-expand"></span></div>
+		<div class="params-setting">
+			<table>
+				<tbody>
+					<tr>
+						<td><label>裁剪长度：</label></td>
+						<td>
+							<input type="range" id="clip-width" min="1" max="100" step="1"
+								data-bind="value: width, valueUpdate: 'input'">
+						</td>
+						<td>
+							<input type="number" id="clip-width-label" min="1" max="100" step="1"
+								data-bind="value: width, valueUpdate: 'input'" />
+						</td>
+					</tr>
+					<tr>
+						<td><label>裁剪宽度：</label></td>
+						<td>
+							<input type="range" id="clip-height" min="1" max="100" step="1"
+								data-bind="value: height, valueUpdate: 'input'">
+						</td>
+						<td>
+							<input type="number" id="clip-height-label" min="1" max="100" step="1"
+								data-bind="value: height, valueUpdate: 'input'" />
+						</td>
+					</tr>
+					<tr>
+						<td><label>绕X轴旋转：</label></td>
+						<td>
+							<input id="pitch" type="range" min="0" max="360" step="1.0"
+								data-bind="value: pitch, valueUpdate: 'input'">
+						</td>
+						<td>
+							<input type="number" min="0" max="360" step="1"
+								data-bind="value: pitch, valueUpdate: 'input'">
+						</td>
+					</tr>
+					<tr>
+						<td><label>绕Y轴旋转：</label></td>
+						<td>
+							<input id="roll" type="range" min="0" max="360" step="1.0"
+								data-bind="value: roll, valueUpdate: 'input'">
+						</td>
+						<td>
+							<input type="number" min="0" max="360" step="1.0"
+								data-bind="value: roll, valueUpdate: 'input'">
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label>绕Z轴旋转：</label>
+						</td>
+						<td>
+							<input id="heading" type="range" min="0" max="360" step="1.0"
+								data-bind="value: heading, valueUpdate: 'input'">
+						</td>
+						<td>
+							<input type="number" min="0" max="360" step="1.0"
+								data-bind="value: heading, valueUpdate: 'input'">
+						</td>
+					</tr>
+					<tr>
+						<td><label>拉伸：</label></td>
+						<td>
+							<input id="extrude" type="range" min="0.1" max="30" step="0.1"
+								data-bind="value: extrudeDistance, valueUpdate: 'input'">
+						</td>
+						<td>
+							<input type="number" min="0.1" max="30" step="0.5"
+								data-bind="value: extrudeDistance, valueUpdate: 'input'">
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">
+							<input type="button" id="choose-clip-pos" class="button black" value="选取裁剪位置" />
+							<input type="button" id="clear" class="button black" value="清除"
+								style="margin-left: 10px;" />
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<script>
+		function onload(SuperMap3D) {
+			var EngineType = getEngineType();
+			var viewer = new SuperMap3D.Viewer('Container', {
+				contextOptions: {
+					contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+				}
+			});
+			viewer.scenePromise.then(function (scene) {
+				init(SuperMap3D, scene, viewer);
+			});
+		}
+		function init(SuperMap3D, scene, viewer) {
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+			viewer.resolutionScale = window.devicePixelRatio;
+			scene.globe.depthTestAgainstTerrain = false;
+			var promise = scene.open(URL_CONFIG.SCENE_BIMBUILDING);
+			promise.then(function (layers) {
+
+				var boxPosition, position, dim, width = 5,
+					height = 5,
+					heading = 0,
+					pitch = 0,
+					roll = 0,
+					extrudeDistance = 1.0,
+					startClip = false,
+					hasClipped = false;
+
+				var viewModel = {
+					width: 5,
+					height: 5,
+					heading: 0.0,
+					pitch: 0.0,
+					roll: 0.0,
+					extrudeDistance: 1.0,
+					isMoving: false
+				};
+
+				var handler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+
+				var box = viewer.entities.add({ // 标识盒
+					position: SuperMap3D.Cartesian3.fromDegrees(0, 0, 0),
+					show: false,
+					box: {
+						dimensions: new SuperMap3D.Cartesian3(5, 5, 0.1),
+						fill: false,
+						outline: true,
+						outlineColor: SuperMap3D.Color.WHITE,
+						outlineWidth: 5.0
+					}
+				});
+
+				function updateClip() {
+					for (var i = 0, j = layers.length; i < j; i++) {
+						layers[i].setCustomClipCross({
+							position: position,
+							dimensions: dim,
+							heading: heading,
+							pitch: pitch,
+							roll: roll,
+							extrudeDistance: extrudeDistance
+						});
+					}
+				}
+
+				handler.setInputAction(function (movement) {
+					if (startClip) {
+						scene.pickPositionAsync(movement.endPosition).then((last) => {
+							boxPosition = last;
+							if (!boxPosition) {
+								return;
+							}
+							box.position = boxPosition;
+						});
+					}
+				}, SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+
+				handler.setInputAction(function (evt) {
+					if (startClip) {
+						scene.pickPositionAsync(evt.position).then((last) => {
+							position = last;
+							if (!position) {
+								return;
+							}
+							var hpr = new SuperMap3D.HeadingPitchRoll(SuperMap3D.Math.toRadians(heading), SuperMap3D.Math.toRadians(pitch), SuperMap3D.Math.toRadians(roll));
+							var orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(position, hpr);
+							box.orientation = orientation;
+							dim = new SuperMap3D.Cartesian3(width, height, extrudeDistance);
+							updateClip();
+							startClip = false;
+							hasClipped = true;
+							box.show = false;
+						});
+					}
+				}, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+				SuperMap3D.knockout.track(viewModel);
+				var toolbar = document.getElementById('toolbar');
+				SuperMap3D.knockout.applyBindings(viewModel, toolbar);
+
+				SuperMap3D.knockout.getObservable(viewModel, 'width').subscribe(
+					function (newValue) {
+						width = Number(newValue);
+						box.box.dimensions = new SuperMap3D.Cartesian3(width, height, 0.1);
+						dim = new SuperMap3D.Cartesian3(width, height, extrudeDistance);
+						if (!position) {
+							return;
+						}
+						if (hasClipped) {
+							updateClip();
+						}
+					}
+				);
+
+				SuperMap3D.knockout.getObservable(viewModel, 'height').subscribe(
+					function (newValue) {
+						height = Number(newValue);
+						box.box.dimensions = new SuperMap3D.Cartesian3(width, height, 0.1);
+						dim = new SuperMap3D.Cartesian3(width, height, extrudeDistance);
+						if (!position) {
+							return;
+						}
+						if (hasClipped) {
+							updateClip();
+						}
+					}
+				);
+
+				SuperMap3D.knockout.getObservable(viewModel, 'heading').subscribe(
+					function (newValue) {
+						heading = Number(newValue);
+						var hpr = new SuperMap3D.HeadingPitchRoll(SuperMap3D.Math.toRadians(heading), SuperMap3D.Math.toRadians(pitch), SuperMap3D.Math.toRadians(roll));
+						var orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(boxPosition, hpr);
+						box.orientation = orientation;
+						if (!position) {
+							return;
+						}
+						if (hasClipped) {
+							updateClip();
+						}
+					}
+				);
+
+				SuperMap3D.knockout.getObservable(viewModel, 'pitch').subscribe(
+					function (newValue) {
+						pitch = Number(newValue);
+						var hpr = new SuperMap3D.HeadingPitchRoll(SuperMap3D.Math.toRadians(heading), SuperMap3D.Math.toRadians(pitch), SuperMap3D.Math.toRadians(roll));
+						var orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(boxPosition, hpr);
+						box.orientation = orientation;
+						if (!position) {
+							return;
+						}
+						if (hasClipped) {
+							updateClip();
+						}
+					}
+				);
+
+				SuperMap3D.knockout.getObservable(viewModel, 'roll').subscribe(
+					function (newValue) {
+						roll = Number(newValue);
+						var hpr = new SuperMap3D.HeadingPitchRoll(SuperMap3D.Math.toRadians(heading), SuperMap3D.Math.toRadians(pitch), SuperMap3D.Math.toRadians(roll));
+						var orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(boxPosition, hpr);
+						box.orientation = orientation;
+						if (!position) {
+							return;
+						}
+						if (hasClipped) {
+							updateClip();
+						}
+					}
+				);
+
+				SuperMap3D.knockout.getObservable(viewModel, 'extrudeDistance').subscribe(
+					function (newValue) {
+						extrudeDistance = Number(newValue);
+						if (hasClipped) {
+							updateClip();
+						}
+					}
+				);
+
+				$("#choose-clip-pos").on("click", function () {
+					startClip = true;
+					box.show = true;
+				});
+
+				$("#clear").on("click", function () {
+					startClip = false;
+					box.show = false;
+					for (var i = 0, j = layers.length; i < j; i++) {
+						layers[i].clearCustomClipBox();
+					};
+					viewer.entities.removeAll();
+				});
+
+				// 折叠参数面板
+				$(".params-setting-anchor").click(function () {
+					$(".params-setting").toggleClass("params-setting-hide");
+				});
+
+			});
+		}
+		if (typeof SuperMap3D !== 'undefined') {
+			window.startupCalled = true;
+			onload(SuperMap3D);
+		}
+	</script>
+</body>
+
+</html>

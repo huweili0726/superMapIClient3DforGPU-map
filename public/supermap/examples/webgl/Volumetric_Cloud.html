@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>体积云</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./style/vuecommon.css" rel="stylesheet">
+    <script src="./js/config.js"></script>
+    <script src="./js/layerTree/vue.global.js"></script>
+    <script src="./js/layerTree/naive-ui.min.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container" style="display: none; width: 336px;">
+        <div id="app">
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-header-title">体积云</div>
+                    <span class="panel-header-close" id="close">X</span>
+                </div>
+
+                <!-- vue component content -->
+                <n-config-provider :theme-overrides="overridesTheme" :theme="darkTheme" style="margin-top: 20px;">
+                    <n-scrollbar style="max-height: 520px;padding-right: 10px;" trigger="none">
+                        <div class="row-item">
+                            <span>体积云</span>
+                            <div style="width: 200px">
+                                <n-switch v-model:value="state.useVolumeCloud" size="small" />
+                            </div>
+                        </div>
+
+                        <div class="row-item">
+                            <span>渲染质量</span>
+                            <n-select style="width: 200px" v-model:value="state.renderQualityType"
+                                :options="state.renderQualityOption" :focusable="false" />
+                        </div>
+
+                        <div class="row-item">
+                            <span>云层厚度</span>
+                            <div class="slider-box" style="width: 100px; margin-left: 50px;">
+                                <n-slider v-model:value="state.thickness" :min="2000" :max="20000" :step="10" />
+                            </div>
+                            <n-input-number v-model:value="state.thickness" style="width:70px" :min="2000" :max="20000"
+                                :step="10" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>云层覆盖度</span>
+                            <div class="slider-box" style="width: 110px; margin-left: 35px;">
+                                <n-slider v-model:value="state.coverage" :min="0.0" :max="1.0" :step="0.01" />
+                            </div>
+                            <n-input-number v-model:value="state.coverage" style="width:60px" :min="0.0" :max="1.0"
+                                :step="0.01" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>风速（km/h）</span>
+                            <div class="slider-box" style="width: 110px; margin-left: 15px;">
+                                <n-slider v-model:value="state.speed" :min="0.0" :max="200.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.speed" style="width:60px" :min="0.0" :max="200.0"
+                                :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>风向（&deg;）</span>
+                            <div class="slider-box" style="width: 110px; margin-left: 45px;">
+                                <n-slider v-model:value="state.direction" :min="0.0" :max="360.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.direction" style="width:60px" :min="0.0" :max="360.0"
+                                :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>显示高层云</span>
+                            <div style="width: 200px">
+                                <n-checkbox v-model:checked="state.useHighCloud"></n-checkbox>
+                            </div>
+                        </div>
+                        
+                    </n-scrollbar>
+                </n-config-provider>
+
+            </div>
+        </div>
+    </div>
+    <div class="loading-container">
+        <div class="circle"></div>
+    </div>
+    <script type="module">
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(2),  // Webgl2:2 ; WebGPU:3
+                    msaaLevel: 2,
+                },
+                timeline: true,
+                useSuperMapOIT: true
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+            
+            // 打开场景
+            const promise = scene.open(URL_CONFIG.SCENE_CBD);
+            promise.then(function (layers) {
+                document.querySelector('.loading-container').style.display = 'none';
+                document.querySelector('.vue-container').style.display = 'block';
+
+                // 初始化Vue组件
+                initVueComponents(scene, viewer);
+            })
+        }
+
+
+        // 初始化Vue组件
+        function initVueComponents(scene, viewer) {
+            // 对象解构
+            const { reactive, watch } = Vue;
+            const { darkTheme } = naive;
+
+            // 初始化变量
+            const VolumetricCloudsQuality = SuperMap3D.VolumetricCloudsQuality;
+            const state = reactive({
+                useVolumeCloud: true,
+                useHighCloud: false,
+                renderQualityType: VolumetricCloudsQuality.Middle,
+                renderQualityOption: [
+                    { label: () => '高等', value: VolumetricCloudsQuality.High, },
+                    { label: () => '普通', value: VolumetricCloudsQuality.Middle, },
+                    { label: () => '低等', value: VolumetricCloudsQuality.Low, },
+                ],
+                thickness: 8000,
+                coverage: 0.5,
+                speed: 50.0,
+                direction: 0.0,
+            });
+
+            const volumetricClouds = scene.volumetricClouds;
+            volumetricClouds.enabled = true; // 开启体积云
+
+            scene.globe.enableLighting = true; // 地形和大气启用光照
+            scene.hdrEnabled = true; // 建议打开高动态光照效果更好
+
+            // 创建Vue示例
+            const App = {
+                setup() {
+                    watch(() => state.useVolumeCloud,
+                        (val) => {
+                            volumetricClouds.enabled = Boolean(val);
+                        }
+                    );
+
+                    watch(() => state.useHighCloud,
+                        (val) => {
+                            volumetricClouds.cirrusEnabled = Boolean(val);
+                        }
+                    );
+
+                    watch(() => state.renderQualityType,
+                        (val) => {
+                            volumetricClouds.quality = Number(val);
+                        }
+                    );
+
+                    watch(() => state.thickness,
+                        (val) => {
+                            volumetricClouds.thickness = Number(val);
+                        }
+                    );
+
+                    watch(() => state.coverage,
+                        (val) => {
+                            volumetricClouds.shapeCoverage = Number(val);
+                        }
+                    );
+
+                    watch(() => state.speed,
+                        (val) => {
+                            volumetricClouds.windSpeed = Number(val);
+                        }
+                    );
+
+                    watch(() => state.direction,
+                        (val) => {
+                            volumetricClouds.windHeading = Number(val);
+                        }
+                    );
+
+                    return {
+                        state,
+                        darkTheme,
+                        overridesTheme: { // 重写主题样式
+                            common: {
+                                primaryColor: "rgba(52, 153, 229, 1)",
+                                primaryColorHover: "rgba(52, 153, 229, 1)",
+                                primaryColorPressed: "rgba(255,255,255,0.85)",
+                                primaryColorSuppl: "rgba(255,255,255,0.45)",
+                            },
+                            Button: {
+                                fontSizeMedium: "14px", // 底部操作按钮：宽高和文字大小自适应浏览器
+                                textColor: "rgba(255,255,255,0.65)", // 设置默认n-button全局样式
+                                border: "1px solid rgba(255,255,255,0.65)",
+                                textColorHover: "#5EB7F2",
+                                borderHover: "1px solid #5EB7F2",
+                                textColorPressed: "#2276BF",
+                                borderPressed: "1px solid #2276BF",
+                            },
+                            Tabs: {
+                                barColor: "#3499e5", // tabs底部横条颜色
+                                tabFontSizeMedium: "14px", // tabs标签文字大小 - 兼容移动端样式
+                            },
+                            ColorPicker: {
+                                border: "none", // color-pick颜色条去掉边框
+                            },
+                            Divider: {
+                                color: "rgba(255, 255, 255, 0.15)", // 分割条颜色
+                            },
+                            Checkbox: {
+                                colorChecked: "#3499E5",
+                                checkMarkColor: "#fff",
+                            },
+                            Slider: {
+                                fillColor: "#3499E5",
+                                fillColorHover: "#3499E5",
+                                handleSize: "12px",
+                            },
+                            Switch: {
+                                railColorActive: "#3499E5",
+                            },
+                            Select: {
+                                color: "rgba(255, 255, 255, 0.15)"
+                            }
+                        },
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

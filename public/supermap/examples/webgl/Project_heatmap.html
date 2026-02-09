@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>热力图叠加S3M</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script src="./js/heatmap.min.js"></script>
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/tooltip.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script src="./js/config.js"></script>
+</head>
+<body>
+<div id="Container"></div>
+<div id='loadingbar' class="spinner">
+    <div class="spinner-container container1">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container2">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container3">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+</div>
+<div class="heatmap" style="overflow: hidden; width: 840px;height: 400px;">
+    <div class="heatmap-canvas" width="50%" height="25%" >
+    </div>
+</div>
+<script type="text/javascript">
+    function onload(SuperMap3D) {
+        // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+        var EngineType = getEngineType();
+        var viewer = new SuperMap3D.Viewer('Container', {
+            contextOptions: {
+                contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+            }
+        });
+
+        viewer.scenePromise.then(function(scene){
+            init(SuperMap3D, scene, viewer);
+        });
+    }
+
+    function init(SuperMap3D, scene, viewer) {
+        viewer.resolutionScale = window.devicePixelRatio;
+        // 加载高德影像地图
+        viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+            url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+            minimumLevel: 3,
+            maximumLevel: 18,
+        }));
+        var scene = viewer.scene;
+        scene.shadowMap.darkness = 1.275; //设置第二重烘焙纹理的效果（明暗程度）
+        
+        scene.debugShowFramesPerSecond = false;
+        scene.hdrEnabled = false;
+        scene.sun.show = true;
+
+        var widget = viewer.Widget;
+        if(!scene.pickPositionSupported){
+            alert('不支持深度纹理,热力图功能无法使用！');
+        }
+        try{
+            // 创建热力图
+             var heatmapInstance = createHeatMap(40);
+			 var pts= null;
+            // 添加S3M图层
+            var buildPromise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_CBD_BUILD,{name : 'build'});
+            var ground1Promise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_CBD_GROUND1,{name : 'ground1'});
+            var lakePromise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_CBD_LAKE, {name: 'lake'});
+            var treePromise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_CBD_TREE, { name : 'tree'});
+            var roadPromise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_CBD_ROAD, {name: 'road'});
+            var bridgePromise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_CBD_BRIDGE, {name: 'bridge'});
+            var ground2Promise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_CBD_GROUND2, {name: 'ground2'});
+            var promiseSet = [ground1Promise,buildPromise,lakePromise,treePromise,roadPromise,bridgePromise];
+            Promise.all(promiseSet).then(function(layers){
+                scene.camera.setView({ // 图层加载完成,设置相机位置
+                    destination : SuperMap3D.Cartesian3.fromDegrees(116.44829499568006, 39.9038584836946, 200.729171148720404),
+                    orientation : {
+                        heading : 5.462824916628415,
+                        pitch :-1.5695598976662626,
+                        roll : 6.2831853071570976
+                    }
+                });
+                var tooltip = createTooltip(document.body);
+                var clickCount = 0;
+                var positions = [];
+                var screenSpaceEventHandler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+                screenSpaceEventHandler.setInputAction(function(evt) {
+                    scene.pickPositionAsync(evt.position).then((position) => {
+                        positions.push(position);
+                        clickCount++;
+                        if (clickCount === 2) {
+                            polylineHandler.drawEvt.raiseEvent(positions);
+                        }
+                    })
+                }, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+                var polylineHandler = new SuperMap3D.DrawHandler(viewer, SuperMap3D.DrawMode.Line);
+                polylineHandler.activeEvt.addEventListener(function(isActive){
+                    if(isActive == true){
+                        viewer.enableCursorStyle = false;
+                        viewer._element.style.cursor = '';
+                        $('body').removeClass('drawCur').addClass('drawCur');
+                    } else{
+                        viewer.enableCursorStyle = true;
+                        $('body').removeClass('drawCur');
+                    }
+                });
+                polylineHandler.movingEvt.addEventListener(function(windowPosition){
+                    tooltip.showAt(windowPosition,'<p>两点定一个矩形</p>');
+                });
+                polylineHandler.drawEvt.addEventListener(function(result) {
+                    polylineHandler.deactivate();
+                    polylineHandler.polyline.show = false;
+                    pts = result.object ? result.object.positions : result;
+                    var mycanvas=document.getElementsByClassName("heatmap-canvas");
+                    var imgData= mycanvas[1].toDataURL("image/png");
+                    var img = new Image();
+                    img.src = imgData;
+                    img.onload = function() {
+                        for(var layer of layers) {
+                            layer.addOverlayImage({
+                                bounds: SuperMap3D.Rectangle.fromCartesianArray(pts),
+                                name: 'heat-map' ,
+                                image: img
+                            });
+                        }
+                        clickCount = 0;
+                        positions = [];
+                        polylineHandler.activate();
+                    }
+                });
+                polylineHandler.activate();
+                $('#loadingbar').remove(); // 移除加载动画
+				scene.camera.moveEnd.addEventListener(function(){
+				    var height = scene.camera.positionCartographic.height;
+					_heatmapInstance = createHeatMap(height/10);
+					
+					if(layers!=null && pts!=null){
+					
+                    var img = new Image();
+                    img.src = _heatmapInstance.getDataURL();
+                    img.onload = function() {
+                        for(var layer of layers) {
+						    layer.removeOverlayImage('heat-map');
+                            layer.addOverlayImage({
+                                bounds: SuperMap3D.Rectangle.fromCartesianArray(pts),
+                                name: 'heat-map',
+                                image: img
+                            });
+                        }
+					}
+					}
+				});
+            },function(e){
+                if (widget._showRenderLoopErrors) {
+                    var title = '加载SCP失败，请检查网络连接状态或者url地址是否正确？';
+                    widget.showErrorPanel(title, undefined, e);
+                }
+            });
+        } catch(e){
+            if (widget._showRenderLoopErrors) {
+                var title = '渲染时发生错误，已停止渲染。';
+                widget.showErrorPanel(title, undefined, e);
+            }
+        }
+    }
+
+    function createHeatMap(value) {
+        var heatmapInstance = h337.create({
+            container : document.querySelector('.heatmap'),
+			radius:value
+        });
+        var points = [];
+        var max = 0;
+        var width = 840;
+        var height = 400;
+        var len = 200;
+        while(len--) {
+            var val = Math.floor(Math.random()*100);
+            max = Math.max(max, val);
+            var point = {
+                x : Math.floor(Math.random()*width),
+                y : Math.floor(Math.random()*height),
+                value : val
+            };
+            points.push(point)
+        }
+        var data = {
+            max : max,
+            data : points
+        }
+        heatmapInstance.setData(data);
+		return heatmapInstance;
+    }
+    if (typeof SuperMap3D !== 'undefined') {
+        window.startupCalled = true;
+        onload(SuperMap3D);
+    }
+</script>
+</body>
+</html>

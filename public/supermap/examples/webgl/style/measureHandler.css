@@ -1,0 +1,14 @@
+.tool-bar .black1 {
+    width: 100%;
+    border: 1px solid #333;
+    box-shadow: 0 1px 2px #8b8b8b inset, 0 -1px 0 #3d3d3d inset, 0 -2px 3px #8b8b8b inset;
+}
+
+/* .black1 .btn {
+    background: rgba(34, 34, 34, 0.49);
+    color: #fff;
+}
+
+.black1 .caret {
+    border-top-color: #fff;
+} */

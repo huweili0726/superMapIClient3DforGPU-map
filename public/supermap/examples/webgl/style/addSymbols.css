@@ -1,0 +1,30 @@
+input[type=range] {
+    width: 170px;
+}
+
+input[type=text] {
+    width: 80px;
+    padding: 1px;
+    height: 18px;
+    margin: 2.5px;
+}
+
+label {
+    display: inline-block;
+    margin: 5px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.drawCur {
+    cursor: url(../images/cur/draw.cur), auto;
+}
+
+.positionAdjust {
+    width: 150px;
+    margin: 0;
+    margin-left: 55px;
+    display: inline-block;
+    top: -45px;
+    position: relative;
+}

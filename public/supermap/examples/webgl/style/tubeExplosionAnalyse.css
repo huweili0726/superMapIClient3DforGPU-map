@@ -1,0 +1,42 @@
+body {
+    line-height: 16px;
+}
+html {
+    font-size: 100px;
+}
+
+.vue-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 360px;
+    height: fit-content;
+    z-index: 100;
+}
+
+
+/* 图层面板 */
+.panel-container{
+    background: rgba(42,42,42,0.9);
+    padding: 10px;
+}
+
+/* header */
+.panel-header{
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 1px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.panel-header-title{
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 0.8;
+    font-size: 20px;
+    line-height: 24px;
+}
+.panel-header-close{
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 15px;
+    margin-right: 10px;
+}
+

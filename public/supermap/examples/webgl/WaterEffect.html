@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>水面效果</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./style/vuecommon.css" rel="stylesheet">
+    <script src="./js/config.js"></script>
+    <script src="./js/layerTree/vue.global.js"></script>
+    <script src="./js/layerTree/naive-ui.min.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container" style="display: none;">
+        <div id="app">
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-header-title">水面效果</div>
+                    <span class="panel-header-close" id="close">X</span>
+                </div>
+
+                <!-- vue component content -->
+                <n-config-provider :theme-overrides="overridesTheme" :theme="darkTheme" style="margin-top: 20px;">
+                    <n-scrollbar style="max-height: 520px;padding-right: 10px;" trigger="none">
+                        <div class="row-item">
+                            <span>水域范围</span>
+                            <n-select style="width: 230px" v-model:value="state.rangeType" :options="state.rangeOption"
+                                :focusable="false" />
+                        </div>
+
+                        <div class="row-item">
+                            <span>水波纹强度</span>
+                            <n-select style="width: 230px" v-model:value="state.strengthType"
+                                :options="state.strengthOption" :focusable="false" />
+                        </div>
+
+                        <div class="row-item">
+                            <span>水流方向</span>
+                            <div class="slider-box" style="width: 140px; margin-left: 50px;">
+                                <n-slider v-model:value="state.direction" :min="0.0" :max="360.0" :step="1" />
+                            </div>
+                            <n-input-number v-model:value="state.direction" style="width:60px" :min="0.0" :max="360.0"
+                                :step="1" :focusable="false" :show-button="false">
+                                <template #suffix>&deg;</template>
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>水面颜色</span>
+                            <div class="color-pick-box">
+                                <n-color-picker style="width: 230px;" v-model:value="state.waterColor" :render-label="
+                                    () => {
+                                        return '';
+                                    }
+                                    " size="small">
+                                </n-color-picker>
+                            </div>
+                        </div>
+
+                        <div class="row-item">
+                            <span>显示水流方向</span>
+                            <n-checkbox v-model:checked="state.useArrow" style="margin-left: 10px;"></n-checkbox>
+                            <div class="color-pick-box" style="width: 190px;margin-left: 0px;">
+                                <n-color-picker v-model:value="state.arrowColor" :render-label="
+                                    () => {
+                                        return '';
+                                    }
+                                    " size="small"
+                                    :disabled="!state.useArrow">
+                                </n-color-picker>
+                            </div>
+                        </div>
+
+                        <div class="row-item">
+                            <span>开启折射</span>
+                            <div style="width: 226px">
+                                <n-checkbox v-model:checked="state.useRefraction"></n-checkbox>
+                            </div>
+                        </div>
+
+                    </n-scrollbar>
+                </n-config-provider>
+
+            </div>
+        </div>
+    </div>
+    <div class="loading-container">
+        <div class="circle"></div>
+    </div>
+    <script type="module">
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(2),  // Webgl2:2 ; WebGPU:3
+                    msaaLevel: 2,
+                },
+                timeline: true,
+                useSuperMapOIT: true
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+            
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+            // const promise = scene.open("http://localhost:8090/iserver/services/3D-WorkSpace1-5/rest/realspace");
+            const promise = scene.open(URL_CONFIG.SCENE_SRSB);
+            promise.then(function (layers) {
+                document.querySelector('.loading-container').style.display = 'none';
+                document.querySelector('.vue-container').style.display = 'block';
+
+                // 初始化Vue组件
+                initVueComponents(scene, viewer);
+            })
+        }
+
+        // 初始化Vue组件
+        function initVueComponents(scene, viewer) {
+            // 对象解构
+            const { reactive, watch } = Vue;
+            const { darkTheme } = naive;
+
+            // 初始化变量
+            const WaterbodySize = SuperMap3D.WaterbodySize;
+            const WaveStrength = SuperMap3D.WaveStrength;
+            const state = reactive({
+                rangeType: WaterbodySize.MEDIUM,
+                rangeOption: [
+                    { label: () => '较小水域', value: WaterbodySize.SMALL },
+                    { label: () => '中等水域', value: WaterbodySize.MEDIUM },
+                    { label: () => '较广水域', value: WaterbodySize.LARGE },
+                ],
+                strengthType: WaveStrength.MODERATE,
+                strengthOption: [
+                    { label: () => '平静水面', value: WaveStrength.CALM },
+                    { label: () => '轻微波纹', value: WaveStrength.SLIGHT },
+                    { label: () => '中等波纹', value: WaveStrength.MILD },
+                    { label: () => '较大波纹', value: WaveStrength.MODERATE },
+                ],
+                useArrow: true,
+                direction: 0.0,
+                waterColor: "rgba(66,126,120,1.0)",
+                arrowColor: "rgba(241,158,0,1.0)",
+                useRefraction:true,
+            });
+
+            scene.globe.enableLighting = true;
+            scene.highDynamicRange = true;
+
+            // let waterLayer = viewer.scene.layers.layerQueue[0];
+            // let qxLayer = viewer.scene.layers.find("srsb");
+            // if(qxLayer) qxLayer.visible = false;
+            let waterLayer = viewer.scene.layers.find("水面@vector");
+            viewer.flyTo(waterLayer);
+
+            waterLayer.multiTemporalUseWater = true;
+            waterLayer.waterParameter.waterbodySize = SuperMap3D.WaterbodySize.MEDIUM;
+            waterLayer.waterParameter.waveStrength = SuperMap3D.WaveStrength.MODERATE;
+            waterLayer.waterParameter.flowDirectionDisplayMode = SuperMap3D.FlowDirectionDisplayMode.ARROW;
+            waterLayer.waterParameter.flowDirectionArrowColor = SuperMap3D.Color.fromCssColorString("rgba(241,158,0,1.0)");
+            
+            // 创建Vue示例
+            const App = {
+                setup() {
+                    watch(() => state.rangeType,
+                        (val) => {
+                            waterLayer.waterParameter.waterbodySize = Number(val);
+                        }
+                    );
+
+                    watch(() => state.strengthType,
+                        (val) => {
+                            waterLayer.waterParameter.waveStrength = Number(val);
+                        }
+                    );
+
+                    watch(() => state.useArrow,
+                        (val) => {
+                            const FlowDirectionDisplayMode = SuperMap3D.FlowDirectionDisplayMode;
+                            if(val){
+                                waterLayer.waterParameter.flowDirectionDisplayMode = FlowDirectionDisplayMode.ARROW;
+                            }else{
+                                waterLayer.waterParameter.flowDirectionDisplayMode = FlowDirectionDisplayMode.NONE;
+                            }
+                        }
+                    );
+
+                    watch(() => state.useRefraction,
+                        (val) => {
+                            waterLayer.waterParameter.refractionEnabled = Boolean(val);
+                        }
+                    );
+
+                    watch(() => state.direction,
+                        (val) => {
+                            waterLayer.waterParameter.waveDirection = Number(val);
+                        }
+                    );
+
+                    watch(() => state.waterColor,
+                        (val) => {
+                            waterLayer.waterParameter.color = SuperMap3D.Color.fromCssColorString(val);
+                        }
+                    );
+
+                    watch(() => state.arrowColor,
+                        (val) => {
+                            waterLayer.waterParameter.flowDirectionArrowColor = SuperMap3D.Color.fromCssColorString(val);
+                        }
+                    );
+
+                    return {
+                        state,
+                        darkTheme,
+                        overridesTheme: { // 重写主题样式
+                            common: {
+                                primaryColor: "rgba(52, 153, 229, 1)",
+                                primaryColorHover: "rgba(52, 153, 229, 1)",
+                                primaryColorPressed: "rgba(255,255,255,0.85)",
+                                primaryColorSuppl: "rgba(255,255,255,0.45)",
+                            },
+                            Button: {
+                                fontSizeMedium: "14px", // 底部操作按钮：宽高和文字大小自适应浏览器
+                                textColor: "rgba(255,255,255,0.65)", // 设置默认n-button全局样式
+                                border: "1px solid rgba(255,255,255,0.65)",
+                                textColorHover: "#5EB7F2",
+                                borderHover: "1px solid #5EB7F2",
+                                textColorPressed: "#2276BF",
+                                borderPressed: "1px solid #2276BF",
+                            },
+                            Tabs: {
+                                barColor: "#3499e5", // tabs底部横条颜色
+                                tabFontSizeMedium: "14px", // tabs标签文字大小 - 兼容移动端样式
+                            },
+                            ColorPicker: {
+                                border: "none", // color-pick颜色条去掉边框
+                            },
+                            Divider: {
+                                color: "rgba(255, 255, 255, 0.15)", // 分割条颜色
+                            },
+                            Checkbox: {
+                                colorChecked: "#3499E5",
+                                checkMarkColor: "#fff",
+                            },
+                            Slider: {
+                                fillColor: "#3499E5",
+                                fillColorHover: "#3499E5",
+                                handleSize: "12px",
+                            },
+                            Switch: {
+                                railColorActive: "#3499E5",
+                            },
+                            Select: {
+                                color: "rgba(255, 255, 255, 0.15)"
+                            }
+                        },
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

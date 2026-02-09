@@ -1,0 +1,298 @@
+<!--********************************************************************
+* Copyright© 2000 - 2025 SuperMap Software Co.Ltd. All rights reserved.
+*********************************************************************-->
+<!--********************************************************************
+* 注意：示例依赖服务/iserver/services/MGISAnalystUAVReconnaissanceAreaServer/rest的测试数据，
+* 需要确定自己服务数据的范围，并修改initData()接口中的视图范围和侦查路径点串到服务器数据范围下，然后再点击“绘制侦查路线”，进行分析。
+*********************************************************************-->
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Test">
+    <meta name="SuperMap3D-sandcastle-labels" content="Geometries">
+    <title>SuperMap 无人机侦查区域分析</title>
+
+    <!-- MGIS_SuperMap3D插件 -->
+    <!-- <script src="./js/load-mgisclient3d.js"></script> -->
+
+    <!-- MGIS_SuperMap3D插件打包 -->
+    <!-- <script src="../MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script> -->
+
+    <!-- 组件源码 -->
+    <!-- <script type="module" src="./js/load-cesium-es6.js"></script>
+    <link href="../Source/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../Source/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script> -->
+
+    <!-- 组件打包 -->
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../../Build/SuperMap3D/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script>
+
+    <script src="js/jquery.min.js"></script>
+
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <style>
+        .mInput[type=number] {
+            margin: 5px 0px;
+        }
+
+        .mInput[type=text] {
+            margin: 5px 0px;
+        }
+
+        .mButton {
+            margin: 5px 0px;
+        }
+
+        .mSelect {
+            margin: 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="param-container tool-bar" style="position: absolute; top: 20px; right: 30px; width: 350px;height: auto;padding: 0px;border-radius: 5px;">
+        <summary style="font-size: 20px;padding: 10px;background-color: rgba(50, 50, 50, 1);">无人机侦查分析</summary>
+        <div style="padding: 5px;background-color: rgba(38, 38, 38, 0.75);text-align: center;">
+            <div>
+                <b class='panel-title text-center'>水平探测角度范围（-180°-180°）</b>
+            </div>
+            <div style="margin-left: 10px; padding-top: 0px; display: flex; justify-content: center; align-items: center;">
+                <h5>最小角度(°)：</h5>
+                <input class="mInput" style="width: 60px;" id="input-hMinAngle" type="number" value="-30" step="1" min="-180" max="180" />
+                <h5 style="margin-left: 10px;">最大角度(°)：</h5>
+                <input class="mInput" style="width: 60px;" id="input-hMaxAngle" type="number" value="30" step="1" min="-180" max="180" />
+            </div>
+        </div>
+        <div style="padding: 5px;background-color: rgba(38, 38, 38, 0.75);text-align: center;">
+            <div>
+                <b class='panel-title text-center'>垂直探测角度范围（-90°-90°）</b>
+            </div>
+            <div style="margin-left: 10px; padding-top: 0px; display: flex; justify-content: center; align-items: center;">
+                <h5>最小角度(°)：</h5>
+                <input class="mInput" style="width: 60px;" id="input-vMinAngle" type="number" value="-50" step="1" min="-90" max="90"/>
+                <h5 style="margin-left: 10px;">最大角度(°)：</h5>
+                <input class="mInput" style="width: 60px;" id="input-vMaxAngle" type="number" value="50" step="1" min="-90" max="90" />
+            </div>  
+        </div>
+        <div style="padding: 5px;background-color: rgba(38, 38, 38, 0.75);text-align: center;">
+            <div class='input-group' style="margin-left: 15px; margin-right: 15px;">
+                <span class='input-group-addon'>探测距离（1-1w米）</span>
+                <input type='text' class='form-control' id='input-UAV-distance' value='2000'/>
+            </div>
+        </div>
+        <div style="padding: 5px;background-color: rgba(38, 38, 38, 0.75);text-align: center;">
+            <div class='input-group' style="margin-left: 15px; margin-right: 15px;">
+                <span class='input-group-addon'>相对地面高度（米）</span>
+                <input type='text' class='form-control' id='input-UAV-relativeHeight' value='100'/>
+            </div>
+        </div>
+        <div style="padding: 5px;background-color: rgba(38, 38, 38, 0.75);text-align: center;margin-top: 10px; margin-bottom: 10px;">
+            <button id="btn-UAV-start-analyst" type="button" class="button black mButton" style="width:150px; margin-left: 5px;" onclick="startAnalyst()" >开始分析</button>
+            <button id="btn-UAV-start-analyst" type="button" class="button black mButton" style="width:150px; margin-left: 10px;" onclick="clearAnalystResult()" >清除结果</button>
+        </div>
+    </div>
+    <div id="Container" class="fullSize" style="position: absolute;left: 0;width: 100%;height: 100%;border: 1px solid #3473b7;">
+        <script id="_sandcastle_script">
+            var scene, viewer;
+            var host;
+
+            var polylinePts = [];
+            var polylineEntity;
+            var entities = [];
+            var analystUAVReconnaissanceArea;
+
+            function onload(MGIS_SuperMap3D) {
+                'use strict';
+                if (window.Cesium) {
+                    window.SuperMap3D = MGIS_SuperMap3D;
+                }
+                //若本地没有标绘相关服务则可访问支持中心的iserver
+                host = document.location.toString().match(/file:\/\//) ? "http://localhost:8090" : 'http://' + document.location.hostname + ":8090";
+                viewer = new SuperMap3D.Viewer('Container', {
+                    timeline: false,
+                    animation: false,
+                    shouldAnimation: true,
+                    skyAtmosphere: false,
+                    infoBox: false
+                });
+                scene = viewer.scene;
+
+                analystUAVReconnaissanceArea = new SuperMap.AnalystUAVReconnaissanceArea({ serverUri: host + "/iserver/services/MGISAnalystUAVReconnaissanceAreaServer/rest" });
+
+                init();  
+                initData();
+                
+            }
+            
+            if (typeof MGIS_SuperMap3D !== 'undefined') {
+                window.startupCalled = true;
+                onload(MGIS_SuperMap3D);
+            }
+
+            function init() {   
+            }
+
+            function initData() {
+                //=============================== 以下需要根据服务数据范围进行修改 ==============================
+
+                // 加载服务数据范围的影像和地形数据
+                // let imageUrl = host + "/iserver/services/map-ugcv5-World/rest/maps/World";
+                // let terrainUrl = host + "/iserver/services/3D-local3DCache-NC_DEM_30MDEM_30M/rest/realspace/datas/NC_DEM_30M@DEM_30M";
+              
+                // _addImageLayer(imageUrl);
+                // _addTerrainLayer(terrainUrl,  true);
+
+                // 定位到服务数据范围区域
+                scene.camera.flyTo({
+                    destination: new SuperMap3D.Cartesian3(-2455055.9162776726, 5016218.161330629, 3120847.003273937),
+                    orientation: {
+                        heading: 6.105977379659777,
+                        pitch: -0.5130391785021686,
+                        roll: 0.0
+                    }
+                });
+
+                // 无人机侦查路线
+                polylinePts.push(new SuperMap3D.MPoint3D(115.93547029152263, 29.571658152047664, 500));
+                polylinePts.push(new SuperMap3D.MPoint3D(115.97110115090925, 29.543597220494117, 1300));
+                polylinePts.push(new SuperMap3D.MPoint3D(116.01466453710285, 29.508288557463366, 300));
+
+                let positions = [];
+                for (const pt of polylinePts) {
+                    positions.push(SuperMap3D.Cartesian3.fromDegrees(pt.x, pt.y, pt.z));
+                }
+                polylineEntity = viewer.entities.add({
+                    polyline: {
+                        positions: positions,
+                        material: SuperMap3D.Color.RED,
+                        width: 2
+                    }
+                });
+            }
+
+            function startAnalyst(){
+
+
+                let initialHDetectionAngle = $('#input-hMinAngle').val();
+                let terminalHDetectionAngle = $('#input-hMaxAngle').val();
+                let initialVDetectionAngle = $('#input-vMinAngle').val();
+                let terminalVDetectionAngle = $('#input-vMaxAngle').val();
+                let detectionRange =  $('#input-UAV-distance').val();
+                let relativeHeight =  $('#input-UAV-relativeHeight').val();
+
+                let UAVReconnaissanceAreaParameter = new SuperMap.UAVReconnaissanceAreaParameter();
+                UAVReconnaissanceAreaParameter.initialHDetectionAngle = Number(initialHDetectionAngle);
+                UAVReconnaissanceAreaParameter.terminalHDetectionAngle = Number(terminalHDetectionAngle);
+                UAVReconnaissanceAreaParameter.initialVDetectionAngle = Number(initialVDetectionAngle);
+                UAVReconnaissanceAreaParameter.terminalVDetectionAngle = Number(terminalVDetectionAngle);
+                UAVReconnaissanceAreaParameter.detectionRange = Number(detectionRange);
+ 
+                UAVReconnaissanceAreaParameter.routePoint3Ds = [];
+                for(let i = 0; i < polylinePts.length; i++) {
+                    UAVReconnaissanceAreaParameter.routePoint3Ds.push(
+                        new SuperMap.MGPoint3D(
+                            polylinePts[i].x, 
+                            polylinePts[i].y, 
+                            polylinePts[i].z + Number(relativeHeight)));
+                }
+
+                var analystBtn = document.getElementById("btn-UAV-start-analyst");
+                var analystBtnText = analystBtn.textContent;
+                analystBtn.disabled = true;
+            
+                analystUAVReconnaissanceArea.analyst(UAVReconnaissanceAreaParameter, (result)=> {
+                    clearAnalystResult();
+                    for (let index = 0; index < result.length; index++) {
+                        const element = result[index];
+                        // 添加面
+                        let outerBoundary = undefined;
+                        let arrHoles = [];
+                        for (let i = 0; i < element.length; i++) {
+                            let arr = [];
+                            let point2Ds = element[i];
+                            for (const point2D of point2Ds.getItems()) {
+                                arr.push(point2D.x);
+                                arr.push(point2D.y);
+                            }
+                            if (0 == i) {
+                                outerBoundary = SuperMap3D.Cartesian3.fromDegreesArray(arr);
+                            } else {
+                                arrHoles.push(new SuperMap3D.PolygonHierarchy(SuperMap3D.Cartesian3.fromDegreesArray(arr)));
+                            }
+                        }
+
+                        entities.push(viewer.entities.add({
+                            polygon: {
+                                hierarchy: {
+                                    positions: outerBoundary,
+                                    holes: arrHoles
+                                },
+                                material: SuperMap3D.Color.fromCssColorString("rgba(255, 255, 0, 0.3)"),
+                                outline: true,
+                                outlineColor: SuperMap3D.Color.fromCssColorString("rgba(255, 255, 0, 0.6)"),
+                                outlineWidth: 2,
+                                clampToGround: true
+                            }
+                        }));
+                    }
+                    analystBtn.disabled = false;
+                }); 
+            
+                setTimeout(() => {
+                    // 等待300毫秒后再访问进度条信息
+                    var timer = setInterval(() => {
+                        let status = analystUAVReconnaissanceArea.getExecuteStatus();
+                        if (status == 1) {
+                            let percent = analystUAVReconnaissanceArea.getExecutePercent();
+                            analystBtn.textContent = analystBtnText+ " " + percent + "%";
+                        } else if (status == 2) {
+                            clearInterval(timer);
+                            analystBtn.textContent = analystBtnText;
+                        }
+                    }, 30);
+                }, 300);
+            }
+
+            function clearAnalystResult(){
+                entities.forEach(element => {
+                    viewer.entities.remove(element);
+                });
+            }
+
+            function _addImageLayer(layerURL) {
+                viewer.imageryLayers.addImageryProvider(new SuperMap3D.SuperMapImageryProvider({ url: layerURL }));
+            }
+
+            function _addTerrainLayer(layerURL, isSct) {
+                try {
+                    if (SuperMap3D.SuperMapTerrainProvider) {
+                        viewer.terrainProvider = new SuperMap3D.SuperMapTerrainProvider({
+                            url: layerURL,
+                            isSct: isSct, //地形服务源自SuperMap iServer发布时需设置isSct为true
+                            invisibility: true, //是否开启设置地形显隐的功能,默认为false
+                        });
+                    } else if (SuperMap3D.CesiumTerrainProvider) {
+                        viewer.terrainProvider = new SuperMap3D.CesiumTerrainProvider({
+                            url: layerURL,
+                            isSct: isSct, //地形服务源自SuperMap iServer发布时需设置isSct为true
+                            invisibility: true, //是否开启设置地形显隐的功能,默认为false
+                        });
+                    }
+                } catch (e) {
+                    
+                }
+            }
+
+        </script>
+    </div> 
+</body>
+
+</html>

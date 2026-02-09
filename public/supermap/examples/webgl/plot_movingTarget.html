@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Test">
+    <meta name="SuperMap3D-sandcastle-labels" content="Geometries">
+    <title>SuperMap 动目标</title>
+
+    <!-- MGIS_SuperMap3D插件 -->
+    <!-- <script src="./js/load-mgisclient3d.js"></script> -->
+
+    <!-- MGIS_SuperMap3D插件打包 -->
+    <!-- <script src="../MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script> -->
+
+    <!-- 组件源码 -->
+    <!-- <script type="module" src="./js/load-SuperMap3D-es6.js"></script>
+    <link href="../Source/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../Source/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script> -->
+
+    <!-- 组件打包 -->
+    <script src="js/plotPanelControl/PlottingUI.Include.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../../Build/SuperMap3D/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script>
+
+    <script src="js/jquery.min.js"></script>
+
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <style>
+        .mInput[type=number] {
+            margin: 5px 0px;
+        }
+
+        .mInput[type=text] {
+            margin: 5px 0px;
+        }
+
+        .mButton {
+            margin: 5px 0px;
+        }
+
+        .mSelect {
+            margin: 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="param-container tool-bar" style="width: 420px;height: auto;padding: 0px;border-radius: 5px;">
+        <details>
+            <summary style="font-size: 20px;padding: 10px;background-color: rgba(50, 50, 50, 1);">动目标</summary>
+            <div style="padding: 10px;background-color: rgba(38, 38, 38, 0.75);">
+                <div class='param-item'>
+                    <button type="button" class="button black mButton" onclick="createMovingTarget()">创建目标</button>
+                    <button type="button" class="button black mButton" onclick="clearMovingTarget()">清空目标</button>
+                    <button type="button" class="button black mButton" onclick="startSignalSimulation()">开启信号</button>
+                    <button type="button" class="button black mButton" onclick="stopSignalSimulation()">停止信号</button>
+                </div>
+                <div class='param-item'>
+                    <b>每次发射：</b>
+                    <input class="mInput" id="movingTargetCount-input" type="number" value="5000" step="1" min="1"
+                        max="100000" oninput="movingTargetCountChanged()" />
+                    <b>（个）</b>
+                </div>
+                <div class='param-item'>
+                    <b>发射周期：</b>
+                    <input class="mInput" id="movingTargetLayerInterval-input" type="number" value="3" step="0.1"
+                        min="0.1" max="500" oninput="movingTargetLayerIntervalChanged()" />
+                    <b>（秒）</b>
+                </div>
+                <div class="title"></div>
+                <div class="param-item">
+                    <b>默认显示模式：</b>
+                    <select class="cesium-button mSelect" id="movingTargetMode" lay-filter="movingTargetMode">
+                        <option value="模型">模型</option>
+                        <option value="图片">图片</option>
+                        <option value="标号">标号</option>
+                    </select>
+                </div>
+                <div class="title"></div>
+                <div class='param-item'>
+                    <b>相机高度：</b>
+                    <input class="mInput" id="nearViewHeight-input" style="width: 80px;" type="number" value="2000000"
+                        step="1" min="1" max="1000000000000" oninput="" />
+                    <b>（米）</b>
+                    <button type="button" class="button black mButton" onclick="setNearViewState()">添加近观</button>
+                    <button type="button" class="button black mButton" onclick="clearNearViewState()">删除</button>
+                </div>
+
+                <div class='param-item'>
+                    <b>相机高度：</b>
+                    <input class="mInput" id="farViewHeight-input" style="width: 80px;" type="number" value="5000000"
+                        step="1" min="1" max="1000000000000" oninput="" />
+                    <b>（米）</b>
+                    <button type="button" class="button black mButton" onclick="setFarViewState()">添加远观</button>
+                    <button type="button" class="button black mButton" onclick="clearFarViewState()">删除</button>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary style="font-size: 20px;padding: 10px;background-color: rgba(50, 50, 50, 1);">特效</summary>
+            <div style="padding: 10px;background-color: rgba(38, 38, 38, 0.75);">
+                <div class='param-item'>
+                    <button type="button" class="button black mButton" onclick="addMovingTargetSign()">添加标牌</button>
+                    <button type="button" class="button black mButton" onclick="removeMovingTargetSign()">移除标牌</button>
+                    <button type="button" class="button black mButton" onclick="modifyMovingTargetSign()">修改样式</button>
+                    <button type="button" id="signCanDragBtn" class="button black mButton"
+                        onclick="signCanDrag()">关闭标牌拖拽</button>
+                    <button type="button" class="button black mButton"
+                        onclick="removeSignsDraggedState()">移除标牌拖拽状态</button>
+                    <button type="button" id="isAutoAvoidanceBtn" class="button black mButton"
+                        onclick="setIsSignAutoAvoidance()">开启自动避让</button>
+                    <button type="button" class="button black mButton" onclick="avoidanceSignOne()">避让一次</button>
+                </div>
+                <div class='param-item'>
+                    <b>标牌个数：</b>
+                    <input class="mInput" id="signCount-input" type="number" value="1000" step="1" min="1" max="100000"
+                        oninput="" />
+                    <b>（个）</b>
+                </div>
+                <div class="title"></div>
+                <div class='param-item'>
+                    <b>标牌偏移：</b>
+                </div>
+                <div class='param-item'>
+                    <b>牵引线长度：</b>
+                    <input type="number" id="deviationLength" min="0" class="mInput"
+                        oninput="deviationLengthChanged()" />
+                    <b>（mm）</b>
+                </div>
+                <div class='param-item'>
+                    <b>牵引线旋转：</b>
+                    <input type="number" id="deviationAngle" class="mInput" oninput="deviationAngleChanged()" />
+                    <b>（°）</b>
+                </div>
+                <div class="title"></div>
+                <div class='param-item'>
+                    <b>标牌避让范围：</b>
+                    <input type="text" id="avoidanceRange" class="mInput" oninput="avoidanceRangeChanged()" />
+                    <b>（°）</b>
+                </div>
+                <div class="title"></div>
+                <div class='param-item'>
+                    <button type="button" class="button black mButton" onclick="addMovingTargetTrack()">添加轨迹</button>
+                    <button type="button" class="button black mButton" onclick="removeMovingTargetTrack()">移除轨迹</button>
+                    <button type="button" class="button black mButton"
+                        onclick="setMovingTargetTrackParams()">修改样式</button>
+                </div>
+                <div class='param-item'>
+                    <b>轨迹个数：</b>
+                    <input class="mInput" id="trackCount-input" type="number" value="1000" step="1" min="1" max="100000"
+                        oninput="" />
+                    <b>（个）</b>
+                </div>
+                <!-- 目标ID:
+                <input class="mInput" type="text" id="previewHistoryTargetId"
+                    style="height: 30px;margin-top: 10px;" />
+                <input class="mInput" type="button" class="btn btn-default" value="查看历史轨迹" onclick="previewHistoryTrack()" style="height: 30px"/>
+                <input class="mInput" type="button" class="btn btn-default" value="清空历史轨迹" onclick="clearHistoryTrack()" style="height: 30px"/> -->
+            </div>
+        </details>
+    </div>
+
+    <div id="SuperMap3DContainer" class="fullSize"
+        style="position: absolute;left: 0;width: 100%;height: 100%;border: 1px solid #3473b7;">
+        <script id="SuperMap3D_sandcastle_script">
+
+            var scene, viewer, plotting;
+            var worker;
+            var movingTargetLayer3D;
+            var mGISManager;
+
+            function onload(SuperMap3D) {
+                'use strict';
+                if (window.Cesium) {
+                    window.SuperMap3D = SuperMap3D;
+                }
+                //若本地没有标绘相关服务则可访问支持中心的iserver
+                var host = window.isLocalPlot ? window.plotServer : "http://support.supermap.com.cn:8090";
+                viewer = new SuperMap3D.Viewer('SuperMap3DContainer', {
+                    timeline: false,
+                    animation: false,
+                    shouldAnimation: true,
+                    skyAtmosphere: false,
+                    infoBox: false
+                });
+                scene = viewer.scene;
+                let serverUrl = host + '/iserver/services/plot-jingyong/rest/plot';
+                mGISManager = new SuperMap3D.MGISManager({ scene: scene, serverUrl: serverUrl });
+                mGISManager.property.signAvoidanceAngles = [30, 60, 120, 150];
+
+                movingTargetLayer3D = new SuperMap3D.MovingTargetLayer();
+                movingTargetLayer3D.setName("testMovingTargets");
+                //movingTargetLayer3D.setURI(host); // 此接口已废弃
+                movingTargetLayer3D.setServerUrl(host + "/iserver/services/MGISMovingTargetToolServer/rest/domainComponents/MGISMovingTargetImpl");
+                movingTargetLayer3D.setCanDragSign(true);
+                mGISManager.movingTargetLayers.add(movingTargetLayer3D);
+
+                scene.globe.depthTestAgainstTerrain = true;
+                scene.debugShowFramesPerSecond = true;
+
+                if (SuperMap3D.FeatureDetection.supportsImageRenderingPixelated()) {
+                    viewer.resolutionScale = window.devicePixelRatio;
+                }
+                scene.postProcessStages.fxaa.enabled = true;
+
+                plotting = SuperMap3D.Plotting.getInstance(serverUrl, scene);
+
+                // ws = new WebSocket("ws://localhost:6531");
+                // ws.onopen = function () {
+                //     isConnected = true;
+                //     console.log("连接到服务器")
+                // }
+                worker = new Worker("./plot_movingTargetServer.js");
+                worker.onmessage = function (event) {
+                    // console.time("onmessage")
+                    let msg = event.data;
+                    if (msg.type == "start") {
+                        let datas = msg.ss.split(";");
+                        //console.log("count " + datas.length)
+                        for (let i = 0; i < datas.length; i++) {
+                            let arr = datas[i].split(",");
+
+                            let option = {
+                                targetID: arr[0],
+                                position: new SuperMap3D.MPoint3D(parseFloat(arr[1]), parseFloat(arr[2]), parseFloat(arr[3])),
+                                rotation: undefined
+                            };
+
+                            movingTargetLayer3D.addTarget(option);
+                        }
+                        // console.timeEnd("onmessage")
+                    } else if (msg.type == "update") {
+                        // console.time("onmessage")
+                        let datas = msg.ss.split(";");
+                        //console.log("count " + datas.length)
+                        for (let i = 0; i < datas.length; i++) {
+                            let arr = datas[i].split(",");
+
+                            let option = {
+                                targetID: arr[0],
+                                position: new SuperMap3D.MPoint3D(parseFloat(arr[1]), parseFloat(arr[2]), parseFloat(arr[3])),
+                                rotation: undefined
+                            };
+
+                            movingTargetLayer3D.updateTarget(option);
+                        }
+                        // console.timeEnd("onmessage")
+                    }
+
+                }
+
+                initUIData();
+            }
+
+            if (typeof MGIS_SuperMap3D !== 'undefined') {
+                window.startupCalled = true;
+                onload(MGIS_SuperMap3D);
+            }
+
+            function initUIData() {
+                let angles = mGISManager.property.signAvoidanceAngles;
+                let strAngles = "";
+                for (let index = 0; index < angles.length; index++) {
+                    const element = angles[index];
+                    if (index == 0) {
+                        strAngles += element;
+                    } else {
+                        strAngles += "," + element;
+                    }
+                }
+                document.getElementById('avoidanceRange').value = strAngles;
+
+                document.getElementById('deviationLength').value = 8;
+                document.getElementById('deviationAngle').value = 90;
+            }
+
+            let addSignsTimer = undefined;
+            function addSigns(arrSignParam, arrDetailedSignParam) {
+                if (!MGIS_SuperMap3D.defined(arrSignParam)) {
+                    return;
+                }
+                let nCount = arrSignParam.length;
+                if (nCount <= 500) {
+                    for (let i = 0; i < nCount; i++) {
+                        movingTargetLayer3D.addSign(arrSignParam[i].targetID, arrSignParam[i].signParam);
+                        movingTargetLayer3D.addDetailedSign(arrDetailedSignParam[i].targetID, arrDetailedSignParam[i].signParam);
+                    }
+
+                } else {
+                    let optionsArr = [];
+                    let options = [];
+                    let optionsArr1 = [];
+                    let options1 = [];
+                    let j = 0;
+                    for (let i = 0; i < nCount; i++) {
+                        options.push(arrSignParam[i]);
+                        options1.push(arrDetailedSignParam[i]);
+                        j++;
+                        if (j >= 100 || i == nCount - 1) {
+                            optionsArr.push(options);
+                            options = [];
+                            optionsArr1.push(options1);
+                            options1 = [];
+                            j = 0;
+                        }
+                    }
+
+                    let index = 0;
+
+                    if (MGIS_SuperMap3D.defined(addSignsTimer)) {
+                        clearInterval(addSignsTimer);
+                        addSignsTimer = undefined;
+                    }
+                    addSignsTimer = setInterval(() => {
+                        for (let i = 0; i < optionsArr[index].length; i++) {
+                            movingTargetLayer3D.addSign(optionsArr[index][i].targetID, optionsArr[index][i].signParam);
+                            movingTargetLayer3D.addDetailedSign(optionsArr1[index][i].targetID, optionsArr1[index][i].signParam);
+                        }
+
+                        index++;
+                        if (index >= optionsArr.length) {
+                            clearInterval(addSignsTimer);
+                            addSignsTimer = undefined;
+                        }
+                    }, 10);
+                }
+            }
+
+            function removeSignsDraggedState() {
+                let signs = mGISManager.property.getDraggedSigns();
+                mGISManager.property.removeSignsDraggedState(signs);
+            }
+
+            function signCanDrag() {
+                let layers = mGISManager.movingTargetLayers.getAllLayers();
+                if (layers.length > 0) {
+                    let canDrag = layers[0].getCanDragSign();
+                    for (let index = 0; index < layers.length; index++) {
+                        let layer = layers[index];
+                        layer.setCanDragSign(!canDrag);
+                    }
+                    if (canDrag) {
+                        document.getElementById("signCanDragBtn").innerHTML = "开启标牌拖拽";
+                    } else {
+                        document.getElementById("signCanDragBtn").innerHTML = "关闭标牌拖拽";
+                    }
+                }
+            }
+
+            function addMovingTargetSign() {
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                let signCount = $('#signCount-input').val();
+                signCount = (movingTargetCount >= signCount) ? signCount : movingTargetCount;
+
+                let targetIDs = movingTargetLayer3D.getMovingTargetIDs();
+                let arrSignParam = [];
+                let arrDetailedSignParam = [];
+                for (let i = 0; i < signCount; i++) {
+                    let signParam = new MGIS_SuperMap3D.ParameterSignProperty({
+                        texts: [targetIDs[i]],
+                        signEffectType: SuperMap3D.SignEffectType.Sign1
+                    });
+
+                    let contentFrameStyle = signParam.getContentFrameStyle();
+
+                    contentFrameStyle.lineColor = [new SuperMap3D.Color(0, 1, 1)];
+                    signParam.setContentFrameStyle(contentFrameStyle);
+
+                    let textStyles = signParam.getTextStyles();
+                    if (SuperMap3D.defined(textStyles) && textStyles.length > 0) {
+                        textStyles[0].fontSize = 4.5;
+                    }
+                    signParam.setTextStyles(textStyles);
+
+                    let indecatorLineStyle = signParam.getIndecatorLineStyle();
+                    indecatorLineStyle.aryLineColors = [new MGIS_SuperMap3D.Color(0, 1, 1)];
+
+                    signParam.setIndecatorLineStyle(indecatorLineStyle);
+                    let deviationLength = document.getElementById('deviationLength').value;
+                    let deviationAngle = document.getElementById('deviationAngle').value;
+                    signParam.setIndecatorLineLength(deviationLength);
+                    signParam.setIndecatorLineRotation(deviationAngle);
+
+                    arrSignParam.push({ targetID: targetIDs[i], signParam: signParam });
+
+                    // let detailedSignParam = new MGIS_SuperMap3D.ParameterSignProperty({
+                    //     texts: [targetIDs[i], "XX旅", "XXX指挥中心"],
+                    //     signEffectType: SuperMap3D.SignEffectType.Sign1,
+                    //     showIndecatorLine: true
+                    // });
+
+                    // textStyles = detailedSignParam.getTextStyles();
+                    // for(let i = 0; i < textStyles.length; i++){
+                    //     textStyles[i].fontSize = 4;
+                    // }
+                    // detailedSignParam.setTextStyles(textStyles);
+
+                    let detailedSignParam = new MGIS_SuperMap3D.DomSignProperty({
+                        dom: "<div " +
+                            "style='color: rgb(255, 255, 255);padding: 3px 10px;background-color: #0336497F;line-height: 0.6;width:fit-content; border: 2px solid #00ffff'>" +
+                            "<p id='1' style='margin-top:5px' >" + targetIDs[i] + "</p>" +
+                            "<p id='2'>XX旅</p>" +
+                            "<p id='3'>XXX指挥中心</p>" +
+                            "</div > ",
+                        showIndecatorLine: true,
+                        signRenderMode: MGIS_SuperMap3D.SignRenderMode.DOM
+                    });
+
+                    indecatorLineStyle = detailedSignParam.getIndecatorLineStyle();
+                    indecatorLineStyle.aryLineColors = [new MGIS_SuperMap3D.Color(0, 1, 1)];
+
+                    detailedSignParam.setIndecatorLineStyle(indecatorLineStyle);
+                    detailedSignParam.setIndecatorLineLength(deviationLength);
+                    detailedSignParam.setIndecatorLineRotation(deviationAngle);
+                    // let detailedSignParam = new MGIS_SuperMap3D.SignEffectParameter({
+                    //     createdMode: SuperMap3D.CreateSignMode.PictureMode,
+                    //     signImage: "http://localhost:8090/iserver/mgis/situationSimulation/Sign/标牌1.png"
+                    // });
+                    arrDetailedSignParam.push({ targetID: targetIDs[i], signParam: detailedSignParam });
+                }
+                addSigns(arrSignParam, arrDetailedSignParam);
+
+                movingTargetLayer3D.addTargetClickedEvent(addSignSelectEvent);
+                movingTargetLayer3D.addTargetDoubleClickedEvent(addSignExchangeEvent);
+            }
+
+            function removeMovingTargetSign() {
+                let targetIDs = movingTargetLayer3D.getMovingTargetIDs();
+
+                for (let i = 0; i < targetIDs.length; i++) {
+                    movingTargetLayer3D.removeSign(targetIDs[i]);
+                    movingTargetLayer3D.removeDetailedSign(targetIDs[i]);
+                }
+
+                movingTargetLayer3D.removeTargetClickedEvent(addSignSelectEvent);
+                movingTargetLayer3D.removeTargetDoubleClickedEvent(addSignExchangeEvent);
+            }
+
+            function modifyMovingTargetSign() {
+                // 通过修改标牌样式高亮显示标牌 
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                let signCount = $('#signCount-input').val();
+                signCount = (movingTargetCount >= signCount) ? signCount : movingTargetCount;
+
+
+                let targetIDs = movingTargetLayer3D.getMovingTargetIDs();
+
+                for (let i = 0; i < signCount; i++) {
+                    let targetID = targetIDs[i];
+                    let signParm = movingTargetLayer3D.getSignParm(targetID);
+                    if (SuperMap3D.defined(signParm)) {
+                        let contentFrameStyle = signParm.getContentFrameStyle();
+                        contentFrameStyle.lineColor = [SuperMap3D.Color.YELLOW];
+                        contentFrameStyle.lineDash = 3;
+                        signParm.setContentFrameStyle(contentFrameStyle);
+                        movingTargetLayer3D.setSignParm(targetID, signParm);
+                    }
+
+                    signParm = movingTargetLayer3D.getDetailedSignParm(targetID);
+                    if (SuperMap3D.defined(signParm)) {
+                        signParm.setDom("<div " +
+                            "style='color: rgb(255, 255, 255);padding: 3px 10px;background-color: #0336497F;line-height: 0.6;width:fit-content; border: 2px solid #ffff00'>" +
+                            "<p id='1' style='margin-top:5px' >" + targetID + "</p>" +
+                            "<p id='2'>XX旅</p>" +
+                            "<p id='3'>XXX指挥中心</p>" +
+                            "</div > ");
+
+                        movingTargetLayer3D.setDetailedSignParm(targetID, signParm);
+                    }
+                }
+
+            }
+
+            function setIsSignAutoAvoidance() {
+                let isAutoAvoidance = mGISManager.property.isSignAutoAvoidance;
+                mGISManager.property.isSignAutoAvoidance = !isAutoAvoidance;
+                if (isAutoAvoidance) {
+                    document.getElementById("isAutoAvoidanceBtn").innerHTML = "开启自动避让";
+                } else {
+                    document.getElementById("isAutoAvoidanceBtn").innerHTML = "关闭自动避让";
+                }
+            }
+
+            function deviationLengthChanged() {
+                let value = document.getElementById('deviationLength').value;
+                let targetIDs = movingTargetLayer3D.getMovingTargetIDs();
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                let signCount = $('#signCount-input').val();
+                signCount = (movingTargetCount >= signCount) ? signCount : movingTargetCount;
+
+                for (let i = 0; i < signCount; i++) {
+                    let targetID = targetIDs[i];
+                    let signParm = movingTargetLayer3D.getSignParm(targetID);
+                    if (SuperMap3D.defined(signParm)) {
+                        signParm.setIndecatorLineLength(value);
+                        movingTargetLayer3D.setSignParm(targetID, signParm);
+                    }
+
+                    signParm = movingTargetLayer3D.getDetailedSignParm(targetID);
+                    if (SuperMap3D.defined(signParm)) {
+                        signParm.setIndecatorLineLength(value);
+                        movingTargetLayer3D.setDetailedSignParm(targetID, signParm);
+                    }
+                }
+            }
+
+            function deviationAngleChanged() {
+                let value = document.getElementById('deviationAngle').value;
+                let targetIDs = movingTargetLayer3D.getMovingTargetIDs();
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                let signCount = $('#signCount-input').val();
+                signCount = (movingTargetCount >= signCount) ? signCount : movingTargetCount;
+
+                for (let i = 0; i < signCount; i++) {
+                    let targetID = targetIDs[i];
+                    let signParm = movingTargetLayer3D.getSignParm(targetID);
+                    if (SuperMap3D.defined(signParm)) {
+                        signParm.setIndecatorLineRotation(value);
+                        movingTargetLayer3D.setSignParm(targetID, signParm);
+                    }
+
+                    signParm = movingTargetLayer3D.getDetailedSignParm(targetID);
+                    if (SuperMap3D.defined(signParm)) {
+                        signParm.setIndecatorLineRotation(value);
+                        movingTargetLayer3D.setDetailedSignParm(targetID, signParm);
+                    }
+                }
+            }
+
+            function avoidanceRangeChanged() {
+                let values = document.getElementById('avoidanceRange').value;
+                let strAngles = values.split(",");
+                let angles = [];
+                for (let index = 0; index < strAngles.length; index++) {
+                    const element = strAngles[index];
+                    angles.push(parseFloat(element));
+                }
+                mGISManager.property.signAvoidanceAngles = angles;
+            }
+
+            function avoidanceSignOne() {
+                mGISManager.property.signAvoidance();
+            }
+
+            function addSignExchangeEvent(options) {
+                // 标牌切换事件
+                if (undefined == options || undefined == options.targetID || undefined == options.movingTargetPartType) {
+                    return;
+                }
+                let targetID = options.targetID;
+                let movingTargetPartType = options.movingTargetPartType;
+                if (movingTargetPartType == SuperMap3D.MovingTargetPartType.Sign) {
+                    movingTargetLayer3D.setFirstShowDetailedSign(targetID, !movingTargetLayer3D.getFirstShowDetailedSign(targetID));
+                }
+            }
+
+            var lastSelectTargetID = undefined;
+            var lastSelectSignParm = undefined;
+            var isSelectDetailedSign = undefined;
+            function addSignSelectEvent(options) {
+                if (undefined == options || undefined == options.targetID || undefined == options.movingTargetPartType) {
+                    return;
+                }
+                let targetID = options.targetID;
+                let movingTargetPartType = options.movingTargetPartType;
+
+                if (SuperMap3D.defined(lastSelectTargetID) && SuperMap3D.defined(lastSelectSignParm) && options.targetID != lastSelectTargetID) {
+                    if (!isSelectDetailedSign) {
+                        let signParm = movingTargetLayer3D.getSignParm(lastSelectTargetID);
+
+                        signParm.setContentFrameStyle(lastSelectSignParm.contentFrameStyle);
+                        signParm.setTrayStyle(lastSelectSignParm.trayStyle);
+
+                        movingTargetLayer3D.setSignParm(lastSelectTargetID, signParm);
+                    }
+                    else {
+                        let detailedSignParm = movingTargetLayer3D.getDetailedSignParm(lastSelectTargetID);
+
+                        detailedSignParm.setDom(lastSelectSignParm.dom);
+
+                        movingTargetLayer3D.setDetailedSignParm(lastSelectTargetID, detailedSignParm);
+                    }
+                    lastSelectTargetID = undefined;
+                    lastSelectSignParm = undefined;
+                }
+
+                if (movingTargetPartType == SuperMap3D.MovingTargetPartType.Sign) {
+                    let signParm = movingTargetLayer3D.getSignParm(targetID);
+                    let detailedSignParm = movingTargetLayer3D.getDetailedSignParm(targetID);
+                    if (SuperMap3D.defined(signParm) && (!SuperMap3D.defined(detailedSignParm) || !movingTargetLayer3D.getFirstShowDetailedSign(targetID))) {
+
+                        lastSelectTargetID = targetID;
+                        let lastSelectSignParmTemp = {
+                            contentFrameStyle: signParm.getContentFrameStyle(),
+                            trayStyle: signParm.getTrayStyle()
+                        }
+                        lastSelectSignParm = SuperMap3D.clone(lastSelectSignParmTemp, true);
+
+                        isSelectDetailedSign = false;
+
+                        let contentFrameStyle = signParm.getContentFrameStyle();
+                        contentFrameStyle.lineColor = [SuperMap3D.Color.YELLOW];
+                        signParm.setContentFrameStyle(contentFrameStyle);
+
+                        let trayStyle = signParm.getTrayStyle();
+                        trayStyle.lineColor = [SuperMap3D.Color.YELLOW];
+                        signParm.setTrayStyle(trayStyle);
+
+                        movingTargetLayer3D.setSignParm(targetID, signParm);
+
+                    }
+                    else if (SuperMap3D.defined(detailedSignParm) && (!SuperMap3D.defined(signParm) || movingTargetLayer3D.getFirstShowDetailedSign(targetID))) {
+
+                        lastSelectTargetID = targetID;
+
+                        let lastSelectSignParmTemp = {
+                            dom: detailedSignParm.getDom()
+                        }
+                        lastSelectSignParm = SuperMap3D.clone(lastSelectSignParmTemp, true);
+                        isSelectDetailedSign = true;
+
+                        detailedSignParm.setDom("<div " +
+                            "style='color: rgb(255, 255, 255);padding: 3px 10px;background-color: #0336497F;line-height: 0.6;width:fit-content; border: 2px solid #ffff00'>" +
+                            "<p id='1' style='margin-top:5px' >" + targetID + "</p>" +
+                            "<p id='2'>XX旅</p>" +
+                            "<p id='3'>XXX指挥中心</p>" +
+                            "</div > ");
+
+                        movingTargetLayer3D.setDetailedSignParm(targetID, detailedSignParm);
+                    }
+                }
+            }
+
+            function addMovingTargetTrack() {
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                let trackCount = $('#trackCount-input').val();
+                trackCount = (movingTargetCount >= trackCount) ? trackCount : movingTargetCount;
+
+                let targetIDs = movingTargetLayer3D.getMovingTargetIDs();
+                for (let i = 0; i < trackCount; i++) {
+                    movingTargetLayer3D.addTrackLine(targetIDs[i]);
+                }
+            }
+
+            function removeMovingTargetTrack() {
+                let targetIDs = movingTargetLayer3D.getMovingTargetIDs();
+                for (let i = 0; i < targetIDs.length; i++) {
+                    movingTargetLayer3D.removeTrackLine(targetIDs[i]);
+                }
+
+            }
+
+            function setMovingTargetTrackParams() {
+                if (SuperMap3D.defined(movingTargetLayer3D)) {
+                    movingTargetLayer3D.setTrackLineStyle({
+                        lineWidth: 2,
+                        aryGradientColors: [new SuperMap3D.Color(0, 255, 255)]
+                    });
+                }
+            }
+
+            var historyLineCollection = undefined;
+            function previewHistoryTrack() {
+                historyLineCollection = scene.primitives.add(new SuperMap3D.PolylineCollection());
+
+                let targetID = document.getElementById('previewHistoryTargetId').value;
+                if (targetID.length > 0) {
+                    if (SuperMap3D.defined(movingTargetLayer3D)) {
+                        let historys = movingTargetLayer3D.getTargetHistory(targetID);
+                        let positions = [];
+                        historys.forEach(history => {
+                            positions.push(SuperMap3D.SituationSimulationToolkit.degreesToCartesian3(history.position));
+                        });
+
+                        if (positions > 0) {
+                            historyLineCollection.add({
+                                positions: positions,
+                                width: 2,
+                                material: new SuperMap3D.Material({
+                                    fabric: {
+                                        type: "Color",
+                                        uniforms: {
+                                            color: SuperMap3D.Color.RED,
+                                        }
+                                    }
+                                })
+                            });
+                        }
+                    }
+                }
+            }
+
+            function clearHistoryTrack() {
+                if (historyLineCollection) {
+                    historyLineCollection.removeAll();
+                }
+            }
+
+
+            function movingTargetCountChanged() {
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                if (worker && movingTargetCount > 0) {
+                    worker.postMessage(JSON.stringify({ type: "modifyCount", count: movingTargetCount }));
+                }
+            }
+
+            function movingTargetLayerIntervalChanged() {
+                let movingTargetInterval = $('#movingTargetLayerInterval-input').val();
+                if (worker) {
+                    worker.postMessage(JSON.stringify({ type: "modifyTime", time: movingTargetInterval }));
+
+                    movingTargetLayer3D.setUpdateInterval(movingTargetInterval);
+                }
+            }
+
+            function createMovingTarget() {
+                let defaultMode = undefined;;
+                let showType = $('#movingTargetMode').val();
+                if (showType === "模型") {
+                    defaultMode = {
+                        showMode: SuperMap3D.DotMode.Marker,
+                        modelPath: "./SampleData/situationSimulation/Model/RF-15/RF-15.gltf",
+                        modelScale: 10000
+                    };
+                }
+                else if (showType === "图片") {
+                    defaultMode = {
+                        showMode: SuperMap3D.DotMode.Picture,
+                        picturePath: "./SampleData/situationSimulation/Picture/RF-15.png",
+                        pictureSymbolSize: new SuperMap3D.Cartesian2(10, 10)
+                    };
+                }
+                else if (showType === "标号") {
+                    defaultMode = {
+                        showMode: SuperMap3D.DotMode.Grid,
+                        libID: 100,
+                        code: 300,
+                        // gridSymbolSize: new SuperMap3D.Cartesian2(5, 5)
+                    }
+                }
+                movingTargetLayer3D.setDefaultMode(defaultMode);
+
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                let movingTargetInterval = $('#movingTargetLayerInterval-input').val();
+                movingTargetLayer3D.setUpdateInterval(movingTargetInterval);
+
+                if (worker) {
+                    let json = {
+                        type: "start",
+                        count: movingTargetCount,
+                    };
+                    worker.postMessage(JSON.stringify(json));
+                }
+            }
+
+            function clearMovingTarget() {
+                stopSignalSimulation();
+                movingTargetLayer3D.removeAllTarget();
+            }
+
+            function startSignalSimulation() {
+
+                let defaultMode = undefined;;
+                let showType = $('#movingTargetMode').val();
+                if (showType === "模型") {
+                    defaultMode = {
+                        showMode: SuperMap3D.DotMode.Marker,
+                        modelPath: "./SampleData/situationSimulation/Model/RF-15/RF-15.gltf",
+                        modelScale: 10000
+                    };
+                }
+                else if (showType === "图片") {
+                    defaultMode = {
+                        showMode: SuperMap3D.DotMode.Picture,
+                        picturePath: "./SampleData/situationSimulation/Picture/RF-15.png",
+                        pictureSymbolSize: new SuperMap3D.Cartesian2(10, 10)
+                    };
+                }
+                else if (showType === "标号") {
+                    defaultMode = {
+                        showMode: SuperMap3D.DotMode.Grid,
+                        libID: 100,
+                        code: 300,
+                        // gridSymbolSize: new SuperMap3D.Cartesian2(5, 5)
+                    }
+                }
+                movingTargetLayer3D.setDefaultMode(defaultMode);
+
+                let movingTargetCount = $('#movingTargetCount-input').val();
+                let movingTargetInterval = $('#movingTargetLayerInterval-input').val();
+                movingTargetLayer3D.setUpdateInterval(movingTargetInterval);
+
+                if (worker) {
+                    let json = {
+                        type: "update",
+                        count: movingTargetCount,
+                        time: movingTargetInterval * 1000
+                    };
+                    worker.postMessage(JSON.stringify(json));
+                }
+            }
+
+            function stopSignalSimulation() {
+                worker.postMessage(JSON.stringify({ type: "stop" }));
+            }
+
+            function setNearViewState() {
+                let height = $("#nearViewHeight-input").val();
+                let mode = {
+                    showMode: SuperMap3D.DotMode.Picture,
+                    picturePath: "./SampleData/situationSimulation/Picture/RF-15.png",
+                    pictureSymbolSize: new SuperMap3D.Cartesian2(35, 35)
+                };
+                movingTargetLayer3D.setNearViewStateMode(height, mode);
+            }
+
+            function clearNearViewState() {
+                movingTargetLayer3D.setNearViewStateMode(undefined, undefined);
+            }
+
+            function setFarViewState() {
+                let height = $("#farViewHeight-input").val();
+                let mode = {
+                    showMode: SuperMap3D.DotMode.Picture,
+                    picturePath: "./SampleData/situationSimulation/Picture/RF-15.png",
+                    pictureSymbolSize: new SuperMap3D.Cartesian2(10, 10)
+                };
+                movingTargetLayer3D.setFarViewStateMode(height, mode);
+            }
+
+            function clearFarViewState() {
+                movingTargetLayer3D.setFarViewStateMode(undefined, undefined);
+            }
+        </script>
+    </div>
+</body>
+
+
+</html>

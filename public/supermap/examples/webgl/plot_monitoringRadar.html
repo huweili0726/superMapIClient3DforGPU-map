@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多目标监控雷达示例</title>
+    <link rel="stylesheet" href="./css/sideBar.css">
+    <script src="js/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" media="screen,projection" href="css/jquery-sticklr.css"/>
+    <script src="js/plotPanelControl/PlottingUI.Include.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../../Build/SuperMap3D/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container" style="width: 100%;height: 100%;">
+        <div style="position: absolute;left: 10px;top: 20px;z-index: 1000;">
+            <input type="button" style="background-color:chartreuse" value="创建雷达" onclick="createRadar()" /> &nbsp;
+            <input type="button" style="background-color:chartreuse" value="添加追踪目标" onclick="addTrackingTargets()" />
+            &nbsp;
+            <input type="button" style="background-color:chartreuse" value="保存标绘图" onclick="savePlotMap()" />
+            <input type="button" style="background-color:chartreuse" value="打开标绘图" onclick="openPlotMap()" />
+            <input type="file" id="loadPlotMap" style="display: none;">
+            &nbsp;
+            <input type="button" style="background-color:chartreuse" value="开始追踪" onclick="startTrack()" />
+            &nbsp;
+        </div>
+        <script id="_sandcastle_script">
+            var viewer, scene, mGISManager, plottingLayer, plotMapManager, monitoringRadar,effectManager;
+            var plotEditControl;
+            var isStartUpdate = false;  
+            let currentTextureIndex = 0;
+            function onload(MGIS_SuperMap3D) {
+                'use strict';
+                if (window.Cesium) {
+                    window.SuperMap3D = MGIS_SuperMap3D;
+                }
+
+                var host = window.isLocalPlot ? window.plotServer : "http://support.supermap.com.cn:8090";
+                viewer = new SuperMap3D.Viewer('Container');
+                scene = viewer.scene;
+                var serverUrl = host + '/iserver/services/plot-jingyong/rest/plot';
+                InitPlot(serverUrl);
+                effectManager = SuperMap3D.MGISEffectManager.getInstance(scene);
+                // 初始创建纹理线
+                //var texturedPolyline = createTexturedPolyline(20, 0.2);
+                //viewer.scene.primitives.add(texturedPolyline);
+
+            }
+
+            function createRadar() {
+                //管理器创建
+                let radarPt = new SuperMap3D.PlotPoint3D(100, 35, 1000);
+                let options = {
+                    radius: 300000
+                }
+                effectManager.createMonitoringRadarByPosition(radarPt, options)
+
+                //绑定标号创建
+                let radarStyle = new SuperMap3D.GradientMonitoringRadarStyle({
+                    outerColor: new SuperMap3D.Color(1, 1, 1),
+                    innerColor: new SuperMap3D.Color(1, 1, 1),
+                    radioRadius: 1.0,
+                    opacity: 0.35
+                });
+                var pts = [new SuperMap3D.PlotPoint3D(110, 35, 1000)];
+                plottingLayer.createSymbol(0, 21, pts, { url: "./SampleData/models/car.gltf" }, function (even) {
+                    even.feature.modelScale = 5000
+
+                    let options = { radarStyle: radarStyle, radius: 500000 }
+                    monitoringRadar = new SuperMap3D.MonitoringRadar(even.feature.id, null, scene, options);
+                })
+
+            }
+
+            function addTrackingTargets() {
+                if (!monitoringRadar) {
+                    console.log("没有创建雷达！")
+                }
+                for (let i = 0; i < plottingLayer.geoGraphicObjects.length; i++) {
+                    let effects = plottingLayer.geoGraphicObjects[i].getGeoEffectArray();
+                    let isMonitoringRadar = false;
+                    for (let n = 0; n < effects.length; n++) {
+                        if (effects[n] instanceof SuperMap3D.MonitoringRadar) {
+                            let isMonitoringRadar = true;
+                            break;
+                        }
+                    }
+                    if (!isMonitoringRadar) {
+                        let trackingID = plottingLayer.geoGraphicObjects[i].id;
+                        if (i == 0) {
+                            const options = { flowType: SuperMap3D.FlowLineType.Picture, picturePath: "./SampleData/plot/images/ScanWaveSpacer.png", flowSpeed: 1 }
+                            //锥体
+                            let cone = new SuperMap3D.MonitoringTargetTrackingCone(trackingID, options)
+                            monitoringRadar.addMonitoringTargetTrackingLine(cone);
+                        } else if (i == 1) {
+                            const options = {
+                                flowType: SuperMap3D.FlowLineType.Picture, repeatCount: 20, isVerticalTextures: false,
+                                picturePath: "./SampleData/plot/images/Arrow.png", flowSpeed: 2
+                            }
+                            //追踪线
+                            let cone = new SuperMap3D.MonitoringTargetTrackingLine(trackingID, options)
+                            monitoringRadar.addMonitoringTargetTrackingLine(cone);
+                        } else if (i == 2) {
+                            const options = { flowType: SuperMap3D.FlowLineType.Line, flowSpeed: 1, repeatCount: 3 }
+                            //追踪线
+                            let cone = new SuperMap3D.MonitoringTargetTrackingLine(trackingID, options)
+                            monitoringRadar.addMonitoringTargetTrackingLine(cone);
+                        } else if (i == 3) {
+                            const options = { flowType: SuperMap3D.FlowLineType.Line, flowSpeed: 2 }
+                            //锥体
+                            let cone = new SuperMap3D.MonitoringTargetTrackingCone(trackingID, options)
+                            monitoringRadar.addMonitoringTargetTrackingLine(cone);
+                        }
+
+
+                    }
+                }
+            }
+
+
+            function testAddTarget() {
+                var geoEffect = effectManager.getGeoEffectList()[0];
+                for (var j = 0; j < plottingLayer.geoGraphicObjects.length; j++) {
+                    var targetUuid = plottingLayer.geoGraphicObjects[j].id;
+                    var options = {
+                        name: "跟踪线" + j,
+                        fillColor: new SuperMap3D.Color(0, 1, 0, 1),
+                        detectionAngle: 5,
+                        visible: true,
+                        isAlwaysShow: true
+                    }
+                    var trackingLine = new SuperMap3D.MonitoringTargetTrackingCone(targetUuid, options);
+                    geoEffect.addMonitoringTargetTrackingLine(trackingLine);
+                }
+            }
+
+            function createRadarBySymbol() {
+                var name = "监控雷达";
+                var visible = true;
+                //var radius=500000;//半径
+                var radius = 500000;//半径
+                var outerColor = new SuperMap3D.Color(1, 0, 1, 1);//紫红色
+                var innerColor = new SuperMap3D.Color(0, 1, 1, 1);//浅蓝色
+                var radioRadius = 0.5;
+                var opacity = 0.5;
+                var optionsStyle = { outerColor: outerColor, innerColor: innerColor, radioRadius: radioRadius, opacity: opacity };
+                var radarStyle = new SuperMap3D.GradientMonitoringRadarStyle(optionsStyle);
+                var stackPartitions = 64;//竖直切分数,影响球面的平滑度
+                var slicePartitions = 64;//水平切分数,影响球面的平滑度
+               
+                for (var i = 0; i < plottingLayer.geoGraphicObjects.length; i++) {
+                    var associatedUuid = plottingLayer.geoGraphicObjects[i].id;
+                    //var position=new SuperMap3D.PlotPoint3D(110, 35, 1000);
+                    //var position=plottingLayer.geoGraphicObjects[i].localPoints[0];
+                    var position = null;
+                    var uuid = SuperMap3D.createGuid();
+                    let options = { name: name, visible: visible, uuid: uuid, radius: radius, radarStyle: radarStyle, stackPartitions: stackPartitions, slicePartitions: slicePartitions }
+                    var monitoringRadar = new SuperMap3D.MonitoringRadar(associatedUuid, position, scene, options);
+                    effectManager.addGeoEffect(monitoringRadar);
+                }
+
+
+            }
+
+
+            function setStyleInnerColor() {
+                for (var i = 0; i < effectManager.getGeoEffectList().length; i++) {
+                    var geoEffect = effectManager.getGeoEffectList()[i];
+                    var options = { innerColor: new SuperMap3D.Color(1, 1, 0, 1) };//黄色
+                    var style = new SuperMap3D.GradientMonitoringRadarStyle(options);
+                    geoEffect.setStyle(style);
+                }
+
+
+            }
+
+            function updateGeoPts() {
+                for (let i = 0; i < plottingLayer.geoGraphicObjects.length; i++) {
+                    const feature = plottingLayer.geoGraphicObjects[i];
+                    let effects = feature.getGeoEffectArray();
+                    let isMonitoringRadar = false;
+                    for (let n = 0; n < effects.length; n++) {
+                        if (effects[n] instanceof SuperMap3D.MonitoringRadar) {
+                            isMonitoringRadar = true;
+                            break;
+                        }
+                    }
+                    if (!isMonitoringRadar) {
+                        let temp = feature.localPoints[0];
+                        feature.localPoints = [new MGIS_SuperMap3D.Cartesian3(temp.x, temp.y += 0.01, temp.z)]
+                    }
+                }
+            }
+
+            function savePlotMap() {
+                var strJson = plotMapManager.saveTo();
+                DownLoad("PlotMapJsonData.json", strJson);
+            }
+
+            function openPlotMap() {
+                document.getElementById("loadPlotMap").click();
+            }
+
+            function loadPlotMap(jsonData) {
+                plotMapManager.loadFrom(JSON.parse(jsonData));
+                plottingLayer = scene.plotLayers.findByIndex(0);
+            }
+
+            function startTrack() {
+                isStartUpdate = true;
+            }
+
+            function InitPlot(serverUrl) {
+                mGISManager = new SuperMap3D.MGISManager({ scene: scene, serverUrl: serverUrl });
+                plotMapManager = SuperMap3D.PlotMapManager.getInstance({ serverUrl, scene });
+                plottingLayer = new SuperMap3D.PlottingLayer(scene, "plottingLayer");
+                scene.plotLayers.add(plottingLayer);
+                plotEditControl = new SuperMap3D.PlotEditControl(scene, plottingLayer);//编辑控件
+                plotEditControl.activate();
+
+                document.getElementById('loadPlotMap').addEventListener("change", function (e) {
+                    let reader = new FileReader();
+                    reader.readAsText(e.target.files[0], "UTF-8");
+                    reader.onload = function (event) {
+                        loadPlotMap(event.target.result);
+                    }
+                })
+
+                var pts = [new SuperMap3D.PlotPoint3D(109, 32, 400000)];
+                plottingLayer.createSymbol(0, SuperMap3D.SymbolType.SYMBOL_MODEL, pts, { url: "./SampleData/gltf/客机模型/客机模型.gltf" }, function (even) {
+                    even.feature.modelScale = 10000
+                })
+
+                var pts1 = [new SuperMap3D.PlotPoint3D(111, 33, 300000)];
+                plottingLayer.createSymbol(0, SuperMap3D.SymbolType.SYMBOL_MODEL, pts1, { url: "./SampleData/gltf/客机模型/客机模型.gltf" }, function (even1) {
+                    even1.feature.modelScale = 5000
+                })
+
+                var pts1 = [new SuperMap3D.PlotPoint3D(110, 33, 300000)];
+                plottingLayer.createSymbol(0, SuperMap3D.SymbolType.SYMBOL_MODEL, pts1, { url: "./SampleData/gltf/客机模型/客机模型.gltf" }, function (even1) {
+                    even1.feature.modelScale = 8000
+                })
+
+                var pts1 = [new SuperMap3D.PlotPoint3D(113, 33, 300000)];
+                plottingLayer.createSymbol(0, SuperMap3D.SymbolType.SYMBOL_MODEL, pts1, { url: "./SampleData/gltf/客机模型/客机模型.gltf" }, function (even1) {
+                    even1.feature.modelScale = 8000
+                })
+
+                window.setInterval(function execute() {
+                    if (isStartUpdate) {
+                        updateGeoPts();
+                    }
+                }, 50);
+            }
+
+            //字符串下载至本地
+            function DownLoad(name, data) {
+                var urlObject = window.URL || window;
+                var export_blob = new Blob([data]);
+                var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", 'a');
+                save_link.href = urlObject.createObjectURL(export_blob);
+                save_link.download = name;
+
+                var ev = document.createEvent("MouseEvents");
+                ev.initEvent(
+                    'click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null
+                );
+                save_link.dispatchEvent(ev);
+            }
+
+            if (typeof MGIS_SuperMap3D !== 'undefined') {
+                window.startupCalled = true;
+                onload(MGIS_SuperMap3D);
+            }
+        </script>
+    </div>
+</body>
+
+</html>

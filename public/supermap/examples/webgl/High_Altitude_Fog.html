@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>高度雾</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./style/vuecommon.css" rel="stylesheet">
+    <script src="./js/config.js"></script>
+    <script src="./js/layerTree/vue.global.js"></script>
+    <script src="./js/layerTree/naive-ui.min.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container" style="display: none;width: 336px;">
+        <div id="app">
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-header-title">高度雾</div>
+                    <span class="panel-header-close" id="close">X</span>
+                </div>
+
+                <!-- vue component content -->
+                <n-config-provider :theme-overrides="overridesTheme" :theme="darkTheme" style="margin-top: 20px;">
+                    <n-scrollbar style="max-height: 520px;padding-right: 10px;" trigger="none">
+                        <!-- <div class="row-item">
+                            <span>启用高级大气</span>
+                            <div style="width: 230px">
+                                <n-switch v-model:value="state.useAdvancedAtmosphere" size="small" />
+                            </div>
+                        </div> -->
+
+                        <!-- <div class="row-item">
+                            <span>启用雾</span>
+                            <div style="width: 230px">
+                                <n-switch v-model:value="state.useFog" size="small" />
+                            </div>
+                        </div> -->
+
+                        <div class="row-item">
+                            <span>高度雾</span>
+                            <div style="width: 200px">
+                                <n-switch v-model:value="state.useHeightFog" size="small" />
+                            </div>
+                        </div>
+
+                        <div class="row-item">
+                            <span>密度</span>
+                            <div class="slider-box" style="width: 110px; margin-left: 80px;">
+                                <n-slider v-model:value="state.density" :min="0.01" :max="1.0" :step="0.01" />
+                            </div>
+                            <n-input-number v-model:value="state.density" style="width:60px" :min="0.01" :max="1.0" :step="0.01"
+                                :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>衰减系数</span>
+                            <div class="slider-box" style="width: 110px; margin-left: 52px;">
+                                <n-slider v-model:value="state.decay" :min="0.1" :max="2.0" :step="0.01" />
+                            </div>
+                            <n-input-number v-model:value="state.decay" style="width:60px" :min="0.1" :max="2.0" :step="0.01"
+                                :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                        <div class="row-item">
+                            <span>颜色设置</span>
+                            <div class="color-pick-box" style="width: 200px;">
+                                <n-color-picker v-model:value="state.color" :render-label="
+                                    () => {
+                                        return '';
+                                    }
+                                    " size="small">
+                                </n-color-picker>
+                            </div>
+                        </div>
+
+                    </n-scrollbar>
+                </n-config-provider>
+
+            </div>
+        </div>
+    </div>
+    <div class="loading-container">
+        <div class="circle"></div>
+    </div>
+    <script type="module">
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(2),  // Webgl2:2 ; WebGPU:3
+                    msaaLevel: 1,
+                },
+                timeline: true,
+                useSuperMapOIT: true,
+				terrainProvider: new SuperMap3D.SuperMapTerrainProvider({
+				    url: URL_CONFIG.STK,
+				    requestWaterMask: true,
+				    requestVertexNormals: true,
+				    isSct: false
+				}),
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+            window.viewer = viewer;
+			
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+			
+            // 相机定位
+			viewer.scene.camera.setView({
+			    destination : new SuperMap3D.Cartesian3.fromDegrees(103.064734,31.12816,8870.867706),
+			    orientation : {
+			        heading : 0.34555839949062594,
+			        pitch : -0.1422794351856307,
+			        roll : 0.0009471063581933947
+			    }
+			});
+			
+            document.querySelector('.loading-container').style.display = 'none';
+            document.querySelector('.vue-container').style.display = 'block';
+
+            // 初始化Vue组件
+            initVueComponents(scene, viewer);
+        }
+
+
+        // 初始化Vue组件
+        function initVueComponents(scene, viewer) {
+            // 对象解构
+            const { reactive, watch } = Vue;
+            const { darkTheme } = naive;
+
+            // 初始化变量
+            const state = reactive({
+                useAdvancedAtmosphere:true,
+                useFog:true,
+                useHeightFog:true,
+                density: 0.15,
+                decay: 0.2,
+                color: "rgba(255,255,255,1)"
+            });
+            
+            scene.globe.enableLighting = true; // 地形和大气启用光照
+            scene.highDynamicRange = true; // 建议打开高动态光照效果更好
+            scene.fog.enabled = true;
+            scene.fog.density = 0.15;
+            
+            // 创建Vue示例
+            const App = {
+                setup() {
+                    watch(() => state.useAdvancedAtmosphere,
+                        (val) => {
+                            scene.skyAtmosphere.advancedEnable = Boolean(val);
+                        }
+                    );
+
+                    watch(() => state.useFog,
+                        (val) => {
+                            scene.fog.enabled = Boolean(val);
+                        }
+                    );
+
+                    watch(() => state.useHeightFog,
+                        (val) => {
+                            scene.fog.advanced = Boolean(val);
+                            state.useFog = Boolean(val);
+                        }
+                    );
+
+                    watch(() => state.density,
+                        (val) => {
+                            scene.fog.density = Number(val);
+                        }
+                    );
+
+                    watch(() => state.decay,
+                        (val) => {
+                            scene.fog.heightFalloff = Number(val);
+                        }
+                    );
+                    
+                    watch(() => state.color,
+                        (val) => {
+                            scene.fog.color = SuperMap3D.Color.fromCssColorString(val);
+                        }
+                    );
+
+                    return {
+                        state,
+                        darkTheme,
+                        overridesTheme: { // 重写主题样式
+                            common: {
+                                primaryColor: "rgba(52, 153, 229, 1)",
+                                primaryColorHover: "rgba(52, 153, 229, 1)",
+                                primaryColorPressed: "rgba(255,255,255,0.85)",
+                                primaryColorSuppl: "rgba(255,255,255,0.45)",
+                            },
+                            Button: {
+                                fontSizeMedium: "14px", // 底部操作按钮：宽高和文字大小自适应浏览器
+                                textColor: "rgba(255,255,255,0.65)", // 设置默认n-button全局样式
+                                border: "1px solid rgba(255,255,255,0.65)",
+                                textColorHover: "#5EB7F2",
+                                borderHover: "1px solid #5EB7F2",
+                                textColorPressed: "#2276BF",
+                                borderPressed: "1px solid #2276BF",
+                            },
+                            Tabs: {
+                                barColor: "#3499e5", // tabs底部横条颜色
+                                tabFontSizeMedium: "14px", // tabs标签文字大小 - 兼容移动端样式
+                            },
+                            ColorPicker: {
+                                border: "none", // color-pick颜色条去掉边框
+                            },
+                            Divider: {
+                                color: "rgba(255, 255, 255, 0.15)", // 分割条颜色
+                            },
+                            Checkbox: {
+                                colorChecked: "#3499E5",
+                                checkMarkColor: "#fff",
+                            },
+                            Slider: {
+                                fillColor: "#3499E5",
+                                fillColorHover: "#3499E5",
+                                handleSize: "12px",
+                            },
+                            Switch: {
+                                railColorActive: "#3499E5",
+                            },
+                            Select: {
+                                color: "rgba(255, 255, 255, 0.15)"
+                            }
+                        },
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

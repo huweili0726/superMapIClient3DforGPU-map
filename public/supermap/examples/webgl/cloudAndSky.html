@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>云层与天空盒</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
+    <link href="./style/cloudAndSky.css" rel="stylesheet">
+    <script type="text/javascript" src="./js/jquery.min.js"></script>
+    <script src="./js/tooltip.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <div id="toolbar" class="param-container tool-bar">
+        <div class="titleBox">
+            <div class="titl">云层与天空盒</div>
+            <span class="close2" aria-hidden="false" style="margin-top: 3px;">x</span>
+        </div>
+        <div class="param-item inputBox">
+            <label class="lable">场景模式</label>
+            <div class="content radio-box">
+                <div style="display: flex;flex-direction: row;margin-right: 28px;">
+                    <input type="radio" name="sceneMode" value="3D" id="mode3d" checked>
+                    <label for="mode3d">三维</label>
+                </div>
+                <div style="display: flex;flex-direction: row;margin-right: 15px;">
+                    <input type="radio" name="sceneMode" value="COLUMBUS_VIEW" id="modeColumbus">
+                    <label for="modelColumbus">平面</label>
+                </div>
+            </div>
+        </div>
+        <div class="param-item inputBox">
+            <label for="openCloud" class="lable">开启云层</label>
+            <input type="checkbox" id="openCloud" class="toggle" >
+            <label class="switch"></label>
+        </div>
+        <div class="param-item inputBox showCloud">
+            <label class="lable">切换云层</label>
+            <select id="toggle-sky" style="width:220px;height:25px;border-radius: 4px;">
+                <option value="./images/clouds-supermap-sm.png">云层纹理1</option>
+                <option value="./images/clouds.png">云层纹理2</option>
+            </select>
+        </div>
+        <div class="param-item inputBox showCloud">
+            <label class="lable">云层速度</label>
+            <div class="rangeBox">
+                <input type="range" data-bind="value: cloudSpeed,valueUpdate: 'input'" id="cloudSpeed" min="-2.0"
+                    max="2.0" value="1.0" step="0.5" style="width: 170px;margin-left:7px;">
+                <p id="speedText" style="display: inline-block;font-size: 14px;margin-left: 2px;">1.0</p>
+            </div>
+        </div>
+        <div class="param-item inputBox">
+            <label class="lable" for="openSkybox">开启天空盒</label>
+            <input type="checkbox" id="openSkybox" class="toggle" style="top: 12em;">
+            <label class="switch"></label>
+        </div>
+        <div class="param-item inputBox showSky">
+            <label class="lable">纹理模式</label>
+            <div class="content radio-box">
+                <div style="display: flex;flex-direction: row;margin-right: 28px;">
+                    <input type="radio" name="textureMode" value="cubicSheet" id="cubicSheet">
+                    <label for="cubicSheet" style="width: 60px;">立方面片</label>
+                </div>
+                <div style="display: flex;flex-direction: row;margin-right: 15px;">
+                    <input type="radio" name="textureMode" value="panorama" id="panorama" checked>
+                    <label for="panorama" style="width: 60px;">全景图</label>
+                </div>
+            </div>
+        </div>
+        <div class="param-item inputBox showSky">
+            <label class="lable">天空盒纹理</label>
+            <select id="toggle-skyBox" style="width:220px;height:25px;border-radius: 4px;">
+            </select>
+        </div>
+        <div class="param-item inputBox showSky">
+            <label class="lable">天空盒旋转</label>
+            <div class="rangeBox">
+                <input type="range" data-bind="value: skyRotate,valueUpdate: 'input'" id="skyRotate" min="0.0"
+                    max="360.0" value="0.0" step="1.0" style="width: 170px;margin-left:7px;">
+                <p style="display: inline-block;font-size: 14px;margin-left: 2px;">360°</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            let EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: 2, // Webgl2:2 ; WebGPU:3
+                },
+                navigation: true
+            });
+
+            viewer.resolutionScale = window.devicePixelRatio; 
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            let widget = viewer.Widget;
+            let defaultSkyBox, currentSkyBox, skyListener;
+            let handlerCloud = "cloud", handlerSky = "skyBox", layer;
+
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+            //创建云层
+            let cloudBox = new SuperMap3D.CloudBox({
+                url: "./images/clouds-supermap-sm.png"
+            });
+
+            //创建天空盒
+            let sunSkyBox = new SuperMap3D.SkyBox({
+                sources: {
+                    positiveX: './images/SkyBox/sunsetglow/Right.jpg',
+                    negativeX: './images/SkyBox/sunsetglow/Left.jpg',
+                    positiveY: './images/SkyBox/sunsetglow/Front.jpg',
+                    negativeY: './images/SkyBox/sunsetglow/Back.jpg',
+                    positiveZ: './images/SkyBox/sunsetglow/Up.jpg',
+                    negativeZ: './images/SkyBox/sunsetglow/Down.jpg'
+                }
+            });
+            let blueSkyBox = new SuperMap3D.SkyBox({
+                sources: {
+                    positiveX: './images/SkyBox/bluesky/Right.jpg',
+                    negativeX: './images/SkyBox/bluesky/Left.jpg',
+                    positiveY: './images/SkyBox/bluesky/Front.jpg',
+                    negativeY: './images/SkyBox/bluesky/Back.jpg',
+                    positiveZ: './images/SkyBox/bluesky/Up.jpg',
+                    negativeZ: './images/SkyBox/bluesky/Down.jpg'
+                }
+            });
+            let hdrSkyBox = new SuperMap3D.SkyBox({
+                imageUrl: './images/SkyBox/panorama/HDR_night_4K.hdr'
+            })
+            let jpgSkyBox = new SuperMap3D.SkyBox({
+                imageUrl: './images/SkyBox/panorama/HDR_cloud_4K.jpg'
+            })
+            defaultSkyBox = viewer.scene.skyBox;
+
+            //初始化时把天空盒资源准备好
+            function initialSkyBox() {
+                if (scene.frameState.passes.render) {
+                    sunSkyBox.update(scene.frameState, true);
+                    blueSkyBox.update(scene.frameState, true);
+                    scene.postRender.removeEventListener(initialSkyBox);
+                }
+            }
+            scene.postRender.addEventListener(initialSkyBox);
+
+            //加载场景
+            function loadScene() {
+                let promise = scene.open(URL_CONFIG.SCENE_CBD);
+                try {
+                    promise.then(function () {
+                        layer = scene.layers.find("Building@CBD");
+                        let waterLayer = scene.layers.find('Lake@CBD');
+                        // 设置水面参数
+                        waterLayer.waterSpeed = 0.5;
+                        waterLayer.waterWaveScale = 0.5;
+                    }, function (e) {
+                        if (widget._showRenderLoopErrors) {
+                            let title = "渲染时发生错误,已停止渲染";
+                            widget.showErrorPanel(title, undefined, e);
+                        }
+                    })
+                } catch (e) {
+                    if (widget._showRenderLoopErrors) {
+                        let title = "渲染时发生错误,已停止渲染。";
+                        widget.showErrorPanel(title, undefined, e);
+                    }
+                }
+            }
+
+            //相机上升到一定位置,天空盒出现渐变效果
+            function gradualChange() {
+                skyListener = function () {
+                    let cameraHeight = scene.camera.positionCartographic.height;
+
+                    let skyAtmosphereH1 = 22e4; // 大气开始渐变的最大高度
+                    let skyBoxH1 = 15e4; // 天空开始渐变的最大高度
+                    let skyBoxH2 = 12e4; // 天空开始渐变的最小高度
+                    let bufferHeight = 1e4;
+                    if (cameraHeight < skyAtmosphereH1 && SuperMap3D.defined(currentSkyBox)) {
+                        let skyAtmosphereT = (cameraHeight - skyBoxH2) / (skyAtmosphereH1 - skyBoxH2);
+                        if (skyAtmosphereT > 1.0) {
+                            skyAtmosphereT = 1.0;
+                        } else if (skyAtmosphereT < 0.0) {
+                            skyAtmosphereT = 0.0;
+                        }
+                        let skyBoxT = (cameraHeight - skyBoxH2) / (skyBoxH1 - skyBoxH2);
+                        if (skyBoxT > 1.0) {
+                            skyBoxT = 1.0;
+                        } else if (skyBoxT < 0.0) {
+                            skyBoxT = 0.0;
+                        }
+                        currentSkyBox.alpha = 1.0 - skyBoxT;
+                        if (cameraHeight > skyBoxH2) {
+                            scene.skyAtmosphere.show = true;
+                            scene.skyAtmosphere.alpha = skyAtmosphereT;
+                            scene.skyBox = currentSkyBox;
+                        } else {
+                            scene.skyAtmosphere.show = false;
+                        }
+                    } else {
+                        scene.skyAtmosphere.alpha = 1.0;
+                        scene.skyBox = defaultSkyBox;
+                    }
+
+                    //控制相机 速率
+                    if (scene.skyBox !== defaultSkyBox) {
+                        if (cameraHeight > (skyBoxH2 - 2 * bufferHeight) && cameraHeight < skyBoxH1 + 3 * bufferHeight) {
+                            scene.screenSpaceCameraController.zoomFactor = 0.4;
+                        } else {
+                            scene.screenSpaceCameraController.zoomFactor = 5.0;
+                        }
+                    } else {
+                        scene.skyBox.alpha = 1.0;
+                        scene.skyAtmosphere.alpha = 1.0;
+                        scene.screenSpaceCameraController.zoomFactor = 5.0;
+                    }
+
+                };
+                scene.postRender.addEventListener(skyListener);
+            }
+
+            //操作相机
+            function handlerCamera(val) {
+                let isSkyBox = handlerCloud;
+                if (val == isSkyBox) {
+                    scene.camera.flyTo({
+                        destination: new SuperMap3D.Cartesian3(-5701705.704276292, 21279055.37816442, 12718852.74864528)
+                    })
+                } else {
+                    scene.camera.flyTo({
+                        destination: new SuperMap3D.Cartesian3(-2182943.9676850257, 4386804.912825742, 4069531.779775907),
+                        orientation: {
+                            heading: 6.228849889848172,
+                            pitch: -0.0491143105095484,
+                            roll: 2.973174177967053e-7
+                        }
+                    })
+                };
+            }
+
+            let viewModel = {
+                cloudSpeed: 1.0,
+                skyRotate: 0.0
+            };
+            SuperMap3D.knockout.track(viewModel);
+            let toolbar = document.getElementById('toolbar');
+            SuperMap3D.knockout.applyBindings(viewModel, toolbar);
+
+            // 设置云层速度
+            SuperMap3D.knockout.getObservable(viewModel, 'cloudSpeed').subscribe(
+                function (newValue) {
+                    cloudBox.speed = Number(newValue);
+                    $('#speedText').text(newValue)
+                }
+            );
+            // 设置天空盒旋转
+            SuperMap3D.knockout.getObservable(viewModel, 'skyRotate').subscribe(
+                function (newValue) {
+                    viewer.scene.skyBox.horizontalRotationAngle = Number(newValue) / 180.0 * Math.PI;
+                }
+            );
+
+            $(".showCloud").hide();
+            $(".showSky").hide();
+
+            //开启云层
+            $("#openCloud").on("input change", function () {
+                let openCloud = this.checked;
+                if (openCloud) {
+                    scene.cloudBox = cloudBox;
+                    $(".showCloud").show();
+                    $('#openSkybox').css("top", "18.5em")
+                } else {
+                    scene.cloudBox = null;
+                    $(".showCloud").hide();
+                    $('#openSkybox').css("top", "12em")
+                }
+                handlerCamera(handlerCloud);  //操作相机
+            });
+
+            //切换云层
+            $("#toggle-sky").on('input propertychange', function () {
+                let cloudTextureUrl = $(this).val();
+                scene.cloudBox.url = cloudTextureUrl;
+            });
+
+            //开启天空盒
+            $("#openSkybox").on("change", function () {
+                let openSkybox = this.checked;
+                if (openSkybox) {
+                    $(".showSky").show();
+                    $select.empty();
+                    let $newOption1 = $('<option>', {
+                        value: 'hdrsky',
+                        text: 'HDR-傍晚'
+                    });
+                    let $newOption2 = $('<option>', {
+                        value: 'jpgsky',
+                        text: 'JPG-清晨'
+                    });
+                    $select.append($newOption1, $newOption2);
+                    sunSkyBox.WSpeed = 0.5;
+                    sunSkyBox.show = true;
+                    currentSkyBox = hdrSkyBox;
+                    if (!layer) loadScene();      //加载场景
+                    handlerCamera(handlerSky);  //切换视角
+                    gradualChange();
+                } else {
+                    $(".showSky").hide();
+                    scene.postRender.removeEventListener(skyListener);
+                    scene.skyBox = defaultSkyBox;
+                    scene.skyAtmosphere.show = true;
+                    handlerCamera(handlerCloud);  //切换视角
+                }
+            });
+
+            // 获取select元素
+            let $select = $('#toggle-skyBox');
+            // 动态创建option
+            function createOption(value1, value2, text1, text2) {
+                $select.empty();
+                let $newOption1 = $('<option>', {
+                    value: value1,
+                    text: text1
+                });
+                let $newOption2 = $('<option>', {
+                    value: value2,
+                    text: text2
+                });
+
+                $select.append($newOption1, $newOption2);
+            }
+
+            // 切换天空盒
+            function changeSkyBox(skyBoxName) {
+                if (skyBoxName == "sunsky") {
+                    sunSkyBox.WSpeed = 0.5;
+                    sunSkyBox.show = true;
+                    currentSkyBox = sunSkyBox;
+                    scene.skyBox = currentSkyBox;
+                    blueSkyBox.show = false;
+                    //  hdrSkyBox.show = false;
+                } else if (skyBoxName == "bluesky") {
+                    blueSkyBox.WSpeed = 0.5;
+                    blueSkyBox.show = true;
+                    currentSkyBox = blueSkyBox;
+                    scene.skyBox = currentSkyBox;
+                    sunSkyBox.show = false;
+                    //  hdrSkyBox.show = false;
+                } else if (skyBoxName == "hdrsky") {
+                    hdrSkyBox.WSpeed = 0.5;
+                    hdrSkyBox.show = true;
+                    currentSkyBox = hdrSkyBox;
+                    scene.skyBox = currentSkyBox;
+                    //  sunSkyBox.show = false;
+                    //  blueSkyBox.show = false;
+                    jpgSkyBox.show = false;
+                } else {
+                    jpgSkyBox.WSpeed = 0.5;
+                    jpgSkyBox.show = true;
+                    currentSkyBox = jpgSkyBox;
+                    scene.skyBox = currentSkyBox;
+                    //  sunSkyBox.show = false;
+                    //  blueSkyBox.show = false;
+                    hdrSkyBox.show = false;
+                }
+            }
+
+            // 选择纹理模式
+            $('#cubicSheet').click(function () {
+                let mode = $('#cubicSheet').val();
+                createOption('sunsky', 'bluesky', '晚霞', '晴天')
+                let skyBoxName = $('#toggle-skyBox').val();
+                changeSkyBox(skyBoxName);
+            });
+            $('#panorama').click(function () {
+                let mode = $('#panorama').val();
+                createOption('hdrsky', 'jpgsky', 'HDR-傍晚', 'JPG-清晨')
+                let skyBoxName = $('#toggle-skyBox').val();
+                changeSkyBox(skyBoxName);
+            });
+
+            //切换天空盒
+            $("#toggle-skyBox").on("input propertychange", function () {
+                let skyBoxName = $(this).val();
+                changeSkyBox(skyBoxName);
+            });
+
+            $(".params-setting-anchor").click(function () {
+                $(".params-setting").toggleClass("params-setting-hide");
+            });
+
+            // 切换场景模式
+            $('#mode3d').click(function () {
+                viewer.scene.mode = SuperMap3D.SceneMode.SCENE3D;
+            });
+            $('#modeColumbus').click(function () {
+                viewer.scene.mode = SuperMap3D.SceneMode.COLUMBUS_VIEW;
+            });
+
+            $('#loadingbar').remove();
+        }
+        if (typeof SuperMap3D !== "undefined") {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

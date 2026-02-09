@@ -1,0 +1,109 @@
+{
+    "type": "FeatureCollection",
+    "crs": {
+        "type": "name",
+        "properties": {
+            "name": "urn:ogc:def:crs:EPSG::3857"
+        }
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "澎湖列岛"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13305314.28274099,
+                    2691211.3473616105
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "钓鱼岛"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13745124.404125315,
+                    2966902.1946616789
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "赤尾屿"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13865640.65531669,
+                    2989490.230332819
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "彭佳屿"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13592105.052434409,
+                    2935219.9321831057
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "兰屿"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13528701.441178007,
+                    2517768.3099417437
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "绿岛"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13524220.065160959,
+                    2590785.535920082
+                ]
+            }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "SmUserID": 0,
+                "name": "台湾省"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    13449574.260503857,
+                    2705643.358932297
+                ]
+            }
+        }
+    ]
+}

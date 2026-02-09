@@ -1,0 +1,85 @@
+#Container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.param-item {
+  width: 315px;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleBox .titl {
+  width: 200px;
+}
+
+.selectstyle {
+  width: 220px;
+  margin: 0px;
+  border-radius: 4px;
+}
+
+.rangeBox {
+  width: 220px;
+  margin-left: 0px;
+  display: flex;
+  align-items: center;
+  padding-left: 3px;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100px;
+  height: 2px;
+  border-radius: 10px;
+  /*这个属性设置使填充进度条时的图形为圆角*/
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  margin-top: -3px;
+  height: 10px;
+  width: 10px;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  height: 2px;
+}
+
+.inputBox {
+  margin-bottom: 15px;
+}
+
+.inputBox .content {
+  width: 210px;
+  color: #fff;
+}
+
+.inputBox input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+#img-container {
+  display: inline-block;
+  position: relative;
+}
+
+.inputBox .sp-preview {
+  height: 8px;
+  width: 190px;
+  margin-top: 4px;
+  margin-left: 3px;
+}
+
+.inputBox .sp-replacer {
+  height: 20px;
+  background-color: rgba(42, 42, 42, 1);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

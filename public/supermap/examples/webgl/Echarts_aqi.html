@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Echarts之全国主要城市空气质量</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/echarts.min.js"></script>
+    <script src="./js/EchartsLayer.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script src="./SampleData/SampleUseData/data.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+
+    <script>
+        function onload(SuperMap3D) {
+            var EngineType = getEngineType();
+            //初始化viewer部件，添加STK World Terrain地形服务
+            var viewer = new SuperMap3D.Viewer('Container',{
+                contextOptions: {
+					contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+				}
+            });
+
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+        function init(SuperMap3D, scene, viewer) {
+            var imageryLayers = viewer.imageryLayers;
+
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            //初始化天地图全球中文注记服务，并添加至影像图层
+            var labelImagery = new SuperMap3D.TiandituImageryProvider({
+                mapStyle: SuperMap3D.TiandituMapsStyle.CIA_C, //天地图全球中文注记服务（经纬度投影）
+                token: URL_CONFIG.TOKEN_TIANDITU
+            });
+            imageryLayers.addImageryProvider(labelImagery);
+
+
+            // ArcGIS影像
+            // var provider = new SuperMap3D.ArcGisMapServerImageryProvider({
+            //     url: 'http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer',
+            // });
+            // var imageryLayer = viewer.imageryLayers.addImageryProvider(provider);
+
+            const data = SAMPLEDATA.AIRCITY;
+            const geoCoordMap = SAMPLEDATA.AIRCITYCOORD;
+
+            const convertData = function (data) {
+                const res = [];
+                for (let i = 0; i < data.length; i++) {
+                    const geoCoord = geoCoordMap[data[i].name];
+                    if (geoCoord) {
+                        res.push({
+                            name: data[i].name,
+                            value: geoCoord.concat(data[i].value)
+                        });
+                    }
+                }
+                return res;
+            };
+            const options = {
+                animation: !1,
+                title: {
+                    text: 'Echarts之全国主要城市空气质量',
+                    subtext: '',
+                    sublink: '',
+                    left: 'center',
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'vertical',
+                    y: 'bottom',
+                    x: 'left',
+                    data: ['pm2.5'],
+                    textStyle: {
+                        color: '#fff'
+                    }
+                },
+                GLMap: {},
+                series: [
+                    {
+                        name: '城市',
+                        type: 'scatter',
+                        coordinateSystem: 'GLMap',
+                        data: convertData(data),
+                        symbolSize: function (val) {
+                            return val[2] / 20;
+                        },
+                        label: {
+                            normal: {
+                                formatter: '{b}',
+                                position: 'right',
+                                show: false
+                            },
+                            emphasis: {
+                                show: true
+                            }
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#ddb926'
+                            }
+                        }
+                    },
+                    {
+                        name: '前5',
+                        type: 'effectScatter',
+                        coordinateSystem: 'GLMap',
+                        data: convertData(data.sort(function (a, b) {
+                            return b.value - a.value;
+                        }).slice(0, 6)),
+                        symbolSize: function (val) {
+                            return val[2] / 20;
+                        },
+                        showEffectOn: 'render',
+                        rippleEffect: {
+                            brushType: 'stroke'
+                        },
+                        hoverAnimation: true,
+                        label: {
+                            normal: {
+                                formatter: '{b}',
+                                position: 'right',
+                                show: true
+                            }
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: '#f4e925',
+                                shadowBlur: 10,
+                                shadowColor: '#333'
+                            }
+                        },
+                        zlevel: 1
+                    }
+                ]
+            };
+
+            var echartsLayer = new EchartsLayer(viewer);
+            echartsLayer.chart.setOption(options);
+
+            let handler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+            handler.setInputAction(function (e) {
+                scene.pickPositionAsync(windowPosition).then((last)=>{
+                    let pos = last;
+                    console.log(pos);
+				});
+            }, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+            $('#loadingbar').remove();
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

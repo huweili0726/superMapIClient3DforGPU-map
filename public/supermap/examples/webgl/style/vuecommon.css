@@ -1,0 +1,263 @@
+/* ========= Container Start ========= */
+html, body, #Container {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000000;
+}
+/* ========= Container End ========= */
+
+
+/* ========= LoadingBar Start ========= */
+.loading-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.loading-container .circle {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    animation: loadingBar 1s linear infinite;
+}
+
+@keyframes loadingBar {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+/* ========= LoadingBar End ========= */
+
+
+/* ========= VueComponent Start ========= */
+.vue-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 360px;
+    height: fit-content;
+    z-index: 100;
+}
+
+/* 图层面板 */
+.panel-container{
+    background: rgba(42,42,42,0.9);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* header */
+.panel-header{
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 1px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.panel-header-title{
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 0.8;
+    font-size: 20px;
+    line-height: 24px;
+}
+.panel-header-close{
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 15px;
+    margin-right: 10px;
+}
+
+
+/* 图层树选项 */
+.n-tree-node-content__text{
+    color: rgba(255, 255, 255, 0.85);
+}
+.n-tree.n-tree--block-line .n-tree-node:not(.n-tree-node--disabled):hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+.n-tree.n-tree--block-line .n-tree-node:not(.n-tree-node--disabled).n-tree-node--pending{
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* 图层树选项 内容 避免过长 */
+.n-tree .n-tree-node-content .n-tree-node-content__text{
+    width: 220px;
+    overflow: hidden;
+}
+/* 图层列表选项 后缀 */
+.n-tree .n-tree-node-content .n-tree-node-content__suffix{
+    width: 100px;
+    display: flex;
+    justify-content: end;
+}
+
+
+.row-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 11px;
+    font-size: 14px;
+}
+
+.row-item span{
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.row-item .check-content {
+    width:220px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.row-item .slider-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width:210px;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    /* box-sizing: border-box; */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.row-item .color-pick-box {
+    width: 227px;
+    height: 32px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    margin-left: 38px;
+  }
+
+  .row-item  .n-color-picker-trigger__fill {
+    height: 8px;
+    top: 10px !important;
+    bottom: 10px !important;
+  }
+  
+  .row-item .color-pick-box-full {
+    width: 220px;
+  }
+
+.btn-row-item {
+    margin-left: 120px;
+}
+
+.btn-row-item .n-button {
+  height: 32px;
+  width: 60px; 
+  padding: 6px 10px
+}
+
+
+.icon-list-space {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.selected-img {
+    border: 3px solid rgba(52,153,229, 1);
+}
+
+.normal-img {
+    border: 3px solid rgba(52,153,229, 0);
+}
+
+.draw-img {
+    height: 100%;
+}
+
+.n-checkbox.n-checkbox--show-label {
+    margin-left: -27px;
+}
+
+.btn-row-item2 {
+    margin-right: 20px;
+}
+
+.icon-list-space :deep(.n-tree) .n-tree-node-content .n-tree-node-content__suffix {
+    margin-right: 24px;
+}
+
+.icon-list-space :deep(.n-tree) .n-tree-node-switcher.n-tree-node-switcher--hide {
+    width: 10px !important;
+}
+
+:deep(.n-button) {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+:deep(.n-button):hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.no-center {
+  align-items: start !important;
+}
+
+/* 我的新增 */
+.n-checkbox .n-checkbox__label{
+  color: rgba(255, 255, 255, 0.85);
+}
+
+html {
+
+  font-size: 100px;
+
+}
+
+.n-base-selection-input__content{
+    color: rgba(255, 255, 255, 0.85);
+}
+.n-base-selection .n-base-selection-label{
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.n-input{
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.n-input .n-input__input-el, .n-input .n-input__textarea-el{
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.n-base-selection .n-base-selection__border, .n-base-selection .n-base-selection__state-border{
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.n-input .n-input__border, .n-input .n-input__state-border{
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+
+
+.normal-text{
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+.disabled-text{
+    color: rgba(255, 255, 255, 0.25) !important;
+}
+/* ========= VueComponent End ========= */

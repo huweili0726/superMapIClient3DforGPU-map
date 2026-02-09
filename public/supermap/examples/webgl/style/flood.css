@@ -1,0 +1,20 @@
+html, body, #Container {
+    width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;background-color: #000000;
+}
+.bootstrap-select:not([class*="col-"]):not([class*="form-control"]):not(.input-group-btn){
+    width: 170px;
+}
+.form-group::before {
+    content: attr(data-foo);
+    color: black;
+}
+#setingBar{
+    width:150px;
+    height:110px;
+    margin: 5px;
+    padding: 2px 5px;
+    background: rgba(42, 42, 42, 0.4);
+    padding: 8px;
+    border-radius: 4px;
+    color:cornflowerblue
+}

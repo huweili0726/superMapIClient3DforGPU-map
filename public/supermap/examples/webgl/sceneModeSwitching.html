@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>平面、三维场景切换</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script src="./js/config.js"></script>
+</head>
+<body>
+<div id="Container"></div>
+<div id='loadingbar' class="spinner">
+    <div class="spinner-container container1">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container2">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+    <div class="spinner-container container3">
+        <div class="circle1"></div>
+        <div class="circle2"></div>
+        <div class="circle3"></div>
+        <div class="circle4"></div>
+    </div>
+</div>
+<div id="toolbar" style="position: absolute;left: 5px;top: 5px;display: none;">
+    <select id="imageryOptions" class="selectpicker show-tick">
+        <!--<option disabled selected value>&#45;&#45;选择服务类型&#45;&#45;</option>-->
+        <option selected value="WGS">自定义影像&地形-平面场景</option>
+        <option value="MEC">倾斜数据-三维场景</option>
+    </select>
+</div>
+<script>
+    function onload(SuperMap3D) {
+        // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+        var EngineType = getEngineType();
+        var viewer = new SuperMap3D.Viewer('Container', {
+            terrainProvider: new SuperMap3D.SuperMapTerrainProvider({
+                url: URL_CONFIG.ZF_TERRAIN,
+                isSct: true//地形服务源自SuperMap iServer发布时需设置isSct为true
+            }),
+            sceneModePicker: true,
+            navigation: false,
+            contextOptions: {
+                contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+            }
+        });
+
+        viewer.scenePromise.then(function(scene){
+            init(SuperMap3D, scene, viewer);
+        });
+    }
+
+    function init(SuperMap3D, scene, viewer) {
+        viewer.resolutionScale = window.devicePixelRatio;
+        var layer = viewer.imageryLayers.addImageryProvider(new SuperMap3D.SuperMapImageryProvider({
+            url: URL_CONFIG.ZF_IMG
+        }));
+
+        viewer.scene.camera.setView({
+            destination: new SuperMap3D.Cartesian3(-1226925.7054612704, 5354675.979312425, 3270577.600069679),
+            orientation: {
+                heading: 6.109613004885443,
+                pitch: -0.48783918611301136,
+                roll: 6.283185307179586
+            }
+        });
+        viewer.scene.mode = SuperMap3D.SceneMode.COLUMBUS_VIEW;//平面场景
+
+        var scene = viewer.scene;
+        var promise = scene.addS3MTilesLayerByScp(URL_CONFIG.SCP_JINJIANG2);
+
+        //添加下拉菜单，点击选项切换地图服务
+        $('#imageryOptions').change(function () {
+            var value = $(this).val();
+            if (value == 'WGS') {
+                viewer.scene.camera.setView({
+                    destination: new SuperMap3D.Cartesian3(-1226925.7054612704, 5354675.979312425, 3270577.600069679),
+                    orientation: {
+                        heading: 6.109613004885443,
+                        pitch: -0.48783918611301136,
+                        roll: 6.283185307179586
+                    }
+                });
+                viewer.scene.mode = SuperMap3D.SceneMode.COLUMBUS_VIEW;//平面场景
+            }
+            else if (value == 'MEC') {
+                promise.then(function (layers) {
+                    viewer.scene.mode = SuperMap3D.SceneMode.SCENE3D;//三维场景
+                    //设置相机位置，定位至模型
+                    scene.camera.setView({
+                        //将经度、纬度、高度的坐标转换为笛卡尔坐标
+                        destination: SuperMap3D.Cartesian3.fromDegrees(118.54909017414182, 24.80259473610606, 105.40531821331771),
+                        orientation: {
+                            heading: 5.154573786584606,
+                            pitch: -0.14229615865957967,
+                            roll: 3.2294167340296553e-12
+                        }
+                    });
+                });
+            }
+        });
+        $('#toolbar').show();
+        $('#loadingbar').remove();
+    }
+    if (typeof SuperMap3D !== 'undefined') {
+        window.startupCalled = true;
+        onload(SuperMap3D);
+    }
+</script>
+</body>
+</html>

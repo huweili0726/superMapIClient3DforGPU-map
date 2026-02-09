@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>图层目录树</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./js/layerTree/layerTree.css" rel="stylesheet">
+    <link href="./js/layerTree/icons/iconfont.css" rel="stylesheet">
+    <script src="./js/layerTree/vue.global.js"></script>
+    <script src="./js/layerTree/naive-ui.min.js"></script>
+    <script src="./js/layerTree/axios.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container">
+        <div id="app">
+            <div class="layer-tree-container" style="display:none">
+                <div class="tree-header">
+                    <div class="tree-header-title">图层目录树</div>
+                    <span class="tree-header-close" id="close">X</span>
+                </div>
+                <div class="tree-content">
+                    <n-config-provider :theme-overrides="overridesTheme">
+                        <n-scrollbar style="max-height:500px" trigger="none">
+                            <n-tree 
+                                ref="treeInstRef"
+                                block-line 
+                                draggable 
+                                checkable 
+                                cascade 
+                                :data="data"
+                                :show-line="true" 
+                                :selectable="true" 
+                                :render-label="nodelabel"
+                                :render-suffix="renderSuffix" 
+                                :node-props="nodeProps"
+                                :default-expanded-keys="defaultExpandedKeys" 
+                                :default-checked-keys="defaultCheckedKeys"
+                                @update:checked-keys="getCheckedKeys" 
+                                @update:selected-keys="getSelectOption"
+                                @drop="handleDrop" 
+                            />
+                        </n-scrollbar>
+                    </n-config-provider>
+
+                </div>
+                <div class="tree-footer">
+                    <n-button type="info" color="#3499E5" text-color="#fff" style="margin-right: 0.1rem"
+                        title="将图层列表转为JSON文件并保存到本地" class="tree-footer-save" :focusable="false"
+                        @click="saveTreeOption">保存</n-button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <script>
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                timeline: true,
+                contextOptions: {
+                    contextType: Number(2)  // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer, undefined);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            window.viewer = viewer;
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            // 添加影像图层：给影像图层临时绑定customName属性，用于在图层列表中显示图层名称
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.TileCoordinatesImageryProvider()).customName = '经纬底图';
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            })).customName = '高德影像地图';
+
+            // 打开场景
+            const promise_cbd = scene.open(URL_CONFIG.SCENE_CBD);
+            // const promise_sichuan = scene.open(URL_CONFIG.SCENE_SICHUAN); // 默认不加
+            
+            Promise.all([promise_cbd]).then(function (layers) {
+                $('#loadingbar').remove();
+                $('.layer-tree-container').show();
+                if (!layers) return;
+
+                viewer.camera.setView({
+                    destination: {
+                        x: -2183470.6668919506,
+                        y: 4388805.9272304345,
+                        z: 4068735.332605753
+                    },
+                    orientation: {
+                        heading: 0.10070233472882606,
+                        pitch: -0.3346204472703065,
+                        roll: 6.283185061085522
+                    }
+                });
+
+                // 读取当前场景中的图层，创建图层目录树数据 (若打开layerTree，请将下面两句代码注释掉)
+                let viewerTreeData = computedViewerTreeData(viewer);
+                initVueComponents(scene, viewer, viewerTreeData);
+
+                /**
+                 * layerTree.json：为自动配置图层树的依赖文件,可根据需要打开注释
+                 * 存在：根据其内容创建图层列表
+                 * 不存在：根据当前场景内的具体图层生成图层树
+                 * 建议第一次使用时，保存该文件，并拷贝至相对目录下，以便读取配置。
+                 */
+                // 读取JSON配置目录树
+                // axios.get('./js/layerTree/layerTree.json').then(response => {
+                //     let saveTreeData = response.data;
+                //     // 基于保存的图层列表设置场景影像图层顺序
+                //     setViewerImgLayerOrderBySave(saveTreeData,viewer)
+
+                //     // 计算当前场景下真实存在的图层
+                //     let viewerTreeData = computedViewerTreeData(viewer,saveTreeData);
+
+                //     // 进行图层真实性检查并构建新TreeData
+                //     let TreeDataChecked = checkSaveTreeLayerIsExist(saveTreeData, viewerTreeData);
+
+                //     // 检查场景中的新增图层
+                //     if(saveTreeData){
+                //         TreeDataChecked = checkViewerHasNewLayer(TreeDataChecked,viewerTreeData);
+                //     }
+
+                //     // 初始化Vue实例图层树
+                //     initVueComponents(scene, viewer, TreeDataChecked);
+                // }).catch(error => {
+                //     let viewerTreeData = computedViewerTreeData(viewer);
+                //     initVueComponents(scene, viewer, viewerTreeData);
+                // })
+            })
+
+            $("#close").on("click", function () {
+                console.log('click');
+            });
+        }
+
+        // 根据保存列表中的影像图层顺序调整场景的实际的影像顺序:确保顶层和底层顺序即可
+        function setViewerImgLayerOrderBySave(saveTreeData, viewer) {
+            if (!saveTreeData) return;
+
+            let firshImgLayerOption = saveTreeData[1].children[0]; // 顶层
+            let finalImgLayerOption = saveTreeData[1].children[saveTreeData[1].children.length - 1]; // 底层
+
+            viewer.imageryLayers._layers.forEach(imgLayer => {
+                if (imgLayer.customName == firshImgLayerOption.aliasKey) {
+                    viewer.imageryLayers.raiseToTop(imgLayer);
+                } else if (imgLayer.customName == finalImgLayerOption.aliasKey) {
+                    // viewer.imageryLayers.lowerToBottom(imgLayer);
+                }
+            })
+        }
+
+        // 根据影像图层的URL，给每个图层设置name属性
+        function setImageryLayerNameByUrl() {
+            let imageryLayerList = viewer.imageryLayers._layers;
+            imageryLayerList.forEach(imageryLayer => {
+                if (!imageryLayer.customName) {
+                    let imgLayerName = getImageryLayerName(imageryLayer);
+                    imageryLayer.customName = imgLayerName;
+                }
+            })
+
+            function getImageryLayerName(imageryLayer) {
+                let imageUrl = imageryLayer._imageryProvider.url || imageryLayer._imageryProvider._url;
+
+                if (!imageUrl) {
+                    return "经纬底图";
+                }
+
+                if (imageUrl.includes("/Assets/Textures/GlobalBkLayer.jpg")) {
+                    return "默认底图";
+                }
+
+                if (imageUrl && imageUrl.indexOf("realspace/datas/") != -1) {
+                    let otherImageLayerName = imageUrl.split('realspace/datas/')[1].replace('/', '');
+                    return otherImageLayerName;
+                }
+
+                // 网络底图
+                if (imageryLayer._imageryProvider.tablename) {
+                    let tableName = imageryLayer._imageryProvider.tablename;
+                    if (tableName.indexOf('http') === -1) {
+                        if (tableName.indexOf('/rest/maps/') != -1) {
+                            let name = tableName.split('/rest/maps/')[1];
+                            if (name.indexOf('%') != -1) {
+                                let str = decodeURIComponent(name);
+                                if (str.indexOf('@')) {
+                                    let newName = str.split('@')[0];
+                                    return newName;
+                                }
+                            } else {
+                                return name;
+                            }
+                        }
+                        if (tableName.indexOf('%') != -1) {
+                            let newName = tableName.split('%')[0];
+                            return newName;
+                        }
+                        // 支持地图服务
+                        if (tableName.indexOf('/maps/') != -1) {
+                            let newName = tableName.split('/maps/')[1].replace('/', '');
+                            return newName;
+                        }
+                        return tableName;
+                    } else {
+                        return '未命名';
+                    }
+                } else {
+                    return '未命名';
+                }
+            }
+        };
+
+        // 计算当前场景下的图层：S3M、影像、地形
+        function computedViewerTreeData(viewer, saveTreeData) {
+            // 场景中真实的图层列表
+            let viewerTreeData = [
+                {
+                    "key": "1",
+                    "label": "S3M图层",
+                    "children": [],
+                    "isRoot": true,
+                },
+                {
+                    "key": "2",
+                    "label": "影像图层",
+                    "children": []
+                },
+                {
+                    "key": "3",
+                    "label": "地形图层",
+                    "children": []
+                },
+                {
+                    "key": "4",
+                    "label": "移除图层",
+                    "children": []
+                },
+            ];
+
+            // 移除的图层别名keys
+            let removeAliasKeys = [];
+            if (saveTreeData) {
+                removeAliasKeys = getNodeAliasKeyList(saveTreeData[3]);
+            }
+
+            // 基于影像图层自身的url，给其绑定name属性
+            setImageryLayerNameByUrl();
+            // 给地形图层绑定URL
+            if (!viewer.terrainProvider.name) {
+                viewer.terrainProvider.name = '当前地形';
+            }
+
+            // s3m图层
+            viewer.scene.layers._layerQueue.forEach((s3mLayerGroup, index) => {
+                if (s3mLayerGroup._layerConfigs) { // 图层组
+                    let layerGroup = {
+                        label: s3mLayerGroup._name,
+                        aliasKey: s3mLayerGroup._name,
+                        key: "1-" + String(index),
+                        type: "s3mGroup",
+                        isEdit: false,
+                        children: []
+                    }
+                    s3mLayerGroup._layerConfigs._array.forEach((s3mLayer, index_2) => {
+                        if (!removeAliasKeys.includes(s3mLayer.name)) {
+                            layerGroup.children.push({
+                                label: s3mLayer.name,
+                                aliasKey: s3mLayer.name,
+                                key: `1-${index}-${index_2}`,
+                                layerGroupName: s3mLayerGroup._name,
+                                type: "s3m",
+                                isEdit: false
+                            })
+                            s3mLayer.visible = true;
+                        } else {
+                            s3mLayer.visible = false;
+                        }
+
+                    })
+                    if (layerGroup.children.length >= 1) {
+                        viewerTreeData[0].children.push(layerGroup);
+                    }
+                } else { // 普通s3mLayer
+                    let s3mLayer = s3mLayerGroup;
+                    if (!removeAliasKeys.includes(s3mLayer.name)) {
+                        viewerTreeData[0].children.push({
+                            label: s3mLayer.name,
+                            aliasKey: s3mLayer.name,
+                            key: "1-" + String(index),
+                            type: "s3m",
+                            isEdit: false
+                        });
+                        s3mLayer.visible = true;
+                    } else {
+                        s3mLayer.visible = false;
+                    }
+                }
+            });
+
+            // 影像图层
+            viewer.imageryLayers._layers.forEach((imageryLayer, index) => {
+                if (!removeAliasKeys.includes(imageryLayer.customName)) {
+                    let imageryLayerUrl = imageryLayer._imageryProvider.url;
+                    if (imageryLayerUrl && imageryLayerUrl.includes('/Assets/Textures/GlobalBkLayer.jpg')) {
+                        // 默认影像图层不加到图层树中
+                    } else {
+                        viewerTreeData[1].children.unshift({
+                            label: imageryLayer.customName,
+                            aliasKey: imageryLayer.customName,
+                            key: "2-" + String(index),
+                            type: "imagery",
+                            isEdit: false
+                        });
+                        imageryLayer.show = true;
+                    }
+
+                } else {
+                    imageryLayer.show = false;
+                }
+
+            })
+
+            // 地形图层
+            let curTerrainProvider = viewer.terrainProvider;
+            if (!removeAliasKeys.includes(curTerrainProvider.name) && (curTerrainProvider._baseUrl || curTerrainProvider._urls)) { // 有地形时
+                viewerTreeData[2].children = [{
+                    label: curTerrainProvider.tablename || curTerrainProvider.name || '当前地形',
+                    aliasKey: curTerrainProvider.tablename || curTerrainProvider.name || '当前地形',
+                    key: "3-0",
+                    type: "terrain",
+                    isEdit: false
+                }]
+            } else {
+                viewer.terrainProvider = new SuperMap3D.EllipsoidTerrainProvider();
+            }
+
+            return viewerTreeData;
+        }
+
+        // 基于已保存图层列表，根据当前场景真实存在的图层做真实性检查 (场景中新增图层暂时不做考虑)
+        function checkSaveTreeLayerIsExist(saveTreeData, viewerTreeData) {
+            if (!saveTreeData) return viewerTreeData;
+
+            // 检查S3M
+            saveTreeData[0].children.map((save_node, s3mIndex) => {
+                if (save_node.type == 's3m') { // 普通s3m图层
+                    let s3mLayer = viewer.scene.layers.find(save_node.aliasKey);
+                    if (!s3mLayer) {
+                        // save_node.disabled = true;
+                        saveTreeData[0].children.splice(s3mIndex, 1);
+                    }
+                } else if (save_node.aliasKey.includes("newLayerGroup-")) { // 新建分组
+
+                } else { // 图层组
+                    let layerGroup = viewer.scene.layers._layers.get(save_node.aliasKey);
+                    if (!layerGroup) {
+                        // save_node.disabled = true;
+                        saveTreeData[0].children.splice(s3mIndex, 1);
+                    }
+
+                    // 图层组内的s3m图层，暂时不考虑
+                    // save_node.children.forEach(childOption => {
+                    //     let layerGroup = viewer.scene.layers._layers.get(childOption.layerGroupName);
+                    //     if (layerGroup) {
+                    //         let promise = layerGroup.getSubLayer(childOption.aliasKey);
+                    //         if (promise) {
+                    //             promise.then(s3mlayer => {
+                    //                 if(s3mlayer) childOption.disabled = true;
+                    //             })
+                    //         }
+                    //     }
+                    // });
+                }
+            });
+
+            // 检查影像
+            saveTreeData[1].children.map((save_node, imgIndex) => {
+                let finds = viewerTreeData[1].children.filter(viewer_node => {
+                    return viewer_node.aliasKey == save_node.aliasKey;
+                })
+
+                if (finds.length >= 1) {
+                    save_node.key = finds[0].key;
+                } else {
+                    // save_node.disabled = true;
+                    saveTreeData[1].children.splice(imgIndex, 1);
+                }
+            });
+
+            // 检查地形
+            saveTreeData[2].children.map(save_node => {
+                let finds = viewerTreeData[2].children.filter(viewer_node => {
+                    return viewer_node.aliasKey == save_node.aliasKey;
+                })
+
+                if (finds.length == 0) {
+                    // save_node.disabled = true;
+                    saveTreeData[2].children.splice(0, 1);
+                }
+            });
+
+            return saveTreeData;
+        }
+
+        // 检查场景中的新增图层，如果有则新增到图层列表中去
+        function checkViewerHasNewLayer(saveTreeData_checked, viewerTreeData) {
+            // 检查s3m新增图层
+            let saveS3MAliasKeyList = getNodeAliasKeyList(saveTreeData_checked[0]);
+            viewerTreeData[0].children.forEach(viewer_node => {
+                if (!saveS3MAliasKeyList.includes(viewer_node.aliasKey)) { // 新增图层
+                    saveTreeData_checked[0].children.push(viewer_node);
+                }
+            });
+
+            // 检查影像新增图层
+            let saveImgAliasKeyList = getNodeAliasKeyList(saveTreeData_checked[1]);
+            viewerTreeData[1].children.forEach(viewer_node => {
+                if (!saveImgAliasKeyList.includes(viewer_node.aliasKey)) { // 新增图层
+                    saveTreeData_checked[1].children.push(viewer_node);
+                }
+            });
+
+            return saveTreeData_checked;
+        }
+
+        // 获取指定结点下所有子节点的aliasKey
+        function getNodeAliasKeyList(node) {
+            let aliasKeyList = [];
+            node.children.forEach(option => {
+                aliasKeyList.push(option.aliasKey);
+                if (option.children) {
+                    option.children.forEach(childOption => {
+                        aliasKeyList.push(childOption.aliasKey)
+                    })
+                }
+            })
+            return aliasKeyList;
+        }
+
+        // 初始化Vue图层树组件
+        function initVueComponents(scene, viewer, treeData, treeAlias) {
+            // 转为vue响应式对象
+            let layerTreeData = Vue.reactive(treeData);
+
+            // 对象解构
+            const { h, ref, nextTick } = Vue;
+            const { NButton, NInput, NDropdown } = naive;
+
+            // 如果保存的图层列表中有移除图层，将其隐藏
+            layerTreeData[3].children.forEach(delNodeOption => {
+                if (delNodeOption.layerGroupName) { // 图层组渲染需要时间
+                    setTimeout(() => {
+                        layerVisible(delNodeOption, false)
+                    }, 3000)
+                } else {
+                    layerVisible(delNodeOption, false); // 普通s3m图层
+                }
+            })
+
+            // 节点内容渲染函数
+            function nodelabel({ option }) {
+                let node = option.isEdit == true ? h(NInput, {
+                    autofocus: true,
+                    size: "small",
+                    value: option.label,
+                    onUpdateValue: (v) => {
+                        option.label = v;
+                    },
+                    onChange: () => {
+                        option.isEdit = false;
+                    },
+                    onBlur: () => {
+                        option.isEdit = false;
+                    },
+                }) : option.label;
+
+                return h(
+                    "div", {}, [node]
+                );
+            };
+
+            // 根据图层类型，设置不同的后缀
+            function renderSuffix({ option }) {
+                if (option.isRoot) { // S3M根目录
+                    return h("div", {}, [
+                        h(
+                            NButton,
+                            {
+                                bordered: false,
+                                text: true,
+                                title: "新建分组",
+                                style: 'margin-right:24px',
+                                focusable: false, // 取消focus效果
+                                onClick: (e) => {
+                                    addLayerGroup(option);
+                                },
+                            },
+                            {
+                                icon: () => h("i", { class: "iconfont iconxinjianwenjian", style: "color: rgba(255,255,255,0.65)" }, ""),
+                            }
+                        ),
+                    ]);
+                } else if (option.disabled) { // 当前图层再场景中未存在
+                    return h("div", {}, [])
+                } else if (option.key.length == 1) { // 根目录
+                    return h("div", {}, [])
+                } else if (option.isRemove) { // 移除图层
+                    return h("div", {}, [
+                        h(
+                            NButton,
+                            {
+                                bordered: false,
+                                text: true,
+                                focusable: false,
+                                title: "还原",
+                                style: "margin-right:26px",
+                                onClick: () => {
+                                    layerReStore(option);
+                                },
+                            },
+                            {
+                                icon: () => h("i", { class: "iconfont iconshuaxin", style: "color: rgba(255,255,255,0.65)" }, ""),
+                            }
+                        )
+                    ]);
+                } else if (option.type == 's3mGroup') { // 图层分组
+                    return h("div", {}, [
+                        h(
+                            NButton,
+                            {
+                                bordered: false,
+                                text: true,
+                                focusable: false,
+                                title: "重命名",
+                                style: "margin:0px 5px",
+                                onClick: () => {
+                                    option.isEdit = !option.isEdit; // true
+                                },
+                            },
+                            {
+                                icon: () => h("i", { class: "iconfont iconzhongmingming", style: "color: rgba(255,255,255,0.65)" }, "")
+                            }
+                        ),
+                        h(
+                            NButton,
+                            {
+                                bordered: false,
+                                text: true,
+                                focusable: false,
+                                title: "移除",
+                                style: "margin-right:2px",
+                                onClick: () => {
+                                    groupRemove(option); // 删除图层组
+                                },
+                            },
+                            {
+                                icon: () => h("i", { class: "iconfont iconshanchu", style: "color: #DC5849" }, "")
+                            }
+                        )
+                    ]);
+                } else if (!option.children) { // 普通图层
+                    if (option.key.split('-')[0] == '3') {
+                        return h("div", {}, [
+                            h(
+                                NButton,
+                                {
+                                    bordered: false,
+                                    text: true,
+                                    focusable: false,
+                                    title: "重命名",
+                                    style: "margin:0px 5px",
+                                    onClick: () => {
+                                        option.isEdit = !option.isEdit;
+                                    },
+                                },
+                                {
+                                    icon: () => h("i", { class: "iconfont iconzhongmingming", style: "color: rgba(255,255,255,0.65)" }, "")
+                                }
+                            ),
+                            h(
+                                NButton,
+                                {
+                                    bordered: false,
+                                    text: true,
+                                    focusable: false,
+                                    title: "移除",
+                                    style: "margin-right:2px",
+                                    onClick: () => {
+                                        layerRemove(option);
+                                    },
+                                },
+                                {
+                                    icon: () => h("i", { class: "iconfont iconshanchu", style: "color: #DC5849" }, "")
+                                }
+                            )
+                        ]);
+                    }
+                    else {
+                        return h("div", {}, [
+                            h(
+                                NButton,
+                                {
+                                    bordered: false,
+                                    text: true,
+                                    focusable: false,
+                                    title: "定位",
+                                    style: "margin:0px 5px",
+                                    onClick: () => {
+                                        layerLocate(option);
+                                    },
+                                },
+                                {
+                                    icon: () => h("i", { class: "iconfont icondingwei", style: "color: rgba(255,255,255,0.65)" }, "")
+                                }
+                            ),
+                            h(
+                                NButton,
+                                {
+                                    bordered: false,
+                                    text: true,
+                                    focusable: false,
+                                    title: "重命名",
+                                    style: "margin:0px 5px",
+                                    onClick: () => {
+                                        option.isEdit = !option.isEdit;
+                                    },
+                                },
+                                {
+                                    icon: () => h("i", { class: "iconfont iconzhongmingming", style: "color: rgba(255,255,255,0.65)" }, "")
+                                }
+                            ),
+                            h(
+                                NButton,
+                                {
+                                    bordered: false,
+                                    text: true,
+                                    focusable: false,
+                                    title: "移除",
+                                    style: "margin-right:2px",
+                                    onClick: () => {
+                                        layerRemove(option);
+                                    },
+                                },
+                                {
+                                    icon: () => h("i", { class: "iconfont iconshanchu", style: "color: #DC5849" }, "")
+                                }
+                            )
+                        ]);
+                    }
+                }
+            }
+
+            // 设置指定s3m图层显隐
+            function setS3mLayerVisible(s3mName, isCanSee) {
+                let s3mLayer = viewer.scene.layers.find(s3mName);
+                if (s3mLayer) s3mLayer.visible = isCanSee; // || !s3mLayer.visible
+            }
+
+            // 图层显隐
+            let currentTerrainProvider = undefined;
+            function layerVisible(option, isCanSee) {
+                if (option.type == 's3mGroup') {
+                    option.children.forEach(subOption => {
+                        setS3mLayerVisible(subOption.aliasKey, isCanSee);
+                    })
+                    let layerGroup = scene.layers._layers.get(option.aliasKey);
+                    if (layerGroup) layerGroup.visible = isCanSee;// || !layerGroup.visible
+                } else if (option.layerGroupName) {
+                    let layerGroup = scene.layers._layers.get(option.layerGroupName);
+                    if (layerGroup) {
+                        let promise = layerGroup.getSubLayer(option.aliasKey);
+                        if (promise) {
+                            promise.then(s3mlayer => {
+                                if (s3mlayer) {
+                                    s3mlayer.visible = isCanSee; // || !s3mlayer.visible
+                                } else {
+                                    setS3mLayerVisible(option.aliasKey, isCanSee);
+                                }
+
+                            })
+                        }
+                    } else {
+                        setS3mLayerVisible(option.aliasKey, isCanSee);
+                    }
+                } else {
+                    let optionKey = option.key;
+                    if (optionKey.indexOf("-") != -1) {
+                        switch (option.type) {
+                            case "s3m":
+                                setS3mLayerVisible(option.aliasKey, isCanSee);
+                                break;
+                            case "imagery":
+                                let index = optionKey.split("-")[1];
+                                viewer.imageryLayers._layers[index].show = isCanSee; // || !viewer.imageryLayers._layers[index].show
+                                break;
+                            case "terrain":
+                                if (!currentTerrainProvider) {
+                                    currentTerrainProvider = viewer.terrainProvider;
+                                    viewer.terrainProvider = new SuperMap3D.EllipsoidTerrainProvider();
+                                } else {
+                                    viewer.terrainProvider = currentTerrainProvider;
+                                    currentTerrainProvider = null;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+
+            // 图层定位
+            function layerLocate(option) {
+                if (option.layerGroupName) { // 真实图层组
+                    let layerGroup = scene.layers._layers.get(option.layerGroupName);
+                    if (layerGroup) {
+                        let promise = layerGroup.getSubLayer(option.aliasKey);
+                        if (promise) {
+                            promise.then(s3mlayer => {
+                                viewer.flyTo(s3mlayer, { duration: 0 });
+                            })
+                        }
+                    } else { //新建图层分组
+                        let s3mLayer = viewer.scene.layers.find(option.aliasKey);
+                        viewer.flyTo(s3mLayer, { duration: 0 });
+                    }
+                } else {
+                    if (option.type === "s3m") {
+                        let s3mLayer = viewer.scene.layers.find(option.aliasKey);
+                        viewer.flyTo(s3mLayer, { duration: 0 });
+                    } else if (option.type === "imagery") {
+                        let index = String(option.key).split("-")[1];
+                        let imgLayer = viewer.imageryLayers._layers[Number(index)];
+                        viewer.flyTo(imgLayer);
+                    }
+                }
+            }
+
+            // 图层移除
+            function layerRemove(option) {
+                if (option.layerGroupName) { // 移除图层组里面的子图层
+                    let layerGroup = scene.layers._layers.get(option.layerGroupName);
+                    if (layerGroup) {
+                        let promise = layerGroup.getSubLayer(option.aliasKey);
+                        if (promise) {
+                            promise.then(s3mlayer => {
+                                s3mlayer.visible = false;
+                            })
+                        }
+                        // layerGroup.remove(option.aliasKey);  // 避免移除图层，否则不好还原
+                    }
+
+                    let s3mLayer = viewer.scene.layers.find(option.aliasKey);
+                    s3mLayer.visible = false;
+
+                    // 处理图层列表
+                    layerTreeData[0].children.map((s3mLayerOption, index) => {
+                        if (s3mLayerOption.children) {
+                            s3mLayerOption.children.map((childOption, childindex) => {
+                                if (childOption.key == option.key) {
+                                    let delOption = s3mLayerOption.children.splice(childindex, 1)[0];
+                                    delOption.isRemove = true;
+                                    layerTreeData[3].children.push(delOption);
+
+                                    // 当图层组子图层全部删除完后，删除图层列表中的图层组
+                                    if (s3mLayerOption.children.length == 0) {
+                                        layerTreeData[0].children.splice(index, 1);
+                                    }
+                                }
+                            })
+                        }
+                    })
+                } else { // 移除普通图层
+                    let type = option.type;
+                    if (type === "s3m") {
+                        let s3mLayerName = option.aliasKey;
+                        let s3mLayer = viewer.scene.layers.find(s3mLayerName);
+                        s3mLayer.visible = false;
+                        // viewer.scene.layers.remove(s3mLayerName); 
+
+                        layerTreeData[0].children.map((s3mLayerOption, index) => {
+                            if (s3mLayerOption.key == option.key) {
+                                let delOption = layerTreeData[0].children.splice(index, 1)[0];
+                                delOption.isRemove = true;
+                                layerTreeData[3].children.push(delOption);
+                            }
+                        })
+                    }
+                    if (type === "imagery") {
+                        let imgLayerIndex = option.key.split("-")[1];
+                        let delImagelayer = viewer.imageryLayers._layers[imgLayerIndex];
+                        delImagelayer.show = false;
+                        // viewer.imageryLayers.remove(delImagelayer);
+
+                        layerTreeData[1].children.map((imgLayerOption, index) => {
+                            if (imgLayerOption.key == option.key) {
+                                let delOption = layerTreeData[1].children.splice(index, 1)[0];
+                                delOption.isRemove = true;
+                                layerTreeData[3].children.push(delOption);
+                            }
+                        })
+                    }
+                    if (type === "terrain") {
+                        viewer.terrainProvider = new SuperMap3D.EllipsoidTerrainProvider();
+                        layerTreeData[2].children.map((tinLayerOption, index) => {
+                            if (tinLayerOption.key == option.key) {
+                                let delOption = layerTreeData[2].children.splice(index, 1)[0];
+                                delOption.isRemove = true;
+                                layerTreeData[3].children.push(delOption);
+                            }
+                        })
+                    }
+                }
+            }
+
+            // 图层组移除
+            function groupRemove(option) {
+                if (option.children) {
+                    let optionList = [];
+                    option.children.forEach(childOption => {
+                        optionList.push(childOption);
+                    })
+
+                    optionList.forEach(childOption => {
+                        layerRemove(childOption);
+                    })
+                }
+            }
+
+            // 图层还原
+            function layerReStore(option) {
+                if (option.layerGroupName) {
+                    // 还原到之前父节点
+                    let finds = layerTreeData[0].children.filter(GroupOption => GroupOption.aliasKey == option.layerGroupName);
+                    if (finds.length >= 1) {
+                        let parentNode = finds[0];
+                        parentNode.children.push(option); // parentNode.children.splice(itemIndex, 0, option);
+                    } else {
+                        delete option.layerGroupName;
+                        layerTreeData[0].children.push(option);
+                    }
+                    // 删除移除图层
+                    layerTreeData[3].children.map((childOption, childindex) => {
+                        if (childOption.key == option.key) {
+                            layerTreeData[3].children.splice(childindex, 1);
+                        }
+                    });
+                } else {
+                    let keys = option.key.split('-');
+                    let index = Number(keys[0]);
+                    layerTreeData[index - 1].children.push(option); // layerTreeData[index - 1].children.splice(order, 0, option);
+                    layerTreeData[3].children.map((childOption, childindex) => {
+                        if (childOption.key == option.key) {
+                            layerTreeData[3].children.splice(childindex, 1);
+                        }
+                    });
+                }
+                option.isRemove = false;
+
+                layerVisible(option, true);
+            }
+
+            // 新建分组
+            let newLayerGroupCount = 0;
+            let maxStartNumber = getNodeAliasKeyList(layerTreeData[0]).length + 1; // 新建分组的key，不得和之前的重复
+            function addLayerGroup(option) {
+                newLayerGroupCount++;
+                let length = option.children.length;
+                let newOption = {
+                    "label": `新建分组_${newLayerGroupCount}`,
+                    "aliasKey": `newLayerGroup-${newLayerGroupCount}`,
+                    "key": `1-${maxStartNumber}`,
+                    "type": "s3mGroup",
+                    "isEdit": false,
+                    "children": []
+                }
+                option.children.push(newOption);
+                maxStartNumber++;
+            }
+
+            // 获取指定结点下所有子节点的aliasKey
+            function getNodeAliasKeyList(node) {
+                let aliasKeyList = [];
+                node.children.forEach(option => {
+                    aliasKeyList.push(option.aliasKey);
+                    if (option.children) {
+                        option.children.forEach(childOption => {
+                            aliasKeyList.push(childOption.aliasKey)
+                        })
+                    }
+                })
+                return aliasKeyList;
+            }
+
+            // 保存图层列表Options
+            function saveTreeOption() {
+                localStorage.setItem('TreeDataOptions', JSON.stringify(layerTreeData)); // 保存treeData
+                saveAsJson(JSON.stringify(layerTreeData), "layerTree")
+            }
+
+            // 将JS对象转为JSON保存到本地
+            function saveAsJson(str, fileName) {
+                const blob = new Blob([str], { type: "application/json;charset=utf-8" });
+                const href = URL.createObjectURL(blob);
+                const alink = document.createElement("a");
+                alink.style.display = "none";
+                alink.download = `${fileName}.json`; // 下载后文件名
+                alink.href = href;
+                document.body.appendChild(alink);
+                alink.click();
+                document.body.removeChild(alink); // 下载完成移除元素
+                URL.revokeObjectURL(href); // 释放掉blob对象
+            }
+
+            // 拖拽相关事件
+            function handleDrop({ node, dragNode, dropPosition }) {
+                if (node.type == "s3mGroup" && dragNode.type == "s3mGroup") {
+                    alert("不可将图层组拖拽进图层组中");
+                    return;
+                }
+                if (dragNode.type == "s3mGroup" && node.layerGroupName != undefined) {
+                    alert("不可将图层组拖拽进图层组中");
+                    return;
+                }
+                if(dragNode.key.length == 1){
+                    alert("图层根目录不支持拖拽");
+                    return;
+                }
+
+                // node为目标节点，dragNode为当前拖拽节点
+                let target_level, drag_level = undefined;
+                let target_index = -1;
+                let drag_index = -1;
+                if (node && node.key.indexOf("-") != -1) {
+                    let node_split_arr = node.key.split("-");
+                    if (node_split_arr.length > 1) {
+                        target_level = node_split_arr[0];
+                        target_index = Number(node_split_arr[1]);
+                    }
+                }
+                if (dragNode && dragNode.key.indexOf("-") != -1) {
+                    let dragNode_split_arr = dragNode.key.split("-");
+                    if (dragNode_split_arr.length > 1) {
+                        drag_level = dragNode_split_arr[0];
+                        drag_index = Number(dragNode_split_arr[1]);
+                    }
+                }
+
+                if (target_level != drag_level) {
+                    alert("请在同级目录下拖拽");
+                    return;
+                }
+
+                const [dragNodeSiblings, dragNodeIndex] = findSiblingsAndIndex(
+                    dragNode,
+                    layerTreeData
+                );
+                if (dragNodeSiblings === null || dragNodeIndex === null) return;
+                dragNodeSiblings.splice(dragNodeIndex, 1);
+                if (dropPosition === "inside") {
+                    if (node.children) {
+                        node.children.unshift(dragNode);
+                    } else {
+                        node.children = [dragNode];
+                    }
+                } else if (dropPosition === "before") {
+                    const [nodeSiblings, nodeIndex] = findSiblingsAndIndex(node, layerTreeData);
+                    if (nodeSiblings === null || nodeIndex === null) return;
+                    nodeSiblings.splice(nodeIndex, 0, dragNode);
+                } else if (dropPosition === "after") {
+                    const [nodeSiblings, nodeIndex] = findSiblingsAndIndex(node, layerTreeData);
+                    if (nodeSiblings === null || nodeIndex === null) return;
+                    nodeSiblings.splice(nodeIndex + 1, 0, dragNode);
+                }
+                layerTreeData = Array.from(layerTreeData);
+
+                // 设置图层组标识
+                setNodeGroupAttr(dragNode, node);
+
+                // 只改变场景中的影像图层
+                if (drag_level == "2") {
+                    changeLayerOrderByDrag(drag_index, target_index);
+                    updateImgLayersOrder();
+                }
+            }
+
+            // 当拖拽到图层组中，添加layerGroupName标识，当从图层组拖拽出来，删除该属性
+            function setNodeGroupAttr(dragNode, node) {
+                if (node.type == 's3mGroup') { // 拖拽到图层组中
+                    dragNode.layerGroupName = node.aliasKey;
+                } else if (node.layerGroupName) {  // 有两种方式可以拖拽到图层组中
+                    dragNode.layerGroupName = node.layerGroupName;
+                } else {
+                    delete dragNode.layerGroupName; // 从图层组拖拽出来（拖拽到非图层组里面，即S3M根目录）
+                }
+            }
+
+            // 通过拖拽调整场景中图层顺序
+            function changeLayerOrderByDrag(drag_index, target_index) {
+                // 影像图层列表中index从下往上为：0 1 2 .. n,所以drag - target < 0，drag才是raise，反之则亦然
+                let gap = drag_index - target_index;
+                let change_count = Math.abs(gap);
+                let drag_imgLayer = viewer.imageryLayers._layers[drag_index];
+                if (gap > 0) {
+                    //上 -> 下：lower
+                    for (let i = 0; i < change_count; i++) {
+                        viewer.imageryLayers.lower(drag_imgLayer);
+                    }
+                } else if (gap < 0) {
+                    // 下 -> 上：raise
+                    for (let i = 0; i < change_count; i++) {
+                        viewer.imageryLayers.raise(drag_imgLayer);
+                    }
+                } else {
+                    return;
+                }
+            }
+
+            // 更新影像图层顺序
+            function updateImgLayersOrder() {
+                layerTreeData[1].children = [];
+                viewer.imageryLayers._layers.forEach((imageryLayer, index) => {
+                    let imageryLayerUrl = imageryLayer._imageryProvider.url;
+                    if (imageryLayerUrl && imageryLayerUrl.includes('/Assets/Textures/GlobalBkLayer.jpg')) {
+                        // 默认影像图层不加到图层树中
+                    } else {
+                        layerTreeData[1].children.unshift({
+                            label: imageryLayer.customName,
+                            aliasKey: imageryLayer.customName,
+                            key: "2-" + String(index),
+                            type: "imagery",
+                            isEdit: false
+                        });
+                        imageryLayer.show = true;
+                    }
+                })
+            }
+
+            // 寻找结点
+            function findSiblingsAndIndex(node, nodes) {
+                if (!nodes) return [null, null];
+                for (let i = 0; i < nodes.length; ++i) {
+                    const siblingNode = nodes[i];
+                    if (siblingNode.key === node.key) return [nodes, i];
+                    const [siblings, index] = findSiblingsAndIndex(node, siblingNode.children);
+                    if (siblings && index !== null) return [siblings, index];
+                }
+                return [null, null];
+            }
+
+            // checkBox选中
+            let flag = false; // 用来控制显隐，只有点击的是checkbox才会执行显隐
+            let checkedKeys = []; // 当前所有选中的项目key，通过检查当前选中的项目是否再其中，来判断该图层是否是隐藏还是显示
+            function getCheckedKeys(keys, options) {
+                checkedKeys = keys;
+                flag = true;
+            }
+
+            // 列表项选中
+            function getSelectOption(keys, options) {
+                // console.log("treeInstRef:",treeInstRef.value);
+            }
+
+            // 自定义点击事件
+            function nodeProps({ option }) {
+                return {
+                    onClick() {
+                        // console.log('node-props:',option);
+                        if (flag) {
+                            if (option.key.length == 1) {          // 根目录
+                                let isCanSee = checkedKeys.includes(option.key); // 获取当前结点的选中
+                                option.children.forEach(childOption => {
+                                    layerVisible(childOption, isCanSee);
+                                })
+                            } else if (option.type == "s3mGroup") { // 图层组
+                                if (checkedKeys.includes(option.key)) {
+                                    layerVisible(option, true);
+                                } else {
+                                    layerVisible(option, false);
+                                }
+                            } else {                                // 单个图层                  
+                                if (checkedKeys.includes(option.key)) {
+                                    layerVisible(option, true);
+                                } else {
+                                    layerVisible(option, false);
+                                }
+                            }
+                            flag = false;
+                        }
+                    }
+                }
+            }
+
+            const treeInstRef = ref(null); // 图层树Dom
+
+            // 重写主题样式
+            const overridesTheme = {
+                common: {
+                    primaryColor: "rgba(52, 153, 229, 1)",
+                    primaryColorHover: "rgba(52, 153, 229, 1)",
+                    primaryColorPressed: "rgba(255,255,255,0.85)",
+                    primaryColorSuppl: "rgba(255,255,255,0.45)",
+                },
+                Button: {
+                    fontSizeMedium: "0.14rem", // 底部操作按钮：宽高和文字大小自适应浏览器
+                    textColor: "rgba(255,255,255,0.65)", // 设置默认n-button全局样式
+                    border: "1px solid rgba(255,255,255,0.65)",
+                    textColorHover: "#5EB7F2",
+                    borderHover: "1px solid #5EB7F2",
+                    textColorPressed: "#2276BF",
+                    borderPressed: "1px solid #2276BF",
+                },
+                Tabs: {
+                    barColor: "#3499e5", // tabs底部横条颜色
+                    tabFontSizeMedium: "0.14rem", // tabs标签文字大小 - 兼容移动端样式
+                },
+                ColorPicker: {
+                    border: "none", // color-pick颜色条去掉边框
+                },
+                Divider: {
+                    color: "rgba(255, 255, 255, 0.15)", // 分割条颜色
+                },
+                Checkbox: {
+                    colorChecked: "#3499E5",
+                    checkMarkColor: "#fff",
+                },
+                Slider: {
+                    fillColor: "#3499E5",
+                    fillColorHover: "#3499E5",
+                    handleSize: "0.12rem",
+                },
+                Switch: {
+                    railColorActive: "#3499E5",
+                },
+            };
+
+            // 创建Vue
+            const App = {
+                setup() {
+                    return {
+                        treeInstRef,
+                        showLine: ref(true),
+                        data: layerTreeData,
+                        defaultExpandedKeys: ['1', '2', '3'],
+                        defaultCheckedKeys: ['1', '2', '3'],
+                        nodelabel,
+                        renderSuffix,
+                        handleDrop,
+                        getCheckedKeys,
+                        getSelectOption,
+                        nodeProps,
+                        saveTreeOption,
+                        overridesTheme
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+
+</html>

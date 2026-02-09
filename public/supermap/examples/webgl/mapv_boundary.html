@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>强边界图</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script type="text/javascript" src="./js/mapv/mapvAPI/mapv.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+    <!-- <div id="toolbar" class="param-container tool-bar" style="display: flex;">
+        <div class="param-item">
+            <input id="draw" type="button" value="强边界图" class="button black">
+        </div>
+        <div class="param-item">
+            <input id="destroy" type="button" value="销毁" class="button black">
+        </div>
+    </div> -->
+
+    <script type="module">
+        import mapvLayer from "./js/mapv/mapvLayer.js"; // mapv地图
+        import strongBoundaryData from './js/mapv/data/strongBoundaryData.js' // 强边界图options
+
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            let EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            window.viewer = viewer; // 需要绑定到window，导入的mapv会用到
+            viewer.resolutionScale = window.devicePixelRatio;
+            
+            viewer.imageryLayers.addImageryProvider(
+                new SuperMap3D.SuperMapImageryProvider({
+                    url: "http://www.supermapol.com/realspace/services/map-China400/rest/maps/China400",
+                })
+            );
+
+            // 创建MapV地图
+            let map = new mapvLayer(viewer);
+
+            addData();
+            function addData(){
+                let options = strongBoundaryData();
+                map.createLayer(options);
+            }
+
+            $('#loadingbar').remove();
+
+            $("#draw").click(function () {
+                addData();
+            });
+
+            $("#destroy").click(function () {
+                map.destroy();
+            });
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+
+</body>
+
+</html>

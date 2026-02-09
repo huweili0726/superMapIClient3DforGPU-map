@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Test">
+    <meta name="SuperMap3D-sandcastle-labels" content="Geometries">
+    <title>关灯特效</title>
+    <script src="js/plotPanelControl/PlottingUI.Include.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../../Build/SuperMap3D/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script>
+
+</head>
+
+<body style=" margin: 0;background: #fff;width: 100%;height:100%;position: absolute;top: 0;">
+    <div id="SuperMap3DContainer" class="fullSize" style="position: absolute;width: 100%;height: 100%;">
+
+        <script id="SuperMap3D_sandcastle_script">
+            var plotting, plottingLayer, plotEditControl;
+            var scene, viewer;
+            var symbolLibManager;
+            var groundEfficiency
+
+            function onload(SuperMap3D) {
+                'use strict';
+                if (window.Cesium) {
+                    window.SuperMap3D = SuperMap3D;
+                }
+                var host = window.isLocalPlot ? window.plotServer : "http://support.supermap.com.cn:8090";
+                viewer = new SuperMap3D.Viewer('SuperMap3DContainer');
+                scene = viewer.scene;
+
+                let CBD = host + "/iserver/services/3D-CBD/rest/realspace";
+                var promise = scene.open(CBD);
+
+                groundEfficiency = new SuperMap3D.GroundEffect({
+                    scene: scene,
+                    id: "GroundEffect",
+                    color: SuperMap3D.Color.BLACK.withAlpha(0.7),
+                    positions: [
+                        116.4560006060437, 39.914940223670925,
+                        116.45911535703866, 39.914946081485304,
+                        116.45943901754349, 39.91235473089909,
+                        116.45624166330651, 39.91242400259561,
+                    ],
+                    maxTerrainHeight: 100,
+                    minTerrainHeight: 80
+                })
+            }
+
+            if (typeof MGIS_SuperMap3D !== 'undefined') {
+                window.startupCalled = true;
+                onload(MGIS_SuperMap3D);
+            }
+        </script>
+    </div>
+</body>
+
+</html>

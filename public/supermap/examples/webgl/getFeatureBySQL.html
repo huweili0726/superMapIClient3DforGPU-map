@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>SQL查询</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./style/getFeatureBySQL.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/lib/CustomBubble.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body class="loading">
+    <div id="Container"></div>
+    <div id="toolbar" class="param-container tool-bar">
+        <label style="font: 400 13.3333px Arial;">SQL</label><input type="text" id="SQL" value="SMAREA>500">
+        <button type="button" id="search" class="button black">查询</button>
+        <br>
+        <select id="position" style="width: 100%">
+            <option value="1">定位点1</option>
+            <option value="2">定位点2</option>
+            <option value="3">定位点3</option>
+            <option value="4">点位点4</option>
+        </select>
+    </div>
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            var EngineType = getEngineType();
+            var viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+        function init(SuperMap3D, scene, viewer) {
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+            viewer.resolutionScale = window.devicePixelRatio;
+            var camera = scene.camera;
+            scene.shadowMap.darkness = 1.275; //设置第二重烘焙纹理的效果（明暗程度）
+            scene.debugShowFramesPerSecond = false;
+            scene.hdrEnabled = false;
+            scene.sun.show = true;
+
+            const customBubble = new CustomBubble(viewer,{
+                isDesplayPickedEntityInfo:true
+            });
+            customBubble.start();
+
+            var widget = viewer.Widget;
+            var buildingLayer;//建筑图层
+            var IDs = [];
+            try {
+                var promise = scene.open(URL_CONFIG.SCENE_CBD);
+                promise.then(function (layers) {
+                    buildingLayer = scene.layers.find("Building@CBD");
+                    buildingLayer.indexedDBSetting.isAttributesSave = true;//保存属性
+                    var waterLayer = scene.layers.find('Lake@CBD');
+					// 设置水面参数
+					waterLayer.waterSpeed = 0.5;
+                	waterLayer.waterWaveScale = 0.5;
+                }, function () {
+                    var title = '加载SCP失败，请检查网络连接状态或者url地址是否正确？';
+                    widget.showErrorPanel(title, undefined, e);
+                });
+            } catch (e) {
+                if (widget._showRenderLoopErrors) {
+                    var title = '渲染时发生错误，已停止渲染。';
+                    widget.showErrorPanel(title, undefined, e);
+                }
+            }
+
+            function computedFeatureDescription(feature) {
+                if (!feature.fieldNames || !feature.fieldValues) return;
+
+                let description = [];
+                for (let i = 0; i < feature.fieldNames.length; i++) {
+                    let array = [feature.fieldNames[i], feature.fieldValues[i]];
+                    description.push(array);
+                }
+                return JSON.stringify(description);
+            }
+
+            function onQueryComplete(features) {
+                var selectedFeatures = features;
+                viewer.entities.removeAll();
+                for (var i = 0; i < selectedFeatures.length; i++) {
+                    var value = selectedFeatures[i].fieldValues["0"];
+                    var feature = selectedFeatures[i];
+
+                    const description = computedFeatureDescription(feature);
+
+                    viewer.entities.add({
+                        position: SuperMap3D.Cartesian3.fromDegrees(Number(selectedFeatures[i].fieldValues["12"]), Number(selectedFeatures[i].fieldValues["13"]), Number(selectedFeatures[i].fieldValues["16"])),
+                        billboard: {
+                            image: './images/location4.png',
+                            width: 30,
+                            height: 40,
+
+                        },
+                        name: selectedFeatures[i].fieldValues["11"],
+                        description: description
+                    });
+                    IDs.push(parseInt(value) + 11);
+                }
+                if (IDs.length > 0) {
+                    buildingLayer.setSelection(IDs);
+                }
+            }
+
+            function doSqlQuery(sqlStr) {
+                var sqlParameter = {
+                    "datasetNames": ["二维数据:Building"],
+                    getFeatureMode: "SQL",
+                    queryParameter: {
+                        attributeFilter: sqlStr
+                    }
+                };
+                var url = "http://www.supermapol.com/realspace/services/data-cbd/rest/data/featureResults.rjson?returnContent=true";
+                var queryData = JSON.stringify(sqlParameter);
+
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: queryData,
+                    success: function (result) {
+                        var resultObj = JSON.parse(result);
+                        console.log(resultObj);
+                        if (resultObj.featureCount > 0) {
+                            onQueryComplete(resultObj.features);
+                        }
+                    },
+                    error: function (msg) {
+                        console.log(msg);
+                    },
+                })
+
+            }
+
+            $("#search").click(function () {
+                doSqlQuery($("#SQL").val());
+            });
+            $("#position").change(function () {
+                if (this.value == "1") {
+                    camera.flyTo({
+                        destination: SuperMap3D.Cartesian3.fromDegrees(116.45756824765414, 39.9151525065, 303.9282348283207),
+                        orientation: {
+                            heading: 3.361386,
+                            pitch: -0.543285,
+                            roll: 6.283185307179563
+                        }
+                    });
+                }
+                if (this.value == "2") {
+                    camera.flyTo({
+                        destination: SuperMap3D.Cartesian3.fromDegrees(116.45898554643348, 39.90943026228571, 32.707476595524625),
+                        orientation: {
+                            heading: 6.016771,
+                            pitch: -0.300416,
+                            roll: 0.0
+                        }
+                    });
+                }
+                if (this.value == "3") {
+                    camera.flyTo({
+                        destination: SuperMap3D.Cartesian3.fromDegrees(116.43518565219966, 39.95097107746538, 2078.0503226706123),
+                        orientation: {
+                            heading: 2.718565,
+                            pitch: -0.415366,
+                            roll: 0.0
+                        }
+                    });
+                }
+                if (this.value == "4") {
+                    camera.flyTo({
+                        destination: SuperMap3D.Cartesian3.fromDegrees(116.48368313561016, 39.911532190450295, 369.08993153401934),
+                        orientation: {
+                            heading: 4.771817,
+                            pitch: -0.190922,
+                            roll: 0.0
+                        }
+                    });
+                }
+
+            })
+            $('#loadingbar').remove();
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

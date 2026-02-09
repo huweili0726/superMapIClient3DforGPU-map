@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title id="APIChange">接口变更</title>
+
+  <link rel="shortcut icon" type="image/x-icon" href="./img/favicon.ico" />
+  <link rel="stylesheet" href="./css/develop.css">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+  <script type="text/javascript" include='isIntroduction,lazyload' src="./js/include.js"></script>
+  <script src=""></script>
+
+  <!--[if lte IE 8]>
+    <style>
+        .container .hero-unit {
+            background-position: right bottom;
+            background-image: url('examples/images/home_banner2.png');
+            background-repeat: no-repeat;
+            padding-left: 60px;
+            padding-right: 400px;
+            padding-top: 60px;
+            padding-bottom: 60px
+        }
+    </style>
+    <![endif]-->
+  <style type="text/css">
+    <!-- .STYLE14 {
+    font-family: "微软雅黑"
+    }
+
+    .STYLE28 {
+      font-size: 12pt;
+    }
+
+    .STYLE35 {
+      font-size: 14pt;
+    }
+
+    .STYLE42 {
+      font-size: 11pt;
+    }
+
+    .STYLE43 {
+      font-family: "微软雅黑";
+      font-size: 12pt;
+    }
+
+    .STYLE44 {
+      font-family: "微软雅黑";
+      font-size: 14pt;
+    }
+
+    .STYLE45 {
+      font-family: "微软雅黑";
+      font-size: 10pt;
+    }
+
+    .STYLE46 {
+      color: black;
+      font-weight: bold;
+    }
+
+    .STYLE48 {
+      font-family: "微软雅黑";
+      color: #000000;
+      font-weight: bold;
+    }
+
+    .STYLE59 {
+      font-family: "微软雅黑";
+      font-size: 11pt;
+    }
+
+    .STYLE61 {
+      font-family: "微软雅黑";
+      font-size: 11pt;
+      color: black;
+    }
+    -->
+  </style>
+</head>
+
+<body class="hold-transition skin-blue">
+  <!--顶部导航-->
+  <header class="header-wrapper main-header icl-header"></header>
+  <script>
+    var navigation = {
+      nav: {
+        title: 'SuperMap iClient3D for WebGL/WebGPU',
+        path: '../web/',
+        isLocal: window.isLocal
+      }
+    };
+    identification = {};
+    utils.loadTemplate('.icl-header', './template/header.html', navigation);
+  </script>
+  <!--顶部导航 end-->
+  <div>
+    <div class="container " id="APIChange">
+      <div>
+        <h2 class="title STYLE14" id="details2">产品变更信息</h2>
+        <span class="STYLE14">当前版本：SuperMap iClient3D for 12i(2025)</span>u1<br />
+        <span class="STYLE14">上次版本：</span><span class="STYLE14">SuperMap iClient3D for 12i(2025)</span><br />
+
+        <p class="lead STYLE14 STYLE35"><strong>1. 接口变更： </strong></p>
+        <div align="center">
+          <table width="1349" border="0" align="left" cellpadding="0" cellspacing="0" style="border-collapse:
+ collapse;width:1108px">
+            <colgroup>
+              <col width="226" style="width: 170pt">
+              <col width="269" style="width: 202pt">
+              <col width="562" style="width: 422pt">
+            </colgroup>
+            <tr height="22" style="height:16.5pt">
+              <td height="22"
+                style="height: 16.5pt; width: 261px; font-weight: 700; color: black; font-size: 11.0pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px"
+                align="left">
+                <p align="left" class="STYLE35">
+                  <font color="#e16d6b">类名称</font>
+              </td>
+              <td width="266" align="left"
+                style="width: 263px; font-weight: 700; color: black; font-size: 11.0pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <p align="left" class="STYLE35">
+                  <font color="#e16d6b">变更接口</font>
+              </td>
+              <td width="631" align="left"
+                style="width: 575px; font-weight: 700; color: black; font-size: 11.0pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <p align="left" class="STYLE35">
+
+                  <font color="#e16d6b">接口说明</font>
+              </td>
+            </tr>
+
+            <!--从此处开始正式填入接口内容。-->
+
+
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/FieldLayer3D.html" target="_blank">FieldLayer3D</a>
+              </td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                particleVelocityFieldEffect</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取三维流场效果，类型变更为ParticleVelocityFieldEffect</td>
+            </tr>
+
+            <tr height="22" style="height:16.5pt">
+              <td rowspan="2" align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/Sightline.html" target="_blank">Sightline</a></td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                getBarrierPoint(name, func)</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取障碍点信息，已废弃。使用getBarrierPointAsync(name, func) 代替</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                getObjectIds() </td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取通视分析所有障碍物对象的IDS集合，已废弃。使用getObjectIdsAsync()代替</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/S3MTilesLayer.html" target="_blank">S3MTilesLayer</a>
+              </td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                mixColorType</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取或者设置图层对象的颜色混合模式，作用对象变更为仅对图层对象级别设置颜色模式有效（如专题图，setObjectColor等）</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/VectorTilesMap.html" target="_blank">VectorTilesMap</a></td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                lineAntialiasing</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取或者设置线是否抗锯齿，已废弃。使用VectorTilesMapSetting.lineAntialiasing</td>
+            </tr>
+            <!--2-->
+          </table>
+        </div>
+
+      </div>
+    </div>
+    <div class="container ">
+      <div>
+        <p class="lead STYLE14 STYLE35">&nbsp;</p>
+        <p class="lead STYLE14 STYLE35"><strong>2. 新增接口： </strong></p>
+        <div align="center">
+          <table width="1349" border="0" align="left" cellpadding="0" cellspacing="0"
+            style="border-collapse:collapse;width:1108px">
+            <colgroup>
+              <col width="226" style="width: 170pt">
+              <col width="269" style="width: 202pt">
+              <col width="562" style="width: 422pt">
+            </colgroup>
+            <tr height="22" style="height:16.5pt">
+              <td height="22"
+                style="height: 16.5pt; width: 261px; font-weight: 700; color: black; font-size: 11.0pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px"
+                align="left">
+                <p align="left" class="STYLE35">
+                  <font color="#e16d6b">类名称</font>
+              </td>
+              <td width="266" align="left"
+                style="width: 263px; font-weight: 700; color: black; font-size: 11.0pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <p align="left" class="STYLE35">
+                  <font color="#e16d6b">新增接口</font>
+              </td>
+              <td width="631" align="left"
+                style="width: 575px; font-weight: 700; color: black; font-size: 11.0pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: .5pt solid windowtext; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <p align="left" class="STYLE35">
+                  <font color="#e16d6b">接口说明</font>
+              </td>
+            </tr>
+            <!--从此处开始正式填入接口内容。-->
+            <tr height="22" style="height:16.5pt">
+              <td rowspan="2" align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/FieldLayer3D.html" target="_blank">FieldLayer3D</a></td>
+              <td height="1" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                hypsometricSetting</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取或者设置分层设色参数对象，类型：HypsometricSetting</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                temporalSetting</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取多时序参数对象，类型：TemporalSetting</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td rowspan="3" align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/S3MTilesLayer.html" target="_blank">S3MTilesLayer</a></td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                particleVelocityFieldEffect</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                设置三维流场效果，类型：ParticleVelocityFieldEffect</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                setHypsometricSetting(hypsometricSetting, param)</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                图层按字段设置分层设色效果，目前支持点云、三维流场</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                colorStyle</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取或者设置图层风格与前景色的显示模式，类型：ColorStyle</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/SuperMapImageryProvider.html" target="_blank">SuperMapImageryProvider</a>
+              </td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                setDisplayFilters(filters)</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                对接服务端地图服务中的属性条件过滤</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td rowspan="2" align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/Sightline.html" target="_blank">Sightline</a></td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                getBarrierPointAsync(name, func)</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取障碍点信息</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                getObjectIdsAsync()</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                异步获取通视分析所有障碍物对象IDS集合</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/ViewDome.html" target="_blank">ViewDome</a></td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                getViewDomeRatio(viewDomeType) </td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取开敞度分析结果中可视部分和不可视部分所占开敞度分析范围的比例</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/MapboxImageryProvider.html" target="_blank">MapboxImageryProvider</a>
+              </td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                customRequestHeaders</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                加载Mapbox 瓦片影像时设置自定义请求头</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/Scene.html" target="_blank">Scene</a></td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                vectorTilesMapSetting</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                获取MVT地图的全局设置，类型：VectorTilesMapSetting</td>
+            </tr>
+            <tr height="22" style="height:16.5pt">
+              <td align="left"
+                style="height: 16.5pt; font-weight: 700; color: black; font-size: 11pt; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: .5pt solid windowtext; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                <a href="../docs/Documentation/VectorTilesMap.html" target="_blank">VectorTilesMap</a></td>
+              <td height="0" align="left" class="STYLE14"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                moveLayer(id, beforedId)</td>
+              <td align="left" class="STYLE28"
+                style="color: black; font-size: 11pt; font-weight: 400; font-style: normal; text-decoration: none; font-family: &quot;微软雅黑&quot;; text-align: general; vertical-align: middle; white-space: nowrap; border-left: medium none; border-right: .5pt solid windowtext; border-top: medium none; border-bottom: .5pt solid windowtext; padding-left: 1px; padding-right: 1px; padding-top: 1px">
+                将图层移动到指定的图层数组</td>
+            </tr>
+            <!--2-->
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="container STYLE42">
+    </div>
+    <p>&nbsp;</p>
+  </div>
+
+
+  <div class="container STYLE42">
+    <p class="lead STYLE14 STYLE35"><strong>3. 新增类接口说明： </strong></p>
+    <table width="1112" cellspacing="0" class="MsoTableGrid"
+      style="mso-border-alt: solid windowtext .5pt; mso-yfti-tbllook: 1184; mso-padding-alt: 0cm 5.4pt 0cm 5.4pt; border-collapse: separate; left: 0px; top: 332px; margin-bottom: 0pt;">
+      <col width="157" />
+      <col width="216" />
+      <col width="178" />
+      <col width="262" />
+      <tr style="mso-yfti-irow: 0; mso-yfti-firstrow: yes;">
+        <td width="188" align="center" style="border: Solid 1px #000000; vertical-align: top;
+							 mso-border-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt;
+							 padding-left: 0px; padding-top: 0px; padding-right: 0px;
+							 padding-bottom: 0px;">
+          <p class="STYLE44" style="text-align: left;
+														 margin-left: 0px"> <span
+              style="mso-ascii-font-family: Calibri; mso-ascii-theme-font: minor-latin; mso-fareast-font-family: 宋体; mso-fareast-theme-font: minor-fareast; mso-hansi-font-family: Calibri; mso-hansi-theme-font: minor-latin; color: #e16d6b; font-weight:700">类名称</span>
+          </p>
+        </td>
+        <td style="border-top: Solid 1px #000000; border-right: Solid 1px #000000;
+							 border-bottom: Solid 1px #000000; vertical-align: top;
+							 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+							 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+							 padding-right: 0px; padding-bottom: 0px;" align="center" width="257">
+          <p class="STYLE44" style="text-align: left; margin-left: 0px"> <span
+              style="mso-ascii-font-family: Calibri; mso-ascii-theme-font: minor-latin; mso-fareast-font-family: 宋体; mso-fareast-theme-font: minor-fareast; mso-hansi-font-family: Calibri; mso-hansi-theme-font: minor-latin; color: #e16d6b; font-weight:700">类中文说明</span>
+          </p>
+        </td>
+        <td style="border-top: Solid 1px #000000; border-right: Solid 1px #000000;
+							 border-bottom: Solid 1px #000000; vertical-align: top;
+							 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+							 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+							 padding-right: 0px; padding-bottom: 0px;" align="center" width="173">
+          <p class="STYLE44" style="text-align: left; margin-left: 0px"> <span
+              style="mso-ascii-font-family: Calibri; mso-ascii-theme-font: minor-latin; mso-fareast-font-family: 宋体; mso-fareast-theme-font: minor-fareast; mso-hansi-font-family: Calibri; mso-hansi-theme-font: minor-latin; color: #e16d6b; font-weight:700">接口名称</span>
+          </p>
+        </td>
+        <td style="border-top: Solid 1px #000000; border-right: Solid 1px #000000;
+							 border-bottom: Solid 1px #000000; vertical-align: top;
+							 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+							 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+							 padding-right: 0px; padding-bottom: 0px;" align="center" width="484">
+          <p class="STYLE44" style="text-align: left; margin-left: 0px"> <span
+              style="mso-ascii-font-family: Calibri; mso-ascii-theme-font: minor-latin; mso-fareast-font-family: 宋体; mso-fareast-theme-font: minor-fareast; mso-hansi-font-family: Calibri; mso-hansi-theme-font: minor-latin; color: #e16d6b; font-weight:700">接口中文说明</span>
+          </p>
+        </td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td rowspan="9" align="left" class="STYLE48" style="border-left: Solid 1px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;"><a href="../docs/Documentation/ParticleVelocityFieldEffect.html"
+            target="_blank">ParticleVelocityFieldEffect</a></td>
+        <td width="257" rowspan="9" class="STYLE46" style="border-left: Solid 0px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">三维流场类</td>
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">horizontalDensity</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或设置水平粒子密度。当数据为地理坐标系时，单位为个/度；数据为投影坐标系时，单位为个/米，类型：Float，默认值：1</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">image</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或设置三维流场需要渲染的纹理图片路径，类型：Sting，默认值：&quot;Assets/Textures/arrow.png&quot;
+        </td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">imageSizeInMeters</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或者设置粒子渲染模式为纹理模式时的单位。true表示纹理的单位为米，false表示纹理的代为像素，类型：Boolean，默认值：true
+        </td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">particleBaseColor</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或设置粒子的颜色，类型：Color，默认值：Color.Green</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">particleLifeRange</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或设置粒子的生命周期范围，粒子生命周期将在这个范围内随机产生，单位为毫秒，类型：
+          Array.&lt;Float&gt;，默认值：[5000,10000]</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">particleMode</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或者设置粒子渲染模式，类型：ParticleMode，默认值：ParticleMode.Texture</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">particleSize</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或设置粒子的大小，类型：Float，默认值：5.0</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">velocityScale</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或设置粒子速度缩放倍数，类型：Float，默认值：1</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">verticalDensity</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取或设置垂直粒子密度单位为个/米，类型：Float，默认值：0.1</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td rowspan="2" align="left" class="STYLE48" style="border-left: Solid 1px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;"><a href="../docs/Documentation/ParticleMode.html"
+            target="_blank">ParticleMode</a></td>
+        <td width="257" rowspan="2" class="STYLE46" style="border-left: Solid 0px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">三维流场渲染模式类</td>
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">Point</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">点图元模式，枚举值1</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">Texture</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">纹理模式，枚举值0</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td rowspan="2" align="left" class="STYLE48" style="border-left: Solid 1px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;"><a href="../docs/Documentation/ColorStyle.html"
+            target="_blank">ColorStyle</a></td>
+        <td rowspan="2" class="STYLE46" style="border-left: Solid 0px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">图层风格与前景色的显示模式类</td>
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">OrigialTexture</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">混合模式，枚举值0</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">PureColor</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">替换模式，枚举值1</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td rowspan="5" align="left" class="STYLE48" style="border-left: Solid 1px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;"><a href="../docs/Documentation/VectorTilesMapSetting.html"
+            target="_blank">VectorTilesMapSetting</a></td>
+        <td rowspan="5" class="STYLE46" style="border-left: Solid 0px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">MVT地图全局设置类</td>
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">alpha</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取设置MVT地图允许的透明度，类型：Number，默认值：1.0</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">lineAntialiasing</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取设置MVT地图的线是否抗锯齿，类型：Boolean，默认值：true</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">maxzoom</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取设置MVT地图允许的最大层级，类型：Number，默认值：22</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">minzoom</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取设置MVT地图允许的最小层级，类型：Number，默认值：0</td>
+      </tr>
+      <tr style="mso-yfti-irow: 5;">
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">flyTo(center, zoom, scale)</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">定位相机位置（注意：此方法仅支持不加载地形的情况）</td>
+      </tr>
+
+      <tr style="mso-yfti-irow: 5;">
+        <td rowspan="2" align="left" class="STYLE48" style="border-left: Solid 1px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;"><a href="../docs/Documentation/MapboxViewer.html"
+            target="_blank">MapboxViewer</a></td>
+        <td class="STYLE46" style="border-left: Solid 0px #000000;
+					 border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 mso-border-top-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">Mapbox场景下加载S3M瓦片数据类</td>
+        <td class="STYLE14" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">scene</td>
+        <td class="STYLE59" style="border-right: Solid 1px #000000; border-bottom: Solid 1px #000000;
+					 vertical-align: top; mso-border-top-alt: solid windowtext .5pt;
+					 mso-border-left-alt: solid windowtext .5pt; mso-border-alt: solid windowtext .5pt;
+					 padding: 0cm 5.4pt 0cm 5.4pt; padding-left: 0px; padding-top: 0px;
+					 padding-right: 0px; padding-bottom: 0px;">获取场景对象，类型：Scene</td>
+      </tr>
+    </table>
+    <div>
+      <p class="lead STYLE14 "><strong>4. 问题修复： </strong></p>
+      <ul>
+        <li class="STYLE43">（1）修复相机拉高后体积云不随地面移动问题</li>
+        <li class="STYLE43">（2）修复DPI大于96的地图栅格瓦片加载不出图问题</li>
+        <li class="STYLE43">（3）修复加载GeoScene生成的I3S数据报错问题，支持加载GeoScene4.1生成的投影坐标系下的I3S数据</li>
+        <li class="STYLE43">（4）修复加载同一矢量瓦片在同一视角下在三维场景比在二维场景模糊问题</li>
+      </ul>
+    </div>
+    <p class="MsoNormal" style="margin-right: 0in; margin-top: 0pt;
+			 margin-bottom: 0pt; margin-left: 40px;"></p>
+    <div>
+      <p class="lead STYLE14 "><strong>5. 新增范例： </strong></p>
+      <ul>
+        <li class="STYLE43">量算：<br>
+          （1）连续量算</li>
+        <li class="STYLE43">粒子：</li>
+        （1）三维流场</li>
+        </li>
+      </ul>
+    </div>
+    <hr>
+    <div>
+      <p class="STYLE45">本文档完成日期为2025年09月15日，如果此前的任何文档（包括电子文档和印刷文档）中的某些内容与本文档不相符合，请以本文档为准。若本文档更新，则以更新后的文档为准。
+      </p>
+    </div>
+  </div>
+
+  <span class="STYLE42">
+    <!-- <div style="bottom: 1%; margin-right:0; width: 57px; height: 57px; overflow: hidden; cursor: pointer; left: 50%; -webkit-transition: opacity; position: fixed; opacity: 0.6; display: block; " id="qBack2topBtn">
+        <div class="back2top-icon-real"></div>
+    </div> -->
+  </span></div>
+  <span class="STYLE42">
+    <!--footer-->
+    <div class="footer-box">
+      <footer class="main-footer icl-footer"></footer>
+    </div>
+    <script>
+      utils.loadTemplate(".icl-footer", "./template/footer.html", navigation);
+    </script>
+    <!--footer end-->
+    <script type="text/javascript" src="./js/common.js"></script>
+    <script>
+      var myLazyLoad = new LazyLoad({
+        elements_selector: "iframe"
+      });
+    </script>
+  </span>
+</body>
+
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汇聚图</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/echarts.min.js"></script>
+    <script src="./js/EchartsLayer.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script type="text/javascript" src="./js/mapv/mapvAPI/mapv.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='loadingbar' class="spinner">
+        <div class="spinner-container container1">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container2">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+        <div class="spinner-container container3">
+            <div class="circle1"></div>
+            <div class="circle2"></div>
+            <div class="circle3"></div>
+            <div class="circle4"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import mapvLayer from "./js/mapv/mapvLayer.js"; // mapv地图
+        import computedConvergeData from './js/mapv/data/computedConvergeData.js' // 强边界图options
+
+        function onload(SuperMap3D) {
+            let EngineType = getEngineType();
+            let viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(EngineType),
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            window.viewer = viewer; // 需要绑定到window，导入的mapv会用到
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            viewer.imageryLayers.addImageryProvider(
+                new SuperMap3D.SuperMapImageryProvider({
+                    url: "http://www.supermapol.com/realspace/services/map-China400/rest/maps/China400",
+                })
+            );
+
+            // 城市列表：测试数据
+            const cityList = [
+                {
+                    "name": "北京",
+                    "position": {
+                        "lng": 116.395645,
+                        "lat": 39.929986
+                    }
+                },
+                {
+                    "name": "天津",
+                    "position": {
+                        "lng": 117.210813,
+                        "lat": 39.14393
+                    }
+                },
+                {
+                    "name": "上海",
+                    "position": {
+                        "lng": 121.487899,
+                        "lat": 31.249162
+                    }
+                },
+                {
+                    "name": "重庆",
+                    "position": {
+                        "lng": 106.530635,
+                        "lat": 29.544606
+                    }
+                },
+                {
+                    "name": "石家庄",
+                    "position": {
+                        "lng": 114.522082,
+                        "lat": 38.048958
+                    }
+                },
+                {
+                    "name": "太原",
+                    "position": {
+                        "lng": 112.550864,
+                        "lat": 37.890277
+                    }
+                },
+                {
+                    "name": "呼和浩特",
+                    "position": {
+                        "lng": 111.660351,
+                        "lat": 40.828319
+                    }
+                },
+                {
+                    "name": "哈尔滨",
+                    "position": {
+                        "lng": 126.657717,
+                        "lat": 45.773225
+                    }
+                },
+                {
+                    "name": "长春",
+                    "position": {
+                        "lng": 125.313642,
+                        "lat": 43.898338
+                    }
+                },
+                {
+                    "name": "沈阳",
+                    "position": {
+                        "lng": 123.432791,
+                        "lat": 41.808645
+                    }
+                },
+                {
+                    "name": "济南",
+                    "position": {
+                        "lng": 117.024967,
+                        "lat": 36.682785
+                    }
+                },
+                {
+                    "name": "南京",
+                    "position": {
+                        "lng": 118.778074,
+                        "lat": 32.057236
+                    }
+                },
+                {
+                    "name": "合肥",
+                    "position": {
+                        "lng": 117.282699,
+                        "lat": 31.866942
+                    }
+                },
+                {
+                    "name": "杭州",
+                    "position": {
+                        "lng": 120.219375,
+                        "lat": 30.259244
+                    }
+                },
+                {
+                    "name": "南昌",
+                    "position": {
+                        "lng": 115.893528,
+                        "lat": 28.689578
+                    }
+                },
+                {
+                    "name": "福州",
+                    "position": {
+                        "lng": 119.330221,
+                        "lat": 26.047125
+                    }
+                },
+                {
+                    "name": "郑州",
+                    "position": {
+                        "lng": 113.649644,
+                        "lat": 34.75661
+                    }
+                },
+                {
+                    "name": "武汉",
+                    "position": {
+                        "lng": 114.3162,
+                        "lat": 30.581084
+                    }
+                },
+                {
+                    "name": "长沙",
+                    "position": {
+                        "lng": 112.979353,
+                        "lat": 28.213478
+                    }
+                },
+                {
+                    "name": "广州",
+                    "position": {
+                        "lng": 113.30765,
+                        "lat": 23.120049
+                    }
+                },
+                {
+                    "name": "南宁",
+                    "position": {
+                        "lng": 108.297234,
+                        "lat": 22.806493
+                    }
+                },
+                {
+                    "name": "西安",
+                    "position": {
+                        "lng": 108.953098,
+                        "lat": 34.2778
+                    }
+                },
+                {
+                    "name": "银川",
+                    "position": {
+                        "lng": 106.206479,
+                        "lat": 38.502621
+                    }
+                },
+                {
+                    "name": "兰州",
+                    "position": {
+                        "lng": 103.823305,
+                        "lat": 36.064226
+                    }
+                },
+                {
+                    "name": "西宁",
+                    "position": {
+                        "lng": 101.767921,
+                        "lat": 36.640739
+                    }
+                },
+                {
+                    "name": "乌鲁木齐",
+                    "position": {
+                        "lng": 87.564988,
+                        "lat": 43.84038
+                    }
+                },
+                {
+                    "name": "成都",
+                    "position": {
+                        "lng": 104.067923,
+                        "lat": 30.679943
+                    }
+                },
+                {
+                    "name": "贵阳",
+                    "position": {
+                        "lng": 106.709177,
+                        "lat": 26.629907
+                    }
+                },
+                {
+                    "name": "昆明",
+                    "position": {
+                        "lng": 102.714601,
+                        "lat": 25.049153
+                    }
+                },
+                {
+                    "name": "拉萨",
+                    "position": {
+                        "lng": 91.111891,
+                        "lat": 29.662557
+                    }
+                },
+                {
+                    "name": "海口",
+                    "position": {
+                        "lng": 110.330802,
+                        "lat": 20.022071
+                    }
+                }
+            ]
+
+            // 汇聚点城市名称
+            const targetCityName = '北京';
+
+            // 添加mapv特效线迁移图
+            addMapV();
+            function addMapV() {
+                // 创建MapV地图
+                let map = new mapvLayer(viewer);
+                /**
+                 * computedConvergeData函数需要传入四个参数
+                 * cityList：城市列表数据数组【必填】
+                 * targetCityName：汇聚点城市名称【可选，默认为citylist第一个元素】
+                 * 1.0：最短距离持续时间【可选，默认为1.0s】
+                 * 1：每个批次的包含多少元素【可选，默认为10个，常用于较大数据量（>200），值越大批次越少，数据集越少，性能越好；但是会对动态点运行时间速度造成影响，值越小每个数据集对应的持续时间就越精确】
+                */
+                let options = computedConvergeData(cityList, targetCityName, 1.0, 1);
+                map.createLayer(options);
+
+                // map.destroy();
+            }
+
+            // 添加mapv动态点
+            addEcharts()
+            function addEcharts() {
+
+                // 基于citylist计算echarts所需的数据格式
+                let echarts_option_data = [];
+                cityList.forEach(city => {
+                    let obj = {
+                        name: city.name,
+                        value: [city.position.lng, city.position.lat, 2],
+                        "symbolSize": 10, // 用来控制echarts点大小，后续可根据cityValue值计算
+                        "itemStyle": {
+                            "normal": {
+                                "color": "#F58158" // echarts点颜色
+                            }
+                        }
+                    };
+                    echarts_option_data.push(obj);
+                })
+
+                let option = {
+                    animation: false, // 必须为false，否则会很奇怪
+                    GLMap: {},
+                    series: [{
+                        type: 'effectScatter', // 特效散点图
+                        coordinateSystem: 'GLMap', // 'cartesian2d'使用二维的直角坐标系。'geo'使用地理坐标系
+                        zlevel: 2, // 所有图形的 zlevel 值。
+                        rippleEffect: { //涟漪特效相关配置。
+                            brushType: 'stroke', //波纹的绘制方式，可选 'stroke' 和 'fill'。
+                            period: 4, // 动画的时间。
+                            scale: 2.5, // 动画中波纹的最大缩放比例。
+                        },
+                        symbolSize: 2, // 标记的大小，可以设置成诸如 10 这样单一的数字，也可以用数组分开表示宽和高，例如 [20, 10] 表示标记宽为20，高为10。
+                        showEffectOn: 'render', // 配置何时显示特效。可选：'render' 绘制完成后显示特效。'emphasis' 高亮（hover）的时候显示特效。
+                        itemStyle: { // 图形样式，normal 是图形在默认状态下的样式；emphasis 是图形在高亮状态下的样式，比如在鼠标悬浮或者图例联动高亮时。
+                            normal: {
+                                color: '#46bee9'
+                            }
+                        },
+                        data: echarts_option_data
+                    }]
+                };
+
+                var echartsLayer = new EchartsLayer(viewer);
+                echartsLayer.chart.setOption(option);
+            }
+
+            $('#loadingbar').remove();
+
+        }
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+
+</body>
+
+</html>

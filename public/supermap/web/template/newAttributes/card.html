@@ -1,0 +1,63 @@
+<div class="phonefontsize">
+    {{title}}
+    {{if content.length>1}}
+    <button id="go{{id}}" type="button" class="btn btn-default {{lessPixelWillShowClass}}" aria-label="Left Align">
+        <span class="btn-right"></span>
+    </button>
+    <button id="back{{id}}" type="button" class="btn btn-default {{lessPixelWillShowClass}}" aria-label="Left Align">
+        <span class="btn-left"></span>
+    </button>
+    {{/if}}
+</div>
+<div class="panel-body">
+    <div id="{{id}}" class="news-list long-list swiper-container">
+        <ul class="news-item-img swiper-wrapper">
+            {{ each content item }}
+            <li class="news-box-img swiper-slide">
+                    <div class="news-img"
+                        style="background: no-repeat center / cover url({{item.imgUrl}})">
+                        {{if item.hrefUrl}} 
+                        <a  target="_blank" href="{{item.hrefUrl.home? item.hrefUrl.home: item.hrefUrl}}" style="display: block; height: 100%;"></a>
+                        {{/if}}
+                    </div>
+                <div class="news-info-title">
+                    <div class="news-title-href">
+                        <span>
+                            {{ item.subTitle }}
+                        </span>
+                        <div>
+                            {{each item.As a indexA}}
+                                {{if item.As.length==1}}
+                                <a href="{{ typeof(a.hrefUrl)==='object' ? a.hrefUrl['home']: a.hrefUrl }}"
+                                    target="_blank">
+                                    {{ a.hrefText }}
+                                    <span class="to-details"></span>
+                                </a>
+                                {{ else }}
+                                <a href="{{ typeof(a.hrefUrl)==='object' ? a.hrefUrl['home']: a.hrefUrl }}"
+                                    target="_blank">
+                                    {{ a.hrefText }}
+                                    {{if indexA!=item.As.length-1}}
+                                    <span class="card-divider"></span>
+                                    {{/if}}
+                                </a>
+                                {{/if}}
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+                {{if item.details.length>0}}
+                <div class="detail-introduce">
+                    {{each item.details v}}
+                    <span>
+                        {{v.desc}}
+                    </span>
+                    {{/each}}
+                </div>
+                {{/if}}
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+    <div class="div-hr"></div>
+</div>

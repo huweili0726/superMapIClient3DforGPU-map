@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>BIM构件树</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./js/BIMTree/icons/iconfont.css" rel="stylesheet">
+    <link href="./style/BIMTREE.css" rel="stylesheet">
+    <script src="./js/BIMTree/vue.global.js"></script>
+    <script src="./js/BIMTree/naive-ui.min.js"></script>
+    <script src="./js/BIMTree/axios.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/lib/CustomBubble.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container">
+        <div id="app">
+            <div class="layer-tree-container" style="display:none">
+                <div class="tree-header">
+                    <div class="tree-header-title">BIM构件树</div>
+                </div>
+                <div class="tree-content">
+                    <n-config-provider :theme-overrides="overridesTheme">
+                        <n-input v-model:value="patternTemp" placeholder="请输入" style="margin-bottom: 10px;">
+                            <template #suffix>
+                                <i class="iconfont iconsousuo" title="搜索"  @click="handlePattern" style="color: rgba(255,255,255,0.65)"></i>
+                              </template>
+                        </n-input>
+                        <n-tree ref="treeInstRef" block-line draggable checkable cascade
+                            :default-expand-all="controlExpandedKey" virtual-scroll
+                            style="max-height: 600px;" :show-irrelevant-nodes="showIrrelevantNodes"
+                            :pattern="pattern" :data="data" :show-line="true" :selectable="true"
+                            :render-label="nodelabel" :node-props="nodeProps" :render-suffix="renderSuffix"
+                            :default-expanded-keys="defaultExpandedKeys" :filter="handleFilter"
+                            :default-checked-keys="defaultCheckedKeys" @update:checked-keys="getCheckedKeys"
+                            @update:expanded-keys="handleExpand" @update:selected-keys="getSelectOption" >
+                        </n-tree>
+                    </n-config-provider>
+                </div>
+                <!-- <div class="tree-footer">
+                    <n-button type="info" color="#3499E5" text-color="#fff" style="margin-left: 10px"
+                        class="tree-footer-save" :focusable="false"
+                        @click="setLayerTreeExpand">{{btnContent}}</n-button>
+                </div> -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            const EngineType = getEngineType();
+            const viewer = new SuperMap3D.Viewer('Container', {
+                timeline: true,
+                imageryProvider: false,
+                infoBox: false,
+                navigation:false,
+                contextOptions: {
+                    contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer, undefined);
+            });
+        }
+
+        async function init(SuperMap3D, scene, viewer) {
+            window.viewer = viewer;
+            viewer.resolutionScale = window.devicePixelRatio;
+            viewer.clock.currentTime = SuperMap3D.JulianDate.fromIso8601('2024-12-27T08:58:56.7226277372246841Z').clone();
+            viewer.scene.globe.show = false; // 是否显示地球
+
+            window.useBoundingSphere = false; // 定位时是否显示包围盒
+
+            // 打开场景
+            const sceneUrl = "https://www.supermapol.com/realspace/services/3D-BIMTreeModel/rest/realspace"
+            const BIMLayerName = "ArchLinkModelCache";
+
+            // 等待场景加载
+            await viewer.scene.open(sceneUrl);
+
+            // 处理构件图层
+            if (typeof BIMLayerName === 'undefined') return;
+            let BIMlayer = viewer.scene.layers.find(BIMLayerName) || viewer.scene.layers.layerQueue[0]; // 如果图层名称不对找不到图层，则默认使用第一个图层
+            if (BIMlayer && (BIMlayer instanceof SuperMap3D.S3MTilesLayer)) {
+                window.BIMlayer = BIMlayer;
+                BIMlayer.selectColorType = SuperMap3D.SelectColorType.SILHOUETTE_EDGE;
+                BIMlayer.selectedColor = new SuperMap3D.Color(
+                    128 / 255 * 1.5,
+                    198 / 255 * 1.5,
+                    226 / 255 * 1.5,
+                    1
+                );
+            }
+
+            // 底部高程上移100m
+            // BIMlayer.style3D.bottomAltitude += 100;
+
+            const start = performance.now(); // 计时开始
+
+            let baseURL = computedBaseUrl(BIMlayer);
+            let originTreeData = await computedAllJsonData(baseURL);
+            console.log('原始数据：', originTreeData);
+
+            const floorTreeData = SuperMap3D.clone(originTreeData, true); // 默认就是基于楼层的数据
+            let idToKeyObj = jsonDataToNaiveData(floorTreeData) // 模型id和其图层列表中的key构成的对象，以便点击场景模型图层列表定位
+            console.log('楼层数据：', floorTreeData);
+
+            // 计算构件类型数据: 当前数据没有
+            let typeTreeData = [], idToKeyObj_type = {};
+
+            // 计算空间Tree数据: 当前数据没有
+            let spaceTreeData = [], idToKeyObj_space = {};
+
+            // 多种类型的Tree数据集合
+            const treeDataObj = {
+                floor: {
+                    treeData: [floorTreeData],
+                    dict: idToKeyObj,
+                    allChildrenCount: window.allChildrenCount
+                },
+                type: {
+                    treeData: [typeTreeData],
+                    dict: idToKeyObj_type,
+                    allChildrenCount: window.allChildrenCount
+                },
+                space: {
+                    treeData: [spaceTreeData],
+                    dict: idToKeyObj_space,
+                    allChildrenCount: window.space_allChildrenCount
+                }
+            }
+
+            const end = performance.now(); // 计时结束
+            console.log(`耗时:${(end - start).toFixed(2)}`);
+
+            // 初始化Vue实例图层树
+            initVueComponents(scene, viewer, BIMlayer, treeDataObj);
+
+            const container = document.querySelector('.layer-tree-container');
+            if (container) container.style.display = 'block';
+        }
+
+        // 计算S3M图层的baseURL用以确定BIMtree.json路径 ; 支持使用本地的BIMTree数据来渲染树 baseURL = "./_myReource/data/BIMTree/";
+        function computedBaseUrl(s3mLayer) {
+            if (!s3mLayer || !s3mLayer._baseUri) return;
+            const baseUri = s3mLayer._baseUri;
+            let baseURL = undefined;
+            if (baseUri._string) {
+                baseURL = baseUri._string + 'BIMTree/';
+            } else {
+                baseURL = `${baseUri.scheme}://${baseUri.authority}${baseUri.path}` + 'BIMTree/';
+            }
+            return baseURL;
+        }
+
+        // 基于baseUrl计算出当前服务的所有BIMTree数据:合并BIMTree.json+[url].json
+        async function computedAllJsonData(baseUrl, layerName = undefined) {
+            const treeJsonUrl = baseUrl + 'BIMTree.json';
+
+            // BIMTree.json
+            const responseData = await axios.get(treeJsonUrl).then(response => {
+                return response.data;
+            });
+            let BIMTreeData = responseData.root;
+
+
+            // [url].json
+            let JSONObjData = {};
+            if (responseData.urls) { // 如果没有urls说明一个BIMTree.json就搞定了，不需要在请求url了
+                JSONObjData = await getAllJson(baseUrl, responseData.urls);
+                console.log("JSONObjData:", JSONObjData)
+            }
+
+            let newChildren = [];
+            combineTreeData(BIMTreeData.children, newChildren, JSONObjData, layerName);
+            BIMTreeData.children = newChildren;
+
+            return Promise.resolve(BIMTreeData);
+
+            // 获取单个json文件数据
+            async function getJsonData(baseUrl, jsonUrl) {
+                const relateUrl = jsonUrl.split('/')[1];
+                const childJsonUrl = baseUrl + relateUrl;
+                return axios.get(childJsonUrl);
+            }
+
+            // 获取到所有的[URL].json数据
+            async function getAllJson(BaseUrl, list) {
+                const obj = {};
+                for (let i = 0; i < list.length; i++) {
+                    const data = await getJsonData(BaseUrl, list[i]);
+                    obj[list[i]] = data.data;
+                }
+                return obj;
+            }
+
+            // 合并树
+            function combineTreeData(children, newChildren, jsonDataObj, layerName) {
+                if (!children || children.length == 0) {
+                    return;
+                }
+
+                for (let child of children) {
+                    if (child.url) {
+                        let data = jsonDataObj[child.url];
+                        if (data.name) {
+                            data = [data];
+                        }
+                        else {
+                            data = data.children;
+                        }
+
+
+                        for (let item of data) {
+                            let newItemChildren = [];
+                            combineTreeData(item.children, newItemChildren, jsonDataObj, layerName);
+                            item.children = newItemChildren;
+                            newChildren.push(item);
+                        }
+                    }
+                    else {
+                        newChildren.push(child);
+                    }
+
+                    let newChildChildren = [];
+                    combineTreeData(child.children, newChildChildren, jsonDataObj, layerName);
+                    child.children = newChildChildren;
+
+
+                }
+            }
+        }
+
+        // 将原始数据转为基于type类型的jsonTreeData
+        function computedTypeJsonTreeData(originData) {
+            let typeCollection = {};
+            let typeKeys = [];
+
+            originDataToTypeData(originData);
+
+            // console.log("typeKeys:", typeKeys);
+            // console.log("typeCollection:", typeCollection);
+            const typeTree = createTypeTreeData(typeCollection);
+            return typeTree;
+
+            function originDataToTypeData(origin) {
+                if (origin.children && origin.children.length > 0) {
+                    origin.children.forEach(node => {
+                        originDataToTypeData(node);
+                    })
+                } else if (origin.children && origin.children.length == 0) {
+                    if (typeKeys.includes(origin.category)) {
+                        typeCollection[origin.category].push(origin);
+                    } else {
+                        typeCollection[origin.category] = [origin];
+                        typeKeys.push(origin.category);
+                    }
+                    return;
+                }
+            }
+
+            function createTypeTreeData(typeCollection) {
+                let data = {
+                    children: [],
+                    name: "root"
+                };
+
+                const keys = Object.keys(typeCollection);
+
+                keys.forEach(key => {
+                    let typeList = typeCollection[key];
+                    let typeItem = {
+                        children: typeList,
+                        name: key
+                    }
+                    data.children.push(typeItem);
+                })
+
+                return data;
+            }
+        }
+
+        // jsonTreeData数据转为naiveUI数据：设置key和计算显示用的label
+        function jsonDataToNaiveData(jsonData, type = 'component') {
+
+            let idToKeyObj = {};
+            setKeyForJsonData(jsonData, '0');
+            if (type == 'component') {
+                window.allChildrenCount = countLayerObjects(jsonData, 0); // 计算所有子节点
+            } else {
+                window.space_allChildrenCount = countLayerObjects(jsonData, 0); // 计算所有子节点
+            }
+            return idToKeyObj;
+
+            // 将原始图层树json，转成naiveUI能使用的对象：添加label和key属性
+            function setKeyForJsonData(node, key) {
+                if (!node.key) {
+                    node.key = key;
+                }
+                if (!node.label) {
+                    // node.label = node.name;
+                    if (node.children && node.children.length > 0) { // 无子对象不显示
+                        let childNumber = countLayerObjects(node, 0);
+                        node.label = `${node.name} (${childNumber})`;
+                    } else {
+                        node.label = node.name;
+                    }
+                }
+                if (node.id) {
+                    idToKeyObj[node.id] = node;
+                    // idToKeyObj[node.id] = node.key;
+                    // node.label = node.id; // 检查ID是否正确，当前图层列表将显示构件ID
+                }
+                if (node.children && node.children.length >= 1) {
+                    node.children.map((childrenNode, index) => {
+                        let children_key = `${key}-${index}`;
+                        setKeyForJsonData(childrenNode, children_key);
+                    })
+                } else {
+                    if (node.properties) {
+                        node.properties.type = node.properties.类型;
+                        node.properties.area = node.properties.面积;
+                    }
+                    delete node.children;
+                    return;
+                }
+            }
+
+            // 统计当前结点的子对象数量
+            function countLayerObjects(node, start) {
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(function (child) {
+                        start = countLayerObjects(child, start);
+                    });
+                } else {
+                    start++;
+                }
+                return start;
+            }
+
+        }
+
+        // 初始化Vue图层树组件
+        function initVueComponents(scene, viewer, BIMlayer, treeDataObj) {
+            // 转为vue响应式对象
+            treeDataObj.floor.reactiveTreeData = Vue.reactive(treeDataObj.floor.treeData);
+            treeDataObj.type.reactiveTreeData = Vue.reactive(treeDataObj.type.treeData);
+            treeDataObj.space.reactiveTreeData = Vue.reactive(treeDataObj.space.treeData);
+
+            console.log("treeDataObj:", treeDataObj);
+
+            const rootData = [{
+                children: [],
+                key: "0",
+                label: '全部' + `(${treeDataObj.floor.allChildrenCount})`,
+                name: "root"
+            }]
+            let layerTreeData = Vue.reactive(rootData);
+            treeDataObj.floor.reactiveTreeData[0].children.forEach(child => {
+                layerTreeData[0].children.push(child);
+            })
+
+
+            // 对象解构
+            const { h, ref, nextTick } = Vue;
+            const { NButton, NInput, NDropdown, NEllipsis } = naive;
+
+            // 自定义弹窗
+            const customBubble = new CustomBubble(viewer);
+            customBubble.start();
+
+            let controlExpandedKey = ref(false);
+
+            const treeInstRef = ref(null); // 图层树Dom
+            window.treeInstRef = treeInstRef;
+
+            const btnContent = ref('展开');
+
+            // 节点内容渲染函数
+            function nodelabel({ option }) {
+                return h(NEllipsis, {
+                    bordered: false,
+                    text: true,
+                    style: option.isHighLight ? 'background: #3499E5;' : undefined,
+                    focusable: false, // 取消focus效果
+                },
+                    { default: () => option.label }
+                )
+            };
+
+            // 设置图层列表后缀
+            function renderSuffix({ option }) { }
+
+            let ids = [];
+            function getChildrenIDS(node) {
+                if (node.children && node.children.length >= 1) {
+                    node.children.map(childrenNode => {
+                        getChildrenIDS(childrenNode);
+                    })
+                    if (node.id) {
+                        ids.push(node.id);
+                    }
+                } else {
+                    ids.push(node.id);
+                    return ids;
+                }
+            }
+
+            function setLayerTreeExpand() {
+                controlExpandedKey.value = !controlExpandedKey.value;
+                btnContent.value = btnContent.value == '展开' ? '折叠' : '展开';
+            }
+
+
+            // 图层定位
+            let targetboundingSphereEntity = undefined;
+            window.HeadingPitchObj = { heading: 0, pitch: -30 }
+            function layerLocate(option) {
+                if (option.boundingBox) {
+                    let boundingBox = option.boundingBox;
+                    let boundingSphere = computedBoundingSphere(boundingBox);
+                    if (!boundingSphere) return;
+
+
+                    // 清除上一次的包围盒Entity
+                    if (targetboundingSphereEntity) {
+                        viewer.entities.remove(targetboundingSphereEntity);
+                        targetboundingSphereEntity = undefined;
+                    }
+
+                    targetboundingSphereEntity = viewer.entities.add({
+                        position: boundingSphere.center,
+                        ellipsoid: {
+                            radii: new SuperMap3D.Cartesian3(boundingSphere.radius, boundingSphere.radius, boundingSphere.radius),
+                            material: SuperMap3D.Color.fromCssColorString("rgba(255,255,255, 1)"),
+                            fill: false,
+                            outline: true,
+                            outlineColor: SuperMap3D.Color.BLACK,
+                            outlineWidth: 1,
+                        },
+                    });
+
+                    targetboundingSphereEntity.show = window.useBoundingSphere;
+
+                    const zoomHeading = SuperMap3D.Math.toRadians(window.HeadingPitchObj.heading);
+                    const zoomPitch = SuperMap3D.Math.toRadians(window.HeadingPitchObj.pitch);
+                    const zoomRange = boundingSphere.radius; // 可根据需要调整，比如 * 1.5
+                    viewer.zoomTo(targetboundingSphereEntity, new SuperMap3D.HeadingPitchRange(zoomHeading, zoomPitch, zoomRange));
+                }
+
+                // 计算包围盒代码
+                function computedBoundingSphere(boundingBox) {
+                    let boundingSphere = undefined;
+
+                    if (boundingBox.min && boundingBox.max) {
+                        if (viewer.scene.mode == SuperMap3D.SceneMode.COLUMBUS_VIEW) {
+                            let c1 = new SuperMap3D.Cartesian3(boundingBox.min.z, boundingBox.min.x, boundingBox.min.y);
+                            let c2 = new SuperMap3D.Cartesian3(boundingBox.max.z, boundingBox.max.x, boundingBox.max.y);
+                            min_c3 = SuperMap3D.Transforms.convertTo3DCartesian(c1);
+                            max_c3 = SuperMap3D.Transforms.convertTo3DCartesian(c2);
+                        } else {
+                            min_c3 = new SuperMap3D.Cartesian3(boundingBox.min.z, boundingBox.min.x, boundingBox.min.y);
+                            max_c3 = new SuperMap3D.Cartesian3(boundingBox.max.z, boundingBox.max.x, boundingBox.max.y);
+                        }
+                        boundingSphere = SuperMap3D.BoundingSphere.fromPoints([min_c3, max_c3]);
+                    }
+
+                    return boundingSphere;
+                }
+            }
+
+            // checkBox选中
+            let isClickCheckbox = false; // 用来控制显隐，只有点击的是checkbox才会执行显隐
+            let checkedKeys = []; // 当前所有选中的项目key，通过检查当前选中的项目是否再其中，来判断该图层是否是隐藏还是显示
+            function getCheckedKeys(keys, options) {
+                checkedKeys = keys;
+                isClickCheckbox = true;
+            }
+
+            // 支持搜索过滤
+            function handleFilter(patter, node) {
+                if (patter.includes('？')) { // 查询properties的内容
+                    if (!node.properties) return;
+                    let rule = patter.split('？')[1];
+                    if (rule.includes('面积')) {
+                        if (rule.includes('>')) {
+                            let number = rule.split('>')[1];
+                            return Number(String(node.properties.area).replace('m²', '')) > Number(number);
+                        } else if (rule.includes('<')) {
+                            let number = rule.split('<')[1];
+                            return Number(String(node.properties.area).replace('m²', '')) < Number(number);
+                        } else if (rule.includes('=')) {
+                            let number = rule.split('=')[1];
+                            return Number(String(node.properties.area).replace('m²', '')) == Number(number);
+                        }
+                    } else if (rule.includes('类型')) {
+                        let type = rule.split('=')[1];
+                        return node.properties.type.includes(type);
+                    }
+                } else { // 查询lable中的内容
+                    return node.label.includes(patter);
+                }
+            }
+
+            // 自定义点击事件
+            function nodeProps({ option }) {
+                return {
+                    onClick() {
+                        if (isClickExpandDom) { // 如果是点击展开图标,不执行下面代码
+                            isClickExpandDom = false;
+                            return;
+                        }
+
+                        console.log('node-props:', option);
+                        if (curOption) delete curOption.isHighLight;
+
+                        // 计算选中options的ids列表
+                        ids = [];
+                        getChildrenIDS(option); console.log("选中的ids:", ids);
+
+                        let currentLayer = BIMlayer;
+                        if (!currentLayer) return;
+
+                        currentLayer.removeAllObjsColor(); // 删除所有设置过颜色的模型
+                        currentLayer.releaseSelection(); // 释放选择集,即BIMLayer上点选的构件
+
+                        // 注意：为了使空间图层关闭深度检测起作用，必须再执行setOnlyObjsVisible前执行下面两句话，且顺序不能颠倒
+                        currentLayer.setObjsColor(ids, SuperMap3D.Color.RED);
+
+                        if (isClickCheckbox) {  // 模型显隐
+                            let isCanSee = checkedKeys.includes(option.key); // 获取当前结点是否选中可见
+                            currentLayer.setOnlyObjsVisible(ids, isCanSee);
+                            isClickCheckbox = false;
+                        } else {
+                            layerLocate(option);// 模型定位，如果点击的是checkBox就不需要定位
+                        }
+                    }
+                }
+            }
+
+            // 下拉展开事件
+            let isClickExpandDom = false; // 该变量是为了避免点击下拉展开图标时定位等其他操作
+            function handleExpand(evnet) {
+                isClickExpandDom = true;
+            }
+
+            // 场景中拾取获得选中entity
+            let targetEntity = null;
+            let curOption = undefined; // 当前拾取到的instance对应的列表选项
+            let handler = new SuperMap3D.ScreenSpaceEventHandler(viewer.scene.canvas);
+            handler.setInputAction(async function (e) {
+                if (curOption) delete curOption.isHighLight;
+
+                let pickedObject = await viewer.scene.pickAsync(e.position);
+
+                console.log("拾取到的模型:", pickedObject);
+                let currentLayer = BIMlayer;
+                if (!currentLayer) return;
+                if (pickedObject && pickedObject.id) {
+                    DBQuery([pickedObject.id]);
+                    controlExpandedKey.value = true;
+
+                    // 在生成图层列表时,创建了一个instance.id to tree.option的映射
+                    let pickOption = undefined;
+                    let pickedObjectID = Number(pickedObject.id);
+
+                    pickOption = treeDataObj.floor.dict[pickedObjectID];
+
+                    if (pickOption) {
+                        treeInstRef.value?.scrollTo({ key: pickOption.key });
+                        pickOption.isHighLight = true;
+                        curOption = pickOption;
+                        btnContent.value = '折叠';
+                    }
+                    currentLayer.removeAllObjsColor();
+                } else {
+                    // controlExpandedKey.value = false; // 图层树收起     
+                    currentLayer.removeAllObjsColor();
+                }
+
+            }, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+            // 属性查询
+            function DBQuery(ids) {
+                if (!ids || ids.length.length < 1) return;
+                const selectLayer = viewer.scene.layers.getSelectedLayer();
+                if (!selectLayer) return;
+                selectLayer.getAttributesById(ids).then(function (data) {
+                    console.log("DB属性查询结果:", data); // 根据SMID查询对象属性，取data.UniqueID
+                    displayAttributeByCustomBubble(data);
+                })
+
+                function displayAttributeByCustomBubble(attribute) {
+                    if (attribute) {
+                        let rowsContent = [];
+                        for (let key in attribute) {
+                            let value = String(attribute[key]);
+                            if (value.includes(".")) { // 处理值为小数类型的
+                                let value_num = Number(value);
+                                if (!isNaN(value_num)) {
+                                    value = value_num.toFixed(2);
+                                }
+                            }
+
+                            let array = [key, value];
+                            rowsContent.push(array);
+                        }
+
+                        const modelSMID = attribute.SMID || attribute.SmID;
+                        customBubble.open({
+                            title: `模型ID:${modelSMID}`,
+                            content: [
+                                {
+                                    type: 'table', data: {
+                                        headers: ['字段', '值'],
+                                        rows: rowsContent
+                                    }
+                                }
+                            ]
+                        });
+                    } else {
+                        customBubble.hidden();
+                    }
+                }
+            }
+
+            const close = function () {
+                console.log('close');
+            }
+
+
+            // 构建树搜索过滤
+            let pattern = ref('');
+            let patternTemp = ref('');
+
+            function handlePattern(){
+                pattern.value = patternTemp.value;
+            }
+
+            // 重写主题样式
+            const overridesTheme = {
+                common: {
+                    primaryColor: "rgba(52, 153, 229, 1)",
+                    primaryColorHover: "rgba(52, 153, 229, 1)",
+                    primaryColorPressed: "rgba(255,255,255,0.85)",
+                    primaryColorSuppl: "rgba(255,255,255,0.45)",
+                },
+                Button: {
+                    fontSizeMedium: "0.14rem", // 底部操作按钮：宽高和文字大小自适应浏览器
+                    textColor: "rgba(255,255,255,0.65)", // 设置默认n-button全局样式
+                    border: "1px solid rgba(255,255,255,0.65)",
+                    textColorHover: "#5EB7F2",
+                    borderHover: "1px solid #5EB7F2",
+                    textColorPressed: "#2276BF",
+                    borderPressed: "1px solid #2276BF",
+                },
+                Tabs: {
+                    barColor: "#3499e5", // tabs底部横条颜色
+                    tabFontSizeMedium: "0.14rem", // tabs标签文字大小 - 兼容移动端样式
+                },
+                ColorPicker: {
+                    border: "none", // color-pick颜色条去掉边框
+                },
+                Divider: {
+                    color: "rgba(255, 255, 255, 0.15)", // 分割条颜色
+                },
+                Checkbox: {
+                    colorChecked: "#3499E5",
+                    checkMarkColor: "#fff",
+                },
+                Slider: {
+                    fillColor: "#3499E5",
+                    fillColorHover: "#3499E5",
+                    handleSize: "0.12rem",
+                },
+                Switch: {
+                    railColorActive: "#3499E5",
+                }
+            };
+
+            // 创建Vue
+            const App = {
+                setup() {
+                    return {
+                        treeInstRef,
+                        pattern: pattern,
+                        showLine: ref(true),
+                        data: layerTreeData,
+                        showIrrelevantNodes: ref(false),
+                        defaultExpandedKeys: ['0'],
+                        defaultCheckedKeys: ['0'],
+                        nodelabel,
+                        renderSuffix,
+                        getCheckedKeys,
+                        nodeProps,
+                        setLayerTreeExpand,
+                        overridesTheme,
+                        controlExpandedKey,
+                        close,
+                        btnContent,
+                        handleExpand,
+                        handleFilter,
+                        patternTemp,
+                        handlePattern,
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>剖面分析</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./style/vuecommon.css" rel="stylesheet">
+    <script src="./js/config.js"></script>
+    <script src="./js/layerTree/vue.global.js"></script>
+    <script src="./js/layerTree/naive-ui.min.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div class="vue-container" style="display: none;">
+        <div id="app">
+            <div class="panel-container">
+                <div class="panel-header">
+                    <div class="panel-header-title">剖面分析</div>
+                    <span class="panel-header-close" id="close">X</span>
+                </div>
+
+                <!-- vue component content -->
+                <n-config-provider :theme-overrides="overridesTheme" :theme="darkTheme" style="margin-top: 20px;">
+                    <n-scrollbar style="max-height: 520px;padding-right: 10px;" trigger="none">
+
+                        <div class="row-item">
+                            <span>分析高度(m)</span>
+                            <n-input-number v-model:value="state.extendHeight" style="width: 240px" :min="1" :max="500"
+                                :step="1" :focusable="false" :show-button="false">
+                            </n-input-number>
+                        </div>
+
+                    </n-scrollbar>
+
+                    <div class="btn-row-item" style="margin-left: 100px;">
+                        <n-button type="info" color="#3499E5" text-color="#fff" :focusable="false" @click="draw"
+                            style="margin-right: 10px">绘制</n-button>
+                        <n-button :focusable="false" text-color="#fff" @click="clear">清除</n-button>
+                    </div>
+                </n-config-provider>
+
+            </div>
+        </div>
+    </div>
+    <canvas id="image"
+        style="display: none; width: 600px; height: 450px; position: absolute; right: 2%; bottom: 2%; background-color:rgba(65, 65, 65, 0.5)">
+    </canvas>
+    <div class="loading-container">
+        <div class="circle"></div>
+    </div>
+    <script type="module">
+        import DrawHandler from "./js/lib/DrawHandler.js";
+
+        function onload(SuperMap3D) {
+            const viewer = new SuperMap3D.Viewer('Container', {
+                contextOptions: {
+                    contextType: Number(2),  // Webgl2:2 ; WebGPU:3
+                }
+            });
+
+            viewer.scenePromise.then(function (scene) {
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+
+        function init(SuperMap3D, scene, viewer) {
+            viewer.resolutionScale = window.devicePixelRatio;
+
+            // 加载高德影像地图
+            viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+                url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+                minimumLevel: 3,
+                maximumLevel: 18,
+            }));
+
+            // 打开场景
+            const promise = scene.open(URL_CONFIG.SCENE_CBD);
+            promise.then(function (layers) {
+                document.querySelector('.loading-container').style.display = 'none';
+                document.querySelector('.vue-container').style.display = 'block';
+
+                // 初始化Vue组件
+                initVueComponents(scene, viewer);
+            })
+        }
+
+        // 初始化Vue组件
+        function initVueComponents(scene, viewer) {
+            // 对象解构
+            const { reactive, watch } = Vue;
+            const { darkTheme } = naive;
+
+            // 初始化变量
+            const state = reactive({
+                extendHeight: 240,
+            });
+
+            //创建剖面分析对象
+            const profile = new SuperMap3D.Profile(scene);
+            const drawHandler = new DrawHandler(viewer, {  // 绘制类
+                openMouseTip: false,
+            });
+
+            // 获取坐标点
+            let positions = undefined;
+            const draw = async function () {
+                positions = await drawHandler.startPolyline();
+                if (!positions || !(positions instanceof Array)) return;
+                openProfile(positions);
+            }
+
+            // 剖面分析
+            const openProfile = function (positions) {
+                if (!positions || positions.length < 2) return;
+                const extendHeight = state.extendHeight;
+
+                const startPoint = positions[0];
+                const endPoint = positions[1];
+
+                const scartographic = SuperMap3D.Cartographic.fromCartesian(startPoint);
+                const slongitude = SuperMap3D.Math.toDegrees(scartographic.longitude);
+                const slatitude = SuperMap3D.Math.toDegrees(scartographic.latitude);
+                const sheight = scartographic.height;
+
+                const ecartographic = SuperMap3D.Cartographic.fromCartesian(endPoint);
+                const elongitude = SuperMap3D.Math.toDegrees(ecartographic.longitude);
+                const elatitude = SuperMap3D.Math.toDegrees(ecartographic.latitude);
+                const eheight = ecartographic.height;
+
+                //设置坡面分析的开始和结束位置
+                profile.startPoint = [slongitude, slatitude, sheight];
+                profile.endPoint = [elongitude, elatitude, eheight];
+
+                profile.extendHeight = extendHeight;
+
+                //分析完毕的回调函数
+                profile.getBuffer(function (buffer) {
+
+                    var canvas = document.getElementById("image");
+                    canvas.height = profile._textureHeight;
+                    canvas.width = profile._textureWidth;
+                    var ctx = canvas.getContext("2d");
+                    var imgData = ctx.createImageData(profile._textureWidth, profile._textureHeight);
+                    imgData.data.set(buffer);
+                    //在canvas上绘制图片
+                    ctx.putImageData(imgData, 0, 0);
+                    document.querySelector('#image').style.display = 'block';
+                });
+
+                profile.build();
+            }
+
+            const clear = function () {
+                document.querySelector('#image').style.display = 'none';
+            }
+
+            // 创建Vue示例
+            const App = {
+                setup() {
+                    watch(() => state.extendHeight,
+                        (val) => {
+                            openProfile(positions);
+                        }
+                    );
+
+                    return {
+                        state,
+                        darkTheme,
+                        draw,
+                        clear,
+                        overridesTheme: { // 重写主题样式
+                            common: {
+                                primaryColor: "rgba(52, 153, 229, 1)",
+                                primaryColorHover: "rgba(52, 153, 229, 1)",
+                                primaryColorPressed: "rgba(255,255,255,0.85)",
+                                primaryColorSuppl: "rgba(255,255,255,0.45)",
+                            },
+                            Button: {
+                                fontSizeMedium: "14px", // 底部操作按钮：宽高和文字大小自适应浏览器
+                                textColor: "rgba(255,255,255,0.65)", // 设置默认n-button全局样式
+                                border: "1px solid rgba(255,255,255,0.65)",
+                                textColorHover: "#5EB7F2",
+                                borderHover: "1px solid #5EB7F2",
+                                textColorPressed: "#2276BF",
+                                borderPressed: "1px solid #2276BF",
+                            },
+                            Tabs: {
+                                barColor: "#3499e5", // tabs底部横条颜色
+                                tabFontSizeMedium: "14px", // tabs标签文字大小 - 兼容移动端样式
+                            },
+                            ColorPicker: {
+                                border: "none", // color-pick颜色条去掉边框
+                            },
+                            Divider: {
+                                color: "rgba(255, 255, 255, 0.15)", // 分割条颜色
+                            },
+                            Checkbox: {
+                                colorChecked: "#3499E5",
+                                checkMarkColor: "#fff",
+                            },
+                            Slider: {
+                                fillColor: "#3499E5",
+                                fillColorHover: "#3499E5",
+                                handleSize: "12px",
+                            },
+                            Switch: {
+                                railColorActive: "#3499E5",
+                            },
+                            Select: {
+                                color: "rgba(255, 255, 255, 0.15)"
+                            }
+                        },
+                    }
+                }
+            }
+            const app = Vue.createApp(App);
+            app.use(naive);
+            app.mount('#app');
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

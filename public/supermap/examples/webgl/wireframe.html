@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>线框模式</title>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/bootstrap-select.min.js"></script>
+    <script src="./js/bootstrap-treeview.js"></script>
+    <script src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <script src="./js/spectrum.js"></script>
+    <script src="./js/config.js"></script>
+</head>
+
+<body>
+    <div id="Container"></div>
+    <div id='toolbar' class="param-container tool-bar">
+        <div class="param-item">
+            <b>填充风格：</b>
+            <select id="fillStyle" class="supermap3d-button" style="width: 150px">
+                <option value="0">填充模式</option>
+                <option value="1">线框模式</option>
+                <option value="2" selected>填充和线框模式</option>
+            </select>
+        </div>
+
+        <div class="param-item">
+            <label>线框模式：</label>
+            <select id="WireFrameType" class="supermap3d-button" style="width: 150px">
+                <option value="1">四边形线框</option>
+                <option value="2">草图模式</option>
+                <option value="3" selected>特效线框</option>
+            </select>
+        </div>
+
+        <div class="param-item">
+            <label>线框宽度：</label>
+            <input type="number" min="0.5" max="10" step="0.5" id="width" value="1.0" style="width: 50px">
+        </div>
+
+        <div class="param-item">
+            <label>线框颜色：</label>
+            <input type="text" id="color" class="colorPicker">
+        </div>
+    </div>
+
+
+    <script>
+        function onload(SuperMap3D) {
+            // 通过config.js中的getEngineType,获取引擎类型（EngineType）用于设置启动方式
+            var EngineType = getEngineType(); 
+            var viewer = new SuperMap3D.Viewer('Container', {
+                timeline: true,
+                contextOptions: {
+                    contextType: Number(EngineType), // Webgl2:2 ; WebGPU:3
+                }
+            });
+			viewer.resolutionScale = window.devicePixelRatio;
+            
+            viewer.scenePromise.then(function(scene){
+                init(SuperMap3D, scene, viewer);
+            });
+        }
+        
+        function init(SuperMap3D, scene, viewer) {
+            var scene = viewer.scene;
+            var promise = scene.open(URL_CONFIG.SCENE_CHONGQING_TX);
+            promise.then(function (layers) {
+                //设置相机位置，定位至模型
+                scene.camera.setView({
+                    destination: new SuperMap3D.Cartesian3(-1582723.045963302, 5317134.832891206, 3147506.8171177055),
+                    orientation: {
+                        heading: 3.376613944238855,
+                        pitch: -0.2719071645433542,
+                        roll: 6.283172414416338
+                    }
+                });
+
+
+                var layer = scene.layers.find("wireFrame");
+                // layer.setLodRangeScale(0.01); // 精细加载
+
+
+                layer.style3D.fillStyle = SuperMap3D.FillStyle.Fill_And_WireFrame;
+                layer.wireFrameMode = SuperMap3D.WireFrameType.EffectOutline;
+
+                // 初始化颜色选择控件
+                var initialColor = "rgb(67,67,67)";
+                layer.style3D.lineColor = SuperMap3D.Color.fromCssColorString(initialColor);
+                setTimeout(function () {
+                    $("#color").spectrum({
+                        color: initialColor,
+                        preferredFormat:'rgb',
+                        chooseText: "确定",
+                        cancelText: "取消",
+                        showPalette: true,
+                        showAlpha: true,
+                        localStorageKey: "spectrum.demo",
+                        change: function (color) {
+                            var colorObj = color.toRgb();
+                            layer.style3D.lineColor = new SuperMap3D.Color(colorObj.r / 255, colorObj.g / 255, colorObj.b / 255, colorObj.a);
+                        }
+                    });
+                }, 3000)
+
+
+                $('#fillStyle').change(function () {
+                    var value = parseInt($(this).val());
+                    layer.style3D.fillStyle = value;
+                    // layer.refresh();
+                })
+
+                $('#WireFrameType').change(function () {
+                    var value = parseInt($(this).val());
+                    layer.wireFrameMode = value;
+                    // layer.refresh();
+                })
+
+                $("#width").on("input change", function () { //注：只有使用10.1.2及其以后版本生成缓存时勾选带线框才可以设置线宽
+                    var value = parseInt($("#width").val());
+                    layer.style3D.lineWidth = value;
+                });
+            });
+        }
+
+        if (typeof SuperMap3D !== 'undefined') {
+            window.startupCalled = true;
+            onload(SuperMap3D);
+        }
+    </script>
+</body>
+
+</html>

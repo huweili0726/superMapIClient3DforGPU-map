@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+	<title>BOX裁剪</title>
+	<link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+	<link href="./css/bootstrap.min.css" rel="stylesheet">
+	<link href="./css/pretty.css" rel="stylesheet">
+	<link href="./style/clipbox.css" rel="stylesheet">
+    <link href="./css/bootstrap-select.min.css" rel="stylesheet">
+	<script src="./js/jquery.min.js"></script>
+	<script src="./js/bootstrap.min.js"></script>
+	<script src="./js/bootstrap-select.min.js"></script>
+	<script src="./js/tooltip.js"></script>
+	<script src="./js/slider.js"></script>
+	<script src="./js/config.js"></script>
+	<script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+</head>
+
+<body>
+	<div id="Container"></div>
+	<div id='loadingbar' class="spinner">
+		<div class="spinner-container container1">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+		<div class="spinner-container container2">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+		<div class="spinner-container container3">
+			<div class="circle1"></div>
+			<div class="circle2"></div>
+			<div class="circle3"></div>
+			<div class="circle4"></div>
+		</div>
+	</div>
+	<div id='toolbar' class="param-container tool-bar">
+		<div>
+			<select style="width: 180px;" id="clipMode">
+				<option value="clip_behind_all_plane">裁剪包围盒内</option>
+				<option value="clip_behind_any_plane">裁剪包围盒外</option>
+			</select>
+			<button type="button" id="clearbox" class="button black" style="float: right;">清 除</button>
+
+		</div>
+		<div class="param-item">
+			<b>改变长度：</b>
+			<input type="range" id="length" min="1" max="100" step="1" value="5">
+		</div>
+		<div class="param-item">
+			<b>改变宽度：</b>
+			<input type="range" id="width" min="1" max="100" step="1" value="5">
+		</div>
+		<div class="param-item">
+			<b>改变高度：</b>
+			<input type="range" id="height" min="1" max="100" step="1" value="5">
+		</div>
+		<div class="param-item">
+			<b>进行旋转：</b>
+			<input type="range" id="rotate" min="0" max="360" step="1" value="0">
+		</div>
+		<div class="param-item">
+			<b>交互裁剪：</b>
+			<input type="button" id="custom" value="移动裁剪" title="左键移动裁剪，右键结束" style="width: 88px">
+		</div>
+	</div>
+
+	<script>
+		function onload(SuperMap3D) {
+			var EngineType = getEngineType();
+			var viewer = new SuperMap3D.Viewer('Container', {
+				selectionIndicator: false,
+				infoBox: false,
+				contextOptions: {
+					contextType: Number(EngineType)  // Webgl2:2 ; WebGPU:3
+				}
+			});
+
+			viewer.scenePromise.then(function (scene) {
+				init(SuperMap3D, scene, viewer);
+			});
+		}
+		function init(SuperMap3D, scene, viewer) {
+
+            // // 加载高德影像地图
+            // viewer.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
+            //     url: 'https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+            //     minimumLevel: 3,
+            //     maximumLevel: 18,
+            // }));
+			viewer.resolutionScale = window.devicePixelRatio;
+			var widget = viewer.Widget;
+			try {
+				// 场景添加S3M图层服务
+				var promise = scene.open(URL_CONFIG.SCENE_BIMBUILDING);
+				promise.then(function (layers) {
+
+					// 设置裁剪线颜色
+					for (var i = 0, j = layers.length; i < j; i++) {
+						layers[i].clipLineColor = new SuperMap3D.Color(1, 1, 1, 0);
+					}
+
+					var boxEntity = undefined;
+					var tooltip = createTooltip(document.body);
+					var handler = new SuperMap3D.ScreenSpaceEventHandler(scene.canvas);
+
+					function setAllLayersClipOptions(boxOptions) {
+						for (var i = 0, j = layers.length; i < j; i++) {
+							layers[i].setCustomClipBox(boxOptions);
+						}
+					}
+					function setClipBox() {
+						var newDim = boxEntity.box.dimensions.getValue();
+						var position = boxEntity.position.getValue(0);
+						var clipMode = $('#clipMode').val();
+						var heading = SuperMap3D.Math.toRadians($('#rotate').val());
+						var boxOptions = {
+							dimensions: newDim,
+							position: position,
+							clipMode: clipMode,
+							heading: heading
+						};
+						setAllLayersClipOptions(boxOptions);
+					}
+
+					handler.setInputAction(function (evt) {
+						tooltip.showAt(evt.endPosition, '<p>点击模型，添加裁剪盒子</p>');
+					}, SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+
+					handler.setInputAction(function (evt) {
+						var clipMode = $('#clipMode').val();
+						var length = Number($('#length').val());
+						var width = Number($('#width').val());
+						var height = Number($('#height').val());
+						var rotate = SuperMap3D.Math.toRadians(parseFloat($('#rotate').val()));
+						// 获取鼠标点击的笛卡尔坐标
+
+						scene.pickPositionAsync(evt.position).then((last) => {
+							var cartesian = last;
+							var boxOption = {
+								dimensions: new SuperMap3D.Cartesian3(length, width, height),
+								position: cartesian,
+								clipMode: clipMode,
+								heading: rotate
+							};
+							var hpr = new SuperMap3D.HeadingPitchRoll(rotate, 0, 0);
+							var orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(cartesian, hpr);
+							boxEntity = viewer.entities.add({
+								box: {
+									dimensions: new SuperMap3D.Cartesian3(length, width, height),
+									material: SuperMap3D.Color.fromRandom({
+										alpha: 0.1
+									})
+								},
+								position: cartesian,
+								orientation: orientation
+							});
+							setAllLayersClipOptions(boxOption);
+							tooltip.setVisible(false);
+							handler.removeInputAction(SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+							handler.removeInputAction(SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+						});
+
+					}, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+					handler.setInputAction(function () {
+						setClipBox();
+						handler.removeInputAction(SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+					}, SuperMap3D.ScreenSpaceEventType.RIGHT_CLICK);
+
+					$("#custom").on("click", function () {
+						if (!boxEntity) {
+							return;
+						}
+						handler.setInputAction(
+							function (movement) {
+								scene.pickPositionAsync(movement.startPosition).then((last) => {
+									var cartesian = last;
+									boxEntity.position = cartesian;
+									handler.setInputAction(function (evt) {
+										setClipBox();
+										handler.removeInputAction(SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+									}, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+								});
+							}, SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+					});
+					$('#clearbox').click(function () {
+						for (var i = 0, j = layers.length; i < j; i++) {
+							layers[i].clearCustomClipBox();
+						};
+						viewer.entities.removeAll();
+						handler.setInputAction(function (evt) {
+							tooltip.showAt(evt.endPosition, '<p>点击模型，添加裁剪盒子</p>');
+						}, SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+
+						handler.setInputAction(function (evt) {
+							var clipMode = $('#clipMode').val();
+							var length = Number($('#length').val());
+							var width = Number($('#width').val());
+							var height = Number($('#height').val());
+							var rotate = SuperMap3D.Math.toRadians(parseFloat($('#rotate').val()));
+							// 获取鼠标点击的笛卡尔坐标
+							scene.pickPositionAsync(evt.position).then((last) => {
+								var cartesian = last;
+								var boxOption = {
+									dimensions: new SuperMap3D.Cartesian3(length, width, height),
+									position: cartesian,
+									clipMode: clipMode,
+									heading: rotate
+								};
+								var hpr = new SuperMap3D.HeadingPitchRoll(rotate, 0, 0);
+								var orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(cartesian, hpr);
+								boxEntity = viewer.entities.add({
+									box: {
+										dimensions: new SuperMap3D.Cartesian3(length, width, height),
+										material: SuperMap3D.Color.fromRandom({
+											alpha: 0.1
+										})
+									},
+									position: cartesian,
+									orientation: orientation
+								});
+								setAllLayersClipOptions(boxOption);
+								tooltip.setVisible(false);
+								handler.removeInputAction(SuperMap3D.ScreenSpaceEventType.MOUSE_MOVE);
+								handler.removeInputAction(SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+							});
+
+						}, SuperMap3D.ScreenSpaceEventType.LEFT_CLICK);
+
+					});
+
+					$('#length').bind('input propertychange', function () {
+						if (!boxEntity) {
+							return;
+						}
+						var dim = boxEntity.box.dimensions.getValue();
+						var newValue = Number($(this).val());
+						boxEntity.box.dimensions = new SuperMap3D.Cartesian3(newValue, dim.y, dim.z);
+						setClipBox();
+					});
+					$('#width').bind('input propertychange', function () {
+						if (!boxEntity) {
+							return;
+						}
+						var dim = boxEntity.box.dimensions.getValue();
+						var newValue = Number($(this).val());
+						boxEntity.box.dimensions = new SuperMap3D.Cartesian3(dim.x, newValue, dim.z);
+						setClipBox();
+					});
+					$('#height').bind('input propertychange', function () {
+						if (!boxEntity) {
+							return;
+						}
+						var dim = boxEntity.box.dimensions.getValue();
+						var newValue = Number($(this).val());
+						boxEntity.box.dimensions = new SuperMap3D.Cartesian3(dim.x, dim.y, newValue);
+						setClipBox();
+					});
+					$('#rotate').bind('input propertychange', function () {
+						if (!boxEntity) {
+							return;
+						}
+						var position = boxEntity.position.getValue(0);
+						var newValue = Number($(this).val());
+						var rotate = SuperMap3D.Math.toRadians(newValue);
+						var hpr = new SuperMap3D.HeadingPitchRoll(rotate, 0, 0);
+						var orientation = SuperMap3D.Transforms.headingPitchRollQuaternion(position, hpr);
+						boxEntity.orientation = orientation;
+						setClipBox();
+					});
+					$('#clipMode').change(function () {
+						setClipBox();
+					});
+				}, function (e) {
+					if (widget._showRenderLoopErrors) {
+						var title = '加载SCP失败，请检查网络连接状态或者url地址是否正确？';
+						widget.showErrorPanel(title, undefined, e);
+					}
+				});
+			} catch (e) {
+				if (widget._showRenderLoopErrors) {
+					var title = '渲染时发生错误，已停止渲染。';
+					widget.showErrorPanel(title, undefined, e);
+				}
+			}
+			$('#toolbar').show();
+			$('#loadingbar').remove();
+		}
+		if (typeof SuperMap3D !== 'undefined') {
+			window.startupCalled = true;
+			onload(SuperMap3D);
+		}
+	</script>
+</body>
+
+</html>

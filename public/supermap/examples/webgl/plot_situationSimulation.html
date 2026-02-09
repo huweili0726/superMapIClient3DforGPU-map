@@ -1,0 +1,2906 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Test">
+    <meta name="SuperMap3D-sandcastle-labels" content="Geometries">
+    <title>SuperMap 态势仿真</title>
+
+    <!-- MGIS_SuperMap3D插件 -->
+    <!-- <script src="./js/load-mgisclient3d.js"></script> -->
+
+    <!-- 组件源码 -->
+    <!-- <script type="module" src="./js/load-cesium-es6.js"></script>
+    <link href="../Source/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../Source/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script> -->
+
+    <!-- 组件打包 -->
+    <script src="js/plotPanelControl/PlottingUI.Include.js"></script>
+    <script type="text/javascript" src="../../Build/SuperMap3D/SuperMap3D.js"></script>
+    <link href="../../Build/SuperMap3D/Widgets/widgets.css" rel="stylesheet">
+    <script type="text/javascript" src="../../Build/SuperMap3D/ThirdParty/Workers/MGIS_SuperMap3D/MGIS_SuperMap3D.js"></script>
+
+    <script src="js/jquery.min.js"></script>
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <link href="./css/pretty.css" rel="stylesheet">
+    <style>
+        .dialogBlack {
+            position: absolute;
+            top: 30%;
+            background-color: rgba(38, 38, 38, 0.75);
+            color: #ffffff;
+            border: 1px solid #526f82;
+            display: none;
+            z-index: 9999;
+            width: 400px;
+            border-radius: 5px;
+        }
+
+        .dialogContent {
+            max-height: 500px;
+            overflow: auto;
+        }
+
+        .dialogContent::-webkit-scrollbar {
+            width: 5px;
+            margin-left: 5px;
+        }
+
+        .dialogContent::-webkit-scrollbar-track {
+            background-color: white;
+        }
+
+        .dialogContent::-webkit-scrollbar-thumb {
+            background-color: rgba(38, 38, 38);
+        }
+
+        .dialogContent::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(60, 60, 60);
+        }
+
+        .summaryBlack {
+            font-size: 20px;
+            padding: 10px;
+            background-color: rgba(50, 50, 50, 1);
+            font-weight: normal;
+        }
+
+        .divContent {
+            padding: 10px;
+            background-color: rgba(38, 38, 38, 0.75);
+        }
+
+        .tabs {
+            display: flex;
+        }
+
+        .tab {
+            padding: 10px;
+            background-color: rgba(38, 38, 38, 0.75);
+            cursor: pointer;
+        }
+
+        .tab.active {
+            padding: 10px;
+            background-color: #526f82;
+            cursor: pointer;
+        }
+
+        .tabContent {
+            border: 1px solid #526f82;
+            height: 300px;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .closeButton {
+            cursor: pointer;
+            float: right;
+            margin-left: 10px;
+        }
+
+        .mInput[type=number] {
+            margin: 5px 0px;
+        }
+
+        .mInput[type=color] {
+            margin: 5px 0px;
+        }
+
+        .mInput[type=text] {
+            margin: 5px 0px;
+        }
+
+        .mInput[type=checkbox] {
+            margin: 5px 0px;
+        }
+
+        .mButton {
+            margin: 5px 0px;
+        }
+
+        .mSelect {
+            margin: 0px;
+        }
+    </style>
+</head>
+
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html"
+    style="margin: 0px; overflow: hidden;background: #ffffff;height: 100%;">
+    <!-- 增强特效样式编辑 -->
+    <dialog class="dialogBlack" id="geoEffectAugment-editor" style="padding-bottom: 0px;">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">设置资源路径</h2>
+        </div>
+        <div class="param-item">
+            <b>资源路径：</b>
+            <input class="mInput" type="text" value="" placeholder="请输入增强资源路径" id="augmentUrlPath-input">
+            <button type="button" class="button black mButton" id="augmentUrlDBS-btn">编辑</button>
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="geoEffectAugmentConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="geoEffectAugmentCancel()">取消</button>
+        </div>
+    </dialog>
+    <!-- 扫描棱锥样式编辑 -->
+    <dialog class="dialogBlack" id="geoEffectScancone-editor" style="padding-bottom: 0px;">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">特效编辑</h2>
+        </div>
+        <div class="dialogContent">
+            <div class="param-item">
+                <b>棱锥半径：</b>
+                <input class="mInput" type="number" value="" placeholder="请输入棱锥半径" id="scanconeRadius-input">
+                <b>米</b>
+            </div>
+            <div class="param-item">
+                <b>水平夹角：</b>
+                <input class="mInput" type="number" value="" placeholder="请输入棱锥水平夹角度数" id="scanconeHAngle-input">
+                <b>°</b>
+            </div>
+            <div class="param-item">
+                <b>竖直夹角：</b>
+                <input class="mInput" type="number" value="" placeholder="请输入棱锥竖直夹角度数" id="scanconeVAngle-input">
+                <b>°</b>
+            </div>
+            <div class="param-item">
+                <b>底面样式：</b>
+                <select id="scanconeType-select" class="supermap3d-button mSelect">
+                    <option value="0">弧形底面</option>
+                    <option value="1">平面底面</option>
+                </select>
+            </div>
+            <div class="param-item">
+                <b>探测速度：</b>
+                <input class="mInput" type="number" value="" placeholder="请输入探测速度" id="scanconescanSpeed-input">
+            </div>
+            <div class="param-item">
+                <b>竖直探测角度：</b>
+                <input class="mInput" type="number" value="" placeholder="请输入竖直探测角度值" id="scanconePitchAngle-input">
+                <b>°</b>
+            </div>
+            <div class="param-item">
+                <b>水平探测范围：</b>
+                <input class="mInput" type="number" value="" placeholder="请输入水平探测范围值" id="scanconeScanRange-input">
+                <b>°</b>
+            </div>
+            <div class="param-item">
+                <b>显示填充：</b>
+                <input class="mInput" type="checkbox" title="" id="scanconeIsFill-checkbox" checked>
+            </div>
+            <div class="param-item">
+                <b>显示轮廓：</b>
+                <input class="mInput" type="checkbox" title="" id="scanconeIsOutLineColor-checkbox" checked>
+            </div>
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="geoEffectScanconeConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="geoEffectScanconeCancel()">取消</button>
+        </div>
+    </dialog>
+    <!-- 标牌特效样式编辑 -->
+    <dialog class="dialogBlack" id="geoEffectSign-editor" style="padding-bottom: 0px;">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">特效编辑</h2>
+        </div>
+        <div class="param-item">
+            <b>选择样式：</b>
+            <select id="geoEffectSignType-select" class="supermap3d-button mSelect">
+                <option value="0">自定义标牌</option>
+                <!-- <option value="1">带标题标牌</option> -->
+                <option value="2">带背景标牌1</option>
+                <option value="3">带背景标牌2</option>
+                <option value="4">带背景标牌3</option>
+            </select>
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="geoEffectSignConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="geoEffectSignCancel()">取消</button>
+        </div>
+    </dialog>
+    <!-- 扩散圆特效样式编辑 -->
+    <dialog class="dialogBlack" id="geoEffectAnnularDiffusion-editor" style="padding-bottom: 0px;">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">特效编辑</h2>
+        </div>
+        <div class="param-item">
+            <b>扩散圈数：</b>
+            <input class="mInput" type="number" value="" placeholder="请输入圈数" id="geoEffectDiffusionCount-input">
+            <b>圈</b>
+        </div>
+        <div class="param-item">
+            <b>扩散颜色：</b>
+            <input class="mInput" type="color" id="geoEffectDiffusionColor-input">
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="geoEffectAnnularDiffusionConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="geoEffectAnnularDiffusionCancel()">取消</button>
+        </div>
+    </dialog>
+    <!-- 尾焰特效样式编辑 -->
+    <dialog class="dialogBlack" id="geoEffectTailFrame-editor" style="padding-bottom: 0px;">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">特效编辑</h2>
+        </div>
+        <div class="param-item">
+            <b>尾焰直径：</b>
+            <input class="mInput" type="number" value="" placeholder="请输入尺寸" id="geoEffectDiameter-input">
+            <b>米</b>
+        </div>
+        <div class="param-item">
+            <h2 class="title" style="background-color:rgb(57, 61, 73);color: #ffffff;">偏移量</h2>
+            <div class="param-item">
+                <b>X轴方向：</b>
+                <input class="mInput" type="number" value="" placeholder="设置沿X轴方向的偏移" id="geoEffectOffsetX-input">
+            </div>
+            <div class="param-item">
+                <b>Y轴方向：</b>
+                <input class="mInput" type="number" value="" placeholder="设置沿Y轴方向的偏移" id="geoEffectOffsetY-input">
+            </div>
+            <div class="param-item">
+                <b>Z轴方向：</b>
+                <input class="mInput" type="number" value="" placeholder="设置沿Z轴方向的偏移" id="geoEffectOffsetZ-input">
+            </div>
+        </div>
+        <div class="param-item">
+            <b>随模型变化：</b>
+            <input class="mInput" type="checkbox" title="" id="bChangeSizeFlowModel-checkbox" checked>
+        </div>
+        <div class="param-item">
+            <b>显示特效：</b>
+            <input class="mInput" type="checkbox" title="" id="geoEffectVisible-checkbox" checked>
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="geoEffectTailFrameConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="geoEffectTailFrameCancel()">取消</button>
+        </div>
+    </dialog>
+    <!-- 卫星组样式编辑页 -->
+    <dialog class="dialogBlack" id="satelliteGroup-editor" style="padding-bottom: 0px;">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">卫星组样式</h2>
+        </div>
+        <div class="param-item">
+            <b>缩放比例：</b>
+            <input class="mInput" type="number" value="" placeholder="请输入模型缩放" id="satelliteModelScale-input">
+        </div>
+        <div class="param-item">
+            <b>资源路径：</b>
+            <input class="mInput" type="text" value="" placeholder="请输入模型路径" id="satelliteModelPath-input">
+            <button type="button" class="button black mButton" id="satelliteModelDBS-btn">编辑</button>
+        </div>
+        <div class="param-item" style="display: none;">
+            <b>显示卫星：</b>
+            <input class="mInput" type="checkbox" title="" id="satelliteModelVisible-checkbox" checked>
+        </div>
+        <div class="param-item">
+            <b>轨道线宽：</b>
+            <input class="mInput" type="number" value="" placeholder="请输入轨道线宽" id="orbitWidth-input" checked>
+            <b>px</b>
+        </div>
+        <div class="param-item">
+            <b>轨道线色：</b>
+            <input class="mInput" type="color" value="" id="orbitColor-input">
+        </div>
+        <div class="param-item">
+            <b>显示轨道：</b>
+            <input class="mInput" type="checkbox" title="" id="orbitVisible-checkbox" checked>
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="satelliteGroupConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="satelliteGroupCancel()">取消</button>
+        </div>
+    </dialog>
+    <!-- 实体参数编辑页 -->
+    <dialog class="dialogBlack" id="geoEntity-editor">
+        <span class="closeButton" onclick="closeGeoEntityPanel()">&times;</span>
+        <div class="param-item">
+            <h2 style="font-size: 20px;">实体参数</h2>
+        </div>
+        <div class="dialogContent">
+            <div class="param-item" style="padding: 0px 10px;">
+                <b>实体名称：</b>
+                <b id="geoEntityName" style="width:100px"></b>
+                <button class="button black mButton" type="button" onclick="editGeoEntityName()">编辑</button>
+            </div>
+            <div class="param-item" style="padding: 0px 10px;">
+                <b>显示模式：</b>
+                <select id="showmode" onchange="onShowModeChange()" class="supermap3d-button mSelect">
+                    <option>模型</option>
+                    <option>图片</option>
+                    <option>矢量</option>
+                    <option>公告板</option>
+                </select>
+            </div>
+
+            <!-- <div class="param-item">
+                <b>显示模式自动变化：</b>
+                <input class="mInput" type="checkbox" id="showmodeChange" lay-skin="switch"
+                    lay-text="开启|关闭" />
+            </div>
+            <div class="param-item">
+                <b>显示变化最大距离：</b>
+                <input class="mInput" id="showmodeChangeDistance" type="number" value="0" step="1"
+                    min="0" oninput="showmodeChangeDistanced()" />
+            </div> -->
+
+            <details>
+                <summary class="summaryBlack">位置</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>经度：</b>
+                        <input class="mInput" id="pos-X" type="number" value="0" step="0.1" min="-180" max="180"
+                            oninput="geoEntityPosChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>纬度：</b>
+                        <input class="mInput" id="pos-Y" type="number" value="0" step="0.1" min="-90" max="90"
+                            oninput="geoEntityPosChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>高度：</b>
+                        <input class="mInput" id="pos-Z" type="number" value="0" step="1"
+                            oninput="geoEntityPosChanged()" />
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary class="summaryBlack">模型参数</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>旋转：</b>
+                        <input class="mInput" style="width: 50px;" id="modelrotate-X" type="number" value="0" step="1"
+                            min="-180" max="180" oninput="geoEntityModelParmChanged()" />
+                        <input class="mInput" style="width: 50px;" id="modelrotate-Y" type="number" value="0" step="1"
+                            min="-180" max="180" oninput="geoEntityModelParmChanged()" />
+                        <input class="mInput" style="width: 50px;" id="modelrotate-Z" type="number" value="0" step="1"
+                            min="-180" max="180" oninput="geoEntityModelParmChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>缩放：</b>
+                        <input class="mInput" id="modelscale" type="number" value="0" step="0.1" min="0"
+                            oninput="geoEntityModelParmChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>模型路径：</b>
+                        <input class="mInput" id="modelpath" type="text" oninput="geoEntityModelParmChanged()" />
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary class="summaryBlack">图片参数</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>图片大小：</b>
+                        <input class="mInput" style="width: 80px;" id="picture-width" type="number" value="0" step="0.1"
+                            min="0" oninput="geoEntityPictureParmChanged()" />
+                        <input class="mInput" style="width: 80px;" id="picture-height" type="number" value="0"
+                            step="0.1" min="0" oninput="geoEntityPictureParmChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>图片路径：</b>
+                        <input class="mInput" id="picturepath" type="text" oninput="geoEntityPictureParmChanged()" />
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary class="summaryBlack">矢量参数</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>旋转：</b>
+                        <input class="mInput" style="width: 50px;" id="vectorrotate-X" type="number" value="0" step="1"
+                            min="-180" max="180" oninput="geoEntityVectorParmChanged()" />
+                        <input class="mInput" style="width: 50px;" id="vectorrotate-Y" type="number" value="0" step="1"
+                            min="-180" max="180" oninput="geoEntityVectorParmChanged()" />
+                        <input class="mInput" style="width: 50px;" id="vectorrotate-Z" type="number" value="0" step="1"
+                            min="-180" max="180" oninput="geoEntityVectorParmChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>缩放：</b>
+                        <input class="mInput" id="vectorscale" type="number" value="0" step="0.1" min="0"
+                            oninput="geoEntityVectorParmChanged()" />
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary class="summaryBlack">标号参数</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>标号库ID：</b>
+                        <input class="mInput" id="plot-ID" type="number" value="0" step="0.1" min="0"
+                            oninput="geoEntityPlotParmChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>标号dode：</b>
+                        <input class="mInput" id="plot-code" type="number" value="0" step="0.1" min="0"
+                            oninput="geoEntityPlotParmChanged()" />
+                    </div>
+                    <!-- <div class="param-item">
+                        <b>标号样式：</b>
+                        <button class="button black mButton" type="button" onclick="editPlotStyle()"></button>
+                    </div> -->
+                </div>
+            </details>
+
+            <details id="geoEntityOrbit-div">
+                <summary class="summaryBlack">轨道参数</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>轨道线宽：</b>
+                        <input class="mInput" id="geoEntityOrbitWidth-input" type="number" value="0" step="0.1" min="0"
+                            oninput="satelliteEntityOrbitWidthChanged()" />
+                    </div>
+                    <div class="param-item">
+                        <b>轨道线色：</b>
+                        <input class="mInput" id="geoEntityOrbitColor-input" type="color"
+                            onchange="geoEntityOrbitColorChange()" />
+                    </div>
+                    <div class="param-item">
+                        <b>显示轨道：</b>
+                        <input class="mInput" type="checkbox" id="geoEntityOrbitVisible-checkbox" title=""
+                            onchange="onGeoEntityOrbitVisibleChange()" checked />
+                    </div>
+                </div>
+            </details>
+        </div>
+    </dialog>
+    <!-- 修改实体名 -->
+    <dialog class="dialogBlack" id="geoEntityName-editor">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">重命名</h2>
+        </div>
+        <div class="param-item">
+            <b>实体名称：</b>
+            <input class="mInput" type="text" id="geoEntityName-input" placeholder="请输入新的实体名称" />
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="geoEntityNameConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="geoEntityNameCancel()">取消</button>
+        </div>
+    </dialog>
+    <!-- 扫描波参数编辑页 -->
+    <dialog class="dialogBlack" id="scanWave-editor" style="padding-bottom: 0px;">
+        <div class="param-item">
+            <h2 style="font-size: 20px;">特效编辑</h2>
+        </div>
+        <div class="dialogContent">
+            <details>
+                <summary class="summaryBlack">大小</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>长度：</b>
+                        <input class="mInput" id="scanWave-length" type="number" value="0" step="1" min="0" />
+                    </div>
+                    <div class="param-item">
+                        <b>宽度：</b>
+                        <input class="mInput" id="scanWave-width" type="number" value="0" step="1" min="0" />
+                    </div>
+                    <div class="param-item">
+                        <b>高度：</b>
+                        <input class="mInput" id="scanWave-height" type="number" value="0" step="1" />
+                    </div>
+                </div>
+            </details>
+            <details>
+                <summary class="summaryBlack">基础参数</summary>
+                <div class="divContent">
+                    <div class="param-item" style="display: flex;">
+                        <label style="width: 80px;margin: 0px;">初始旋转角度：</label>
+                        <input class="mInput" style="width: 50px;margin-right: 10px;" id="scanWave-initRotateX"
+                            type="number" value="0" step="1" min="-180" max="180" />
+                        <input class="mInput" style="width: 50px;margin-right: 10px;" id="scanWave-initRotateY"
+                            type="number" value="0" step="1" min="-180" max="180" />
+                        <input class="mInput" style="width: 50px;" id="scanWave-initRotateZ" type="number" value="0"
+                            step="1" min="-180" max="180" />
+                    </div>
+                    <div class="param-item">
+                        <b>截面边数：</b>
+                        <input class="mInput" id="scanWave-sectionSlices" type="number" value="0" step="1" />
+                    </div>
+                    <div class="param-item" style="display: flex;">
+                        <label style="width: 80px;margin: 0px;">材质或颜色重复次数：</label>
+                        <input class="mInput" id="scanWave-repeatCount" type="number" value="0" step="1" />
+                    </div>
+                    <div class="param-item" style="display: flex;">
+                        <label style="width: 80px;margin: 0px;">材质或颜色流动速度：</label>
+                        <input class="mInput" id="scanWave-flowSpeed" type="number" value="0" step="1" />
+                    </div>
+                    <div class="param-item">
+                        <b>截面角度：</b>
+                        <input class="mInput" id="scanWave-sectionAngle" type="number" value="0" step="1" />
+                    </div>
+                </div>
+            </details>
+            <details>
+                <summary class="summaryBlack">扫描参数</summary>
+                <div class="divContent">
+                    <div class="param-item">
+                        <b>扫描旋转轴：</b>
+                        <select id="scanWave-rotateAxis" class="supermap3d-button mSelect">
+                            <option>x轴</option>
+                            <option>y轴</option>
+                            <option>z轴</option>
+                        </select>
+                    </div>
+                    <div class="param-item">
+                        <b>扫描速度：</b>
+                        <input class="mInput" id="scanWave-scanSpeed" type="number" value="0" step="1" />
+                    </div>
+                    <div class="param-item">
+                        <b>扫描角度：</b>
+                        <input class="mInput" id="scanWave-scanAngle" type="number" value="0" step="1" />
+                    </div>
+                </div>
+            </details>
+            <details>
+                <summary class="summaryBlack">材质参数</summary>
+                <div class="divContent">
+                    <div class="tabs">
+                        <div id="scanWaveModeColor" class="tab active" onclick="showTabContent('scanWaveModeColor')">
+                            颜色模式</div>
+                        <div id="scanWavePictureColor" class="tab" onclick="showTabContent('scanWavePictureColor')">图片模式
+                        </div>
+                    </div>
+                    <div class="tabContent" id="scanWaveModeColorContent" style="display: block;">
+                        <div class="param-item">
+                            <b>背景颜色：</b>
+                            <input class="mInput" type="color" value="" id="scanWave-colorBack">
+                        </div>
+                        <div class="param-item" style="display: flex;">
+                            <label style="width: 100px;margin: 0px;">背景颜色增强度：</label>
+                            <input class="mInput" id="scanWave-colorBackLightScale" type="number" value="0" step="1" />
+                        </div>
+                        <div class="param-item">
+                            <b>前景颜色：</b>
+                            <input class="mInput" type="color" value="" id="scanWave-colorForward">
+                        </div>
+                        <div class="param-item" style="display: flex;">
+                            <label style="width: 100px;margin: 0px;">前景颜色增强度：</label>
+                            <input class="mInput" id="scanWave-colorForwardLightScale" type="number" value="0"
+                                step="1" />
+                        </div>
+                        <div class="param-item" style="display: flex;">
+                            <label style="width: 100px;margin: 0px;margin-right: 5px;">前景色长度占背景色长度比值：</label>
+                            <input class="mInput" id="scanWave-colorForwardLengthRatio" type="number" value="0"
+                                step="0.01" />
+                        </div>
+                    </div>
+                    <div class="tabContent" id="scanWavePictureColorContent" style="display: none;">
+                        <div class="param-item">
+                            <b>图片路径：</b>
+                            <input class="mInput" id="scanWave-picturePath" type="text" />
+                        </div>
+                        <div class="param-item">
+                            <b>增强度：</b>
+                            <input class="mInput" id="scanWave-pictureColorLightScale" type="number" value="0"
+                                step="1" />
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </div>
+        <div class="param-item" style="margin: 0px;text-align: right">
+            <button type="button" class="button black mButton" onclick="scanWaveConfirm()">确认</button>
+            <button type="button" class="button black mButton" onclick="scanWaveCancel()">取消</button>
+        </div>
+    </dialog>
+
+    <div class="param-container tool-bar" style="width: 420px;height: auto;padding: 0px;border-radius: 5px;">
+        <details>
+            <summary class="summaryBlack">方案管理</summary>
+            <div class="divContent">
+                <div class='param-item'>
+                    <label>方案列表：</label>
+                    <ul class="schmemList" style="margin-left: 100px;" id="schmemList">
+                    </ul>
+                    <button type="button" class="button black mButton" onclick="saveScheme()">保存方案</button>
+                    <button type="button" class="button black mButton" onclick="closeScheme()">关闭方案</button>
+                    <button type="button" class="button black mButton" onclick="deleteScheme()">删除方案</button>
+                </div>
+                <div class='param-item'>
+                    <b>方案名：</b>
+                    <input class="mInput" type="text" id="schmemName" style="width: 100px;" placeholder="请输入方案名"
+                        autocomplete="off" />
+                    <button type="button" class="button black mButton" onclick="createCase()">新建方案</button>
+                </div>
+                <div class='param-item'>
+                    <b>自动保存：</b>
+                    <input class="mInput" type="checkbox" id="autoSaveScheme" onchange="autoSaveSchemeChange()" />
+                </div>
+                <div class='param-item'>
+                    <b>当前方案：</b>
+                    <b id="currentScheme"></b>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary class="summaryBlack">军事地理实体</summary>
+            <div class="divContent">
+                <div class='param-item'>
+                    <b>添加实体：</b>
+                    <button type="button" class="button black mButton" onclick="addGeoEntityModel()">添加模型</button>
+                    <button type="button" class="button black mButton" onclick="addGeoEntityDot()">添加标号</button>
+                </div>
+                <div class='param-item'>
+                    <b>实体列表：</b>
+                    <select id="geoEntitys" class="supermap3d-button mSelect" onclick="geoEntitySelectedChanged()">
+                    </select>
+                    <button type="button" class="button black mButton" onclick="editGeoEntity()">编辑</button>
+                </div>
+                <div class='param-item'>
+                    <b>实体定位：</b>
+                    <button type="button" class="button black mButton" onclick="flyGeoEntity()">定位</button>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary class="summaryBlack">特效</summary>
+            <div class="divContent">
+                <div class='param-item'>
+                    <b>特效类型：</b>
+                    <select id="geoEffect" class="supermap3d-button mSelect" onchange="geoEffectTypeChange()">
+                        <option value="">请选择特效类别</option>
+                        <option value="基础线">基础线</option>
+                        <option value="间断线">间断线</option>
+                        <option value="流星线">流星线</option>
+                        <option value="箭头线">箭头线</option>
+                        <option value="管状线">管状线</option>
+                        <option value="尾气">尾气</option>
+                        <option value="尾焰">尾焰</option>
+                        <option value="燃烧">燃烧</option>
+                        <option value="爆炸">爆炸</option>
+                        <option value="打击线">打击线</option>
+                        <option value="渐变体">渐变体</option>
+                        <option value="尾迹线">尾迹线</option>
+                        <option value="机械雷达">机械雷达</option>
+                        <option value="参数体雷达">参数体雷达</option>
+                        <option value="旋转体雷达">旋转体雷达</option>
+                        <option value="扫描雷达">扫描雷达</option>
+                        <option value="预警雷达">预警雷达</option>
+                        <option value="探视锥">探视锥</option>
+                        <option value="增强体">增强体</option>
+                        <option value="扫描棱锥">扫描棱锥</option>
+                        <option value="扫描波">扫描波</option>
+                        <option value="扩散圆">扩散圆</option>
+                        <option value="标牌">标牌</option>
+                    </select>
+                    <button type="button" class="button black mButton" onclick="editGeoEffects()">编辑</button>
+                </div>
+                <div style="color: yellow;">"只有扩散圆、扫描波、扫描棱锥、增强体可编辑"</div>
+            </div>
+        </details>
+        <details>
+            <summary class="summaryBlack">卫星</summary>
+            <div class="divContent">
+                <div class='param-item'>
+                    <b>卫星分组：</b>
+                    <select id="satelliteGroup" class="supermap3d-button mSelect"
+                        onchange="satelliteGroupChange()"></select>
+                    <input class="mInput" type="checkbox" title="" id="satelliteVisible-checkbox"
+                        onchange="satelliteVisibleChange()" checked>
+                    <button type="button" class="button black mButton" onclick="editSatelliteGroup()">编辑</button>
+                </div>
+                <div class='param-item'>
+                    <b>卫星实体：</b>
+                    <select id="satelliteGeoEntity" class="supermap3d-button mSelect"></select>
+                    <button type="button" class="button black mButton" onclick="editSatelliteGeoEntity()">编辑</button>
+                </div>
+                <div class='param-item'>
+                    <button type="button" class="button black mButton" onclick="addSatelliteEntity()">添加卫星实体</button>
+                    <button type="button" class="button black mButton" onclick="removeSatelliteEntity()">移除卫星实体</button>
+                    <button type="button" class="button black mButton" onclick="addSatelliteLinkEffect()">添加特效</button>
+                </div>
+                <div class='param-item'>
+                    <b>卫星定位：</b>
+                    <button type="button" class="button black mButton" onclick="flySatellite()">定位</button>
+                </div>
+            </div>
+        </details>
+        <details>
+            <summary class="summaryBlack">仿真</summary>
+            <div class="divContent">
+                <div class='param-item'>
+                    <button type="button" class="button black mButton" onclick="startPlay()">开始</button>
+                    <button type="button" class="button black mButton" onclick="pausePlay()">暂停</button>
+                    <button type="button" class="button black mButton" onclick="continuePlay()">继续</button>
+                    <button type="button" class="button black mButton" onclick="stopPlay()">停止</button>
+                    <button type="button" class="button black mButton" onclick="resetPlay()">复位</button>
+                </div>
+                <div class='param-item'>
+                    <button type="button" class="button black mButton" onclick="speedUp()">加速</button>
+                    <button type="button" class="button black mButton" onclick="speedDown()">减速</button>
+                    <button type="button" class="button black mButton" onclick="forwardPlay()">快进</button>
+                    <button type="button" class="button black mButton" onclick="reversePlay()">快退</button>
+                    <button type="button" id="isBackPlay" class="button black mButton" onclick="backPlay()">反向</button>
+                </div>
+                <div class='param-item'>
+                    <b>脚本列表：</b>
+                    <select id="deductionScripts" class="supermap3d-button mSelect">
+                        <option value="脚本1">基础参数变化</option>
+                        <option value="脚本2">特效变化</option>
+                        <option value="脚本3">缩放变化</option>
+                        <option value="脚本4">飘带特效</option>
+                        <option value="脚本5">文本</option>
+                    </select>
+                </div>
+                <div class='param-item'>
+                    <b>仿真倍速：</b>
+                    <b id="playSpeedRate">1</b>
+                </div>
+                <div class='param-item'>
+                    <b>复位方式：</b>
+                    <select id="resetType" class="supermap3d-button mSelect">
+                        <option>不复位</option>
+                        <option selected="selected">手动复位</option>
+                        <option>自动复位</option>
+                    </select>
+                </div>
+                <div class='param-item'>
+                    <b>播放进度：</b>
+                    <input class="mInput" id="slider-move" type="range" value="0" step="1" min="0" max="100"
+                        oninput="geoEntityMoveSliderPlayChanged()" />
+                </div>
+                <div class='param-item'>
+                    <b>视角锁定：</b>
+                    <input class="mInput" type="checkbox" id="cameraFollowEarthRotate"
+                        onchange="cameraFollowEarthRotateChange()" checked />
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <div id="Container" class="fullSize"
+        style="position: absolute;left: 0;width: 100%;height: 100%;border: 1px solid #3473b7;">
+        <script id="sandcastle_script">
+            var scene, viewer, serverUrl, plotting;
+            var plottingLayer;
+            var plotEditControl;
+            var plotDrawControl;
+            var plotPanel;
+
+            var satelliteEntityManager;
+            var situationSimulationManager;
+            var deductionScriptManager;
+            var geoEntityManager;
+            var geoEntityRootNode;
+            var geoEntityEffectExtendFactory;
+            var simulationController;
+            var satelliteManager;
+            var geoEntity;
+            var geoEffect;
+            var isSatellite = false;
+
+            function onload(MGIS_SuperMap3D) {
+                'use strict';
+                if (window.Cesium) {
+                    window.SuperMap3D = MGIS_SuperMap3D;
+                }
+                //若本地没有标绘相关服务则可访问支持中心的iserver
+                var host = window.isLocalPlot ? window.plotServer : "http://support.supermap.com.cn:8090";
+                viewer = new SuperMap3D.Viewer('Container', {
+                    timeline: false,
+                    animation: false,
+                    shouldAnimation: true,
+                    skyAtmosphere: false
+                    // //创建地形服务提供者的实例，url为SuperMap iServer发布的TIN地形服务，地形缓存
+                    // terrainProvider: new SuperMap3D.CesiumTerrainProvider({
+                    //     url: host + "/iserver/services/3D-local3DCache-TWDEMTaiHai/rest/realspace/datas/TW@DEM_TaiHai"
+                    // })
+                });
+                //底层将动画默认值设为false了，必须开启才能显示粒子特效
+                viewer.clock.shouldAnimate = true;
+                scene = viewer.scene;
+
+                situationSimulationManager = SuperMap3D.SituationSimulationManager.getInstance();
+                situationSimulationManager.setScene(scene);
+                //situationSimulationManager.setURI(host); // 此接口已废弃，使用setServerUrl()
+                situationSimulationManager.setServerUrl({
+                    dataServerUrl: host + "/iserver/services/data-SituationSimulationSchemeWorkspace/rest/data",
+                    implServerUrl: host + "/iserver/services/MGISSituationSimulationToolServer/rest/domainComponents/MGISSituationSimulationImpl",
+                });
+
+                satelliteEntityManager = situationSimulationManager.getSatelliteEntityManager();
+                deductionScriptManager = situationSimulationManager.getDeductionScriptManager();
+                geoEntityManager = situationSimulationManager.getGeoEntityManager();
+                geoEntityRootNode = geoEntityManager.getGeoEntityRootNode();
+                geoEntityEffectExtendFactory = situationSimulationManager.getGeoEntityEffectExtendFactory();
+                geoEntityEffectExtendFactory.init({ viewer: viewer, document: document });
+                simulationController = situationSimulationManager.getSimulationController();
+                satelliteManager = situationSimulationManager.getSatelliteManager();
+                geoEntityManager.setGeoEntityLayerEditable(true);
+
+
+
+                // //添加SuperMap iServer发布的影像服务
+                // var layer = viewer.imageryLayers.addImageryProvider(new SuperMap3D.SuperMapImageryProvider({
+                //     url: host + "/iserver/services/map-ugcv5-World/rest/maps/Image"
+                // }));
+
+                // let sceneUrl = "http://172.18.120.106:8090/iserver/services/3D-CBD/rest/realspace";
+                // var promise = scene.open(sceneUrl);
+                // promise.then(function (layers) {
+                //     console.log(layers);
+                // });
+
+                // 添加SuperMap iServer发布的影像服务
+                // var layer = viewer.imageryLayers.addImageryProvider(new SuperMap3D.SuperMapImageryProvider({
+                //     url: "http://172.18.120.101:8090/iserver/services/map-ugcv5-World/rest/maps/Image"
+                // }));
+
+
+                scene.globe.depthTestAgainstTerrain = true;
+                scene.debugShowFramesPerSecond = false;
+
+                if (SuperMap3D.FeatureDetection.supportsImageRenderingPixelated()) {
+                    viewer.resolutionScale = window.devicePixelRatio;
+                }
+                scene.postProcessStages.fxaa.enabled = true;
+
+                serverUrl = host + '/iserver/services/plot-jingyong/rest/plot';
+                plotting = SuperMap3D.Plotting.getInstance(serverUrl, scene);
+
+                initSchemeList();
+                initScene();
+                initSatelliteSelectUI();
+                initSatelliteGeoEntity();
+
+                // viewer.camera.flyTo({
+                //     destination: new SuperMap3D.Cartesian3(557092.7630217023, 4251934.913084203, 6420174.621543783),
+                //     orientation: {
+                //         heading: 2.98182791553226,
+                //         pitch: -0.6506589867992263,
+                //         roll: 6.283185307179586
+                //     }
+                // });
+
+                // viewer.camera.flyTo({
+                //     destination: new SuperMap3D.Cartesian3(-3025012.4707319164, 4950970.380270567, 2673833.975889878),
+                //     orientation: {
+                //         heading: 4.094297613796133,
+                //         pitch: -0.8381127614274764,
+                //         roll: 6.283185307179572
+                //     }
+                // });
+            }
+
+            function autoSaveSchemeChange() {
+                let isSave = $("#autoSaveScheme")[0].checked;
+                situationSimulationManager.setIsAutoSave(isSave);
+            }
+
+            function initScene() {
+                let currentName = sessionStorage.getItem("schemeName");
+                if (currentName !== undefined && currentName !== null && currentName.length > 0) {
+                    situationSimulationManager.openScheme(currentName);
+                    updateGeoEntitys();
+                    document.getElementById("currentScheme").innerHTML = currentName;
+                }
+            }
+
+            function initSchemeList() {
+                let SchemeNames = situationSimulationManager.getAllSchemeName();
+                let list = document.getElementById('schmemList');
+                list.innerHTML = "";
+                for (let i = 0; i < SchemeNames.length; i++) {
+                    let li = document.createElement("li");
+                    let txt_node = document.createTextNode(SchemeNames[i]);
+                    li.appendChild(txt_node);
+                    list.appendChild(li);
+                }
+
+                $(function () {
+                    $('.schmemList li').click(function () {
+                        let scheme = $(this).text();
+                        openScheme(scheme);
+                        initSatelliteSelectUI();
+                        initSatelliteGeoEntity();
+                    })
+                });
+            }
+
+            function createCase() {
+                let name = document.getElementById('schmemName').value;
+
+                if (!isNaN(parseFloat(name))) {
+                    alert("方案名不能以数字开头！");
+                    return;
+                }
+
+                let symbols = ['`', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '=', '+', '[', ']', '{', '}', ';', ':', '"', "'", '|', '\\', ',', '<', '>', '.', '?', '/'];
+                for (let i = 0; i < symbols.length; ++i) {
+                    if (name.indexOf(symbols[i]) != -1) {
+                        alert("方案名不能包含'" + symbols[i] + "'");
+                        return;
+                    }
+                }
+
+                let schemeNames = situationSimulationManager.getAllSchemeName();
+                if (schemeNames.indexOf(name) !== -1) {
+                    alert('已存在此名称方案，请重新输入方案名！');
+                    return;
+                }
+
+                situationSimulationManager.newScheme(name);
+                let list = document.getElementById('schmemList');
+                let li = document.createElement("li");
+                let txt_node = document.createTextNode(name);
+                li.appendChild(txt_node);
+                list.appendChild(li);
+
+                $(function () {
+                    $('.schmemList li').click(function () {
+                        let scheme = $(this).text();
+                        openScheme(scheme);
+                    })
+                });
+            }
+
+            if (typeof MGIS_SuperMap3D !== 'undefined') {
+                window.startupCalled = true;
+                onload(MGIS_SuperMap3D);
+            }
+
+            function showGeoEntityParm() {
+                var dlg = document.getElementById('geo-entity-parm');
+                dlg.style.display = "block";
+            }
+
+            function closeGeoEntityParm() {
+                var dlg = document.getElementById('geo-entity-parm');
+                dlg.style.display = "none";
+            }
+
+            function onShowModeChange() {
+                let value = document.getElementById("showmode").value;
+                let geoEntityParm = new SuperMap3D.GeoEntityParameter();
+                if (value === "模型") {
+                    geoEntityParm.setShowMode(SuperMap3D.DotMode.Marker);
+                }
+                else if (value === "图片") {
+                    geoEntityParm.setShowMode(SuperMap3D.DotMode.Picture);
+                }
+                else if (value === "公告板") {
+                    geoEntityParm.setShowMode(SuperMap3D.DotMode.Grid);
+                }
+                else if (value === "矢量") {
+                    geoEntityParm.setShowMode(SuperMap3D.DotMode.Vector);
+                }
+
+                geoEntity.setGeoEntityParameter(geoEntityParm);
+            }
+
+            // layui.form.on("switch(showmodeChange)", function (data) {
+            //     let geoEntityParm = new SuperMap3D.GeoEntityParameter();
+
+            //     geoEntityParm.setIsDistanceChangeMode(data.elem.checked);
+
+            //     geoEntity.setGeoEntityParameter(geoEntityParm);
+            // });
+
+            function showmodeChangeDistanced() {
+                let geoEntityParm = new SuperMap3D.GeoEntityParameter();
+
+                geoEntityParm.setChangeModeDistance($("#showmodeChangeDistance").val() * 1.0);
+
+                geoEntity.setGeoEntityParameter(geoEntityParm);
+            }
+
+            function geoEntityPosChanged() {
+                let geoEntityParm = geoEntity.getGeoEntityParameter();
+
+                var posX = getElementValueByID("pos-X") * 1; //string转double;
+                var posY = getElementValueByID("pos-Y") * 1;
+                var posZ = getElementValueByID("pos-Z") * 1;
+
+                if (!isNaN(posX) && !isNaN(posY) && !isNaN(posZ)
+                    && (geoEntityParm.getPosition().x !== posX || geoEntityParm.getPosition().y !== posY || geoEntityParm.getPosition().z !== posZ)) {
+                    geoEntityParm.setPosition(new SuperMap3D.PlotPoint3D(posX, posY, posZ));
+                }
+
+                geoEntity.setGeoEntityParameter(geoEntityParm);
+            }
+
+            function geoEntityModelParmChanged() {
+                let geoEntityParm = geoEntity.getGeoEntityParameter();
+
+                var modelRotateX = getElementValueByID("modelrotate-X") * 1;
+                var modelRotateY = getElementValueByID("modelrotate-Y") * 1;
+                var modelRotateZ = getElementValueByID("modelrotate-Z") * 1;
+
+                if (!isNaN(modelRotateX) && !isNaN(modelRotateY) && !isNaN(modelRotateZ) &&
+                    (geoEntityParm.getModelRotate().x !== modelRotateX || geoEntityParm.getModelRotate().y !== modelRotateY
+                        || geoEntityParm.getModelRotate().z !== modelRotateZ)) {
+                    var modelRotate = new SuperMap3D.PlotPoint3D(modelRotateX, modelRotateY, modelRotateZ);
+                    geoEntityParm.setModelRotate(modelRotate);
+                }
+
+                var modelScale = getElementValueByID('modelscale') * 1;
+                if (!isNaN(modelScale) && geoEntityParm.getModelScale() !== modelScale) {
+                    geoEntityParm.setModelScale(modelScale);
+                }
+
+                var modelPath = getElementValueByID('modelpath');
+                if (geoEntityParm.getModelPath() !== modelPath) {
+                    geoEntityParm.setModelPath(modelPath);
+                }
+
+                geoEntity.setGeoEntityParameter(geoEntityParm);
+            }
+
+            function geoEntityPictureParmChanged() {
+                let geoEntityParm = geoEntity.getGeoEntityParameter();
+
+                var pictureWidth = parseInt(getElementValueByID("picture-width"));
+                var pictureHeight = parseInt(getElementValueByID("picture-height"));
+
+
+                if (!isNaN(pictureWidth) && !isNaN(pictureHeight) && (geoEntityParm.getPictureSymbolSize().x !== pictureWidth
+                    || geoEntityParm.getPictureSymbolSize().y !== pictureHeight)) {
+                    var pictureSize = new SuperMap3D.Cartesian2(pictureWidth, pictureHeight);
+                    geoEntityParm.setPictureSymbolSize(pictureSize);
+                }
+
+                var picturePath = getElementValueByID('picturepath')
+                if (geoEntityParm.getPicturePath() !== picturePath) {
+                    geoEntityParm.setPicturePath(picturePath);
+                }
+
+                geoEntity.setGeoEntityParameter(geoEntityParm);
+            }
+
+            function geoEntityVectorParmChanged() {
+                let geoEntityParm = geoEntity.getGeoEntityParameter();
+
+                var vectorRotateX = getElementValueByID("vectorrotate-X") * 1;
+                var vectorRotateY = getElementValueByID("vectorrotate-Y") * 1;
+                var vectorRotateZ = getElementValueByID("vectorrotate-Z") * 1;
+
+
+                if (!isNaN(vectorRotateX) && !isNaN(vectorRotateY) && !isNaN(vectorRotateZ)
+                    && (geoEntityParm.getVectorRotate().x !== vectorRotateX || geoEntityParm.getVectorRotate().y !== vectorRotateY
+                        || geoEntityParm.getVectorRotate().z !== vectorRotateZ)) {
+                    var vectorRotate = new SuperMap3D.PlotPoint3D(vectorRotateX, vectorRotateY, vectorRotateZ);
+                    geoEntityParm.setVectorRotate(vectorRotate);
+                }
+
+                var vectorScale = getElementValueByID('vectorscale') * 1;
+                if (!isNaN(vectorScale) && geoEntityParm.getVectorScale() != vectorScale) {
+                    geoEntityParm.setVectorScale(vectorScale);
+                }
+
+                geoEntity.setGeoEntityParameter(geoEntityParm);
+            }
+
+            function geoEntityPlotParmChanged() {
+                let geoEntityParm = geoEntity.getGeoEntityParameter();
+
+                var plotId = parseInt(getElementValueByID("plot-ID"));
+                var plotCode = parseInt(getElementValueByID("plot-code"));
+
+                if (!isNaN(plotId) && geoEntityParm.getDotPlotLibID() !== plotId) {
+                    geoEntityParm.setDotPlotLibID(plotId);
+                }
+
+                if (!isNaN(plotCode) && geoEntityParm.getDotPlotCode() !== plotCode) {
+                    geoEntityParm.setDotPlotCode(plotCode);
+                }
+
+                geoEntity.setGeoEntityParameter(geoEntityParm);
+            }
+
+            function satelliteEntityOrbitWidthChanged() {
+                let OrbitWidth = $('#geoEntityOrbitWidth-input').val();
+                geoEntity.setOrbitWidth(OrbitWidth);
+            }
+
+            function updateGeoEntitys() {
+                $('#geoEntitys').empty();
+
+                let geoEntitys = geoEntityManager.getGeoEntitys();
+                geoEntitys.forEach((value, key) => {
+                    $('#geoEntitys').append(new Option(value.getName(), key));
+                });
+            }
+
+            function geoEntitySelectedChanged() {
+                let option = $("#geoEntitys option:selected");
+                let geoEntityUUID = option.val();
+                geoEntity = geoEntityManager.getGeoEntityByUUID(geoEntityUUID);
+                isSatellite = false;
+            }
+
+            function satelliteEntitySelectedChanged() {
+                let option = $("#satelliteGeoEntity option:selected");
+                let satelliteUUID = option.val();
+                geoEntity = satelliteEntityManager.getSatelliteEntityByUUID(satelliteUUID);
+                isSatellite = true;
+            }
+
+            function removeGeoEntity() {
+                let selObj = document.getElementById('geoEntitys');
+                let geoEntityUUID = selObj.options[selObj.selectedIndex].valude;
+                geoEntityManager.removeGeoEntity(geoEntityUUID);
+                updateGeoEntitys();
+            }
+
+            function removeAllGeoEntity() {
+                geoEntityManager.removeAllGeoEntity(true);
+                updateGeoEntitys();
+            }
+
+            function editableChanged() {
+                let checkObj = document.getElementById("isEditable");
+                geoEntityManager.setGeoEntityLayerEditable(checkObj.checked);
+            }
+
+            function showProperty() {
+                $("#geoEntityName").text(geoEntity.getName());
+
+                let geoEntityParm = geoEntity.getGeoEntityParameter();
+                var showMode = geoEntityParm.getShowMode();
+                switch (showMode) {
+                    case SuperMap3D.DotMode.Grid:
+                        setElementValueByID('showmode', '公告板');
+                        break;
+                    case SuperMap3D.DotMode.Vector:
+                        setElementValueByID('showmode', '矢量');
+                        break;
+                    case SuperMap3D.DotMode.Marker:
+                        setElementValueByID('showmode', '模型');
+                        break;
+                    case SuperMap3D.DotMode.Picture:
+                        setElementValueByID('showmode', '图片');
+                        break;
+                    default:
+                        break;
+                }
+
+
+                var pos = geoEntityParm.getPosition();
+                setElementValueByID('pos-X', pos.x);
+                setElementValueByID('pos-Y', pos.y);
+                setElementValueByID('pos-Z', pos.z);
+
+                let modelRotate = geoEntityParm.getModelRotate();
+                setElementValueByID('modelrotate-X', modelRotate.x);
+                setElementValueByID('modelrotate-Y', modelRotate.y);
+                setElementValueByID('modelrotate-Z', modelRotate.z);
+
+                setElementValueByID('modelscale', geoEntityParm.getModelScale());
+
+                setElementValueByID('modelpath', geoEntityParm.getModelPath());
+
+                var picturesize = geoEntityParm.getPictureSymbolSize();
+                setElementValueByID('picture-width', picturesize.x);
+                setElementValueByID('picture-height', picturesize.y);
+
+                setElementValueByID('picturepath', geoEntityParm.getPicturePath());
+
+                let vectorRotate = geoEntityParm.getVectorRotate();
+                setElementValueByID('vectorrotate-X', vectorRotate.x);
+                setElementValueByID('vectorrotate-Y', vectorRotate.y);
+                setElementValueByID('vectorrotate-Z', vectorRotate.z);
+
+                setElementValueByID('vectorscale', geoEntityParm.getVectorScale());
+
+                setElementValueByID('plot-ID', geoEntityParm.getDotPlotLibID());
+                setElementValueByID('plot-code', geoEntityParm.getDotPlotCode());
+
+                // 处理卫星实体参数  
+                let displayType = $("#geoEntityOrbit-div").css('display');
+                if (displayType == 'block') {
+                    $("#geoEntityOrbitWidth-input").val(geoEntity.getOrbitWidth());
+                    $("#geoEntityOrbitColor-input").val(colorToHex(geoEntity.getOrbitColor()));
+                    $("#geoEntityOrbitVisible-checkbox").attr("checked", geoEntity.isOrbitVisible());
+                }
+            }
+
+            function getElementValueByID(id) {
+                return document.getElementById(id).value;
+            }
+
+            function setElementValueByID(id, value) {
+                document.getElementById(id).value = value;
+            }
+
+            function show_SpeedUp() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                satelliteManager.getSatelliteSimulation().setSimulationSpeed(satelliteManager.getSatelliteSimulation().getSimulationSpeed() * 2);
+            }
+
+            function show_SpeedDown() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                satelliteManager.getSatelliteSimulation().setSimulationSpeed(satelliteManager.getSatelliteSimulation().getSimulationSpeed() / 2);
+            }
+
+            function geoEffectTypeChange() {
+                if ($("#geoEntitys option:selected").val() == undefined || $("#geoEffect").val() === "") {
+                    return;
+                }
+
+                addGeoEffects();
+
+                let curGeoEffect = $("#geoEffect").val();
+                if (curGeoEffect == "尾焰") {
+
+                } else if (curGeoEffect == "扩散圆" || curGeoEffect == "扫描波"
+                    || curGeoEffect == "扫描棱锥" || curGeoEffect == "增强体") {
+                    $("#editGeoEffectBtn").removeClass("button black-disabled")
+                } else {
+                    $("#editGeoEffectBtn").addClass("button black-disabled")
+                }
+            }
+
+            function addGeoEffects() {
+
+                geoEntityManager.setGeoEntityLayerEditable(true);
+                // let selObj = document.getElementById('geoEntitys');
+                // let geoEntityUUID = selObj.options[selObj.selectedIndex].valude;
+                // // geoEntitySelected = geoEntityManager.getGeoEntityByUUID(geoEntityUUID); // 选中实体
+                // geoEntitySelected = geoEntityManager.getGeoEntityByUUID(flyUUID); // 选中实体
+                // let geoEntity1 = geoEntityManager.getGeoEntityByUUID(missileCarUUID);  // 实体1
+
+                let geoEntityTmps = [];  // 实体1
+                for (let geoTmp of geoEntityManager.getGeoEntitys().values()) {
+                    geoEntityTmps.push(geoTmp);
+                }
+
+                let geoEntitySelected = geoEntityManager.getGeoEntityByUUID($("#geoEntitys option:selected").val())
+
+                let geoEntity1 = geoEntityTmps[1];
+                if (geoEntitySelected.getUUID() === geoEntity1.getUUID()) {
+                    geoEntity1 = geoEntityTmps[0];
+                }
+
+                let geoEntityParameter = geoEntitySelected.getGeoEntityParameter();
+
+                let satelliteEntity = satelliteEntityManager.getSatelliteEntitys()[0]; // 卫星实体1
+                let satelliteEntity1 = satelliteEntityManager.getSatelliteEntitys()[1];// 卫星实体2
+
+                let selectedText = $('#geoEffect').val();
+
+
+                let arrScans = []; // 各个扫描瓣的样式
+                for (let i = 0; i < 3; i++) {
+                    let scaneBase = new SuperMap3D.GeoEntityEffectRadarScanBase({
+                        fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.5),
+                        outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                    });
+                    arrScans.push(scaneBase);
+                }
+
+                if (selectedText === "机械雷达") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectMechanicalRadar({
+                        fillColor: new SuperMap3D.Color(0.47, 0.61, 0.56, 0.3),
+                        outlineColor: new SuperMap3D.Color(0.29, 0.85, 0.82, 0.7),
+                        arrGeoEntityEffectRadarScans: arrScans,
+                        radius: 30000
+                    });
+
+                } else if (selectedText === "参数体雷达") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectParameterRadar({
+                        fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                        outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                        arrGeoEntityEffectRadarScans: arrScans,
+                        radius: 30000
+                    });
+
+                } else if (selectedText === "旋转体雷达") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectRotateRadar({
+                        fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                        outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                        arrGeoEntityEffectRadarScans: arrScans,
+                    });
+
+                } else if (selectedText === "扫描雷达") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectScanRadar({
+                        fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                        outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                        scanColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                        //arrGeoEntityEffectRadarScans: arrScans,
+                        radius: 30000
+                    });
+
+                } else if (selectedText === "预警雷达") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectWarningRadar({
+                        fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                        outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                        arrGeoEntityEffectRadarScans: arrScans,
+                        radius: 30000,
+                        pntOffset: new SuperMap3D.PlotPoint3D(0, 0, -0.5),
+                    });
+
+                } else if (selectedText === "基础线") {
+
+                    geoEffect = new SuperMap3D.BasicLineCommunicationLink({
+                        startUUID: geoEntitySelected.getUUID(),
+                        endUUID: geoEntity1.getUUID(),
+                        speedV: 6.0,
+                        lineWidth: 2.0,
+                        startOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                        endOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                    });
+
+                } else if (selectedText === "间断线") {
+                    geoEffect = new SuperMap3D.DashLineCommunicationLink({
+                        startUUID: geoEntitySelected.getUUID(),
+                        endUUID: geoEntity1.getUUID(),
+                        speedV: -5.0,
+                        lineWidth: 3,
+                        dashLength: 30,
+                        startOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                        endOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                    });
+
+                } else if (selectedText === "流星线") {
+                    geoEffect = new SuperMap3D.MeteorCommunicationLink({
+                        startUUID: geoEntitySelected.getUUID(),
+                        endUUID: geoEntity1.getUUID(),
+                        speed: 7,
+                        gradient: 0.1,
+                        lineWidth: 2,
+                        percent: 0.15,
+                        startOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                        endOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                    });
+
+                } else if (selectedText === "箭头线") {
+                    geoEffect = new SuperMap3D.ArrowCommunicationLink({
+                        startUUID: geoEntitySelected.getUUID(),
+                        endUUID: geoEntity1.getUUID(),
+                        repeatCount: 20,
+                        speedV: 5,
+                        startOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                        endOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                    });
+
+                }
+                else if (selectedText === "管状线") {
+                    geoEffect = new SuperMap3D.TubularCommunicationLink({
+                        startUUID: geoEntitySelected.getUUID(),
+                        endUUID: geoEntity1.getUUID(),
+                        topRadius: 50,
+                        bottomRadius: 200,
+                        startOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                        endOffset: new SuperMap3D.PlotPoint3D(0, 0, 0.5),
+                    });
+                }
+                else if (selectedText === "尾焰") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectTailflame({
+                        crossDiameter: geoEntityParameter.getModelScale(),
+                        pntOffset: new SuperMap3D.PlotPoint3D(0, -0.5, 0.5),
+                    });
+
+                } else if (selectedText === "尾气") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectTailgas({
+                        crossDiameter: geoEntityParameter.getModelScale() * 2.0,
+                        pntOffset: new SuperMap3D.PlotPoint3D(0, -0.5, 0.5),
+                    });
+
+                } else if (selectedText === "爆炸") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectBurst({
+                        burstDiameter: geoEntityParameter.getModelScale() * 5.0,
+                    });
+                }
+                else if (selectedText === "燃烧") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectFiresmoke({
+                        firesmokeDiameter: geoEntityParameter.getModelScale() * 0.8,
+                    });
+
+                } else if (selectedText === "打击线") {
+
+                    let options = {
+                        startGeoEntityUUID: geoEntity1.getUUID(),
+                        targetGeoEntityUUID: geoEntitySelected.getUUID(),
+                        during: 3,
+                        attactModelPath: "./SampleData/situationSimulation/Model/MK82/MK82.s3mz",
+                        pathInfo: [{ totalLengthProportion: 0.3, relativeHeight: 5000 },
+                        { totalLengthProportion: 0.5, relativeHeight: 100 }],
+                    }
+
+
+                    geoEffect = new SuperMap3D.GeoEntityEffectAttackline(options);
+
+                } else if (selectedText === "渐变体") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectDynamic({
+                        dynamicModelUrl: "./SampleData/situationSimulation/Model/T90-blueV1.gltf",
+                    });
+
+                } else if (selectedText === "尾迹线") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectTrackline();
+                    geoEffect.setGradients([new SuperMap3D.Color(0.04, 0.67, 0.7, 1), new SuperMap3D.Color(0.04, 0.67, 0.7, 0)]);
+                    geoEffect.setShowPntCount(150);
+                    geoEffect.setOffset(new SuperMap3D.PlotPoint3D(0, -0.5, 0.5));
+                    geoEffect.setLineWidth(2);
+
+                } else if (selectedText === "文字") {
+
+                } else if (selectedText === "探视锥") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectDetecttoncone({
+                        bottomPosition: geoEntity1.getGeoEntityParameter().getPosition(),
+                        bottomRadius: 5000,
+                        colorBack: new SuperMap3D.Color(1, 0, 0, 0.3),
+                        colorBackLightScale: 2,
+                        colorForward: new SuperMap3D.Color(1, 0, 0, 0.3),
+                        colorForwardLightScale: 2,
+                        pntOffset: new SuperMap3D.PlotPoint3D(0, 0.3, 0.5),
+                        speed: 0.01,
+                        bottomPositionMode: 1,
+                    });
+
+                } else if (selectedText === "增强体") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectAugment({
+                        minDistanceDisplay: 20000,
+                        maxDistanceDisplay: 80000,
+                    });
+                } else if (selectedText === "扫描棱锥") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectScancone({
+                        fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                        outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                        radius: 30000,
+                    });
+                } else if (selectedText === "扫描波") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectScanWave({
+                        length: 30000,
+                        width: 6000,
+                        height: 3000,
+                        pntOffset: new SuperMap3D.PlotPoint3D(0, 0.3, 0.5),
+                    });
+                } else if (selectedText === "扩散圆") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectAnnularDiffusion({
+                        radius: 30000,
+                        scanColor: new SuperMap3D.Color(1, 0, 0, 1),
+                        repeat: 1,
+                    });
+                } else if (selectedText === "标牌") {
+                    geoEffect = new SuperMap3D.GeoEntityEffectSign({ texts: ["飞机"] });
+                }
+                // let json = geoEffect.toJSON();
+                // geoEffect.fromJSON(json);
+                // geoEffect.addEffectToScene(scene);
+                // geoEffect.setGeoEntityParameter(geoEntityParameter);
+                // geoEffect.setVisible(true);
+
+                geoEntitySelected.updateGeoEntityEffects([geoEffect], true);
+                geoEffect.setGeoEntityParameter(geoEntityParameter);
+                if (selectedText === "渐变体") {
+                    geoEntityParameter.setVisible(false);
+                } else {
+                    geoEntityParameter.setVisible(true);
+                }
+                geoEntitySelected.setGeoEntityParameter(geoEntityParameter);
+            }
+
+            function editGeoEffects() {
+                // let geoEntitySelected = geoEntityManager.getGeoEntityByUUID(flyUUID); // 选中实体
+                // let geoEntityEffects = geoEntitySelected.getGeoEntityEffects();
+                // let geoEntityEffect = geoEntityEffects[0];
+                // geoEntityEffect.setRadius(180000);
+
+                let curGeoEffect = $("#geoEffect").val();
+                if (curGeoEffect == "尾焰") {
+                    editGeoEffectTailFrame();
+                } else if (curGeoEffect == "扩散圆") {
+                    editGeoEffectAnnularDiffusion();
+                } else if (curGeoEffect == "标牌") {
+                    // editGeoEffectSign();
+                } else if (curGeoEffect == "扫描波") {
+                    editScanWave();
+                } else if (curGeoEffect == "扫描棱锥") {
+                    editGeoEffectScancone();
+                } else if (curGeoEffect == "增强体") {
+                    editGeoEffectAugment();
+                }
+            }
+
+            function geoEffectTailFrameConfirm() {
+                let geoEffectDiameter = $('#geoEffectDiameter-input').val();
+                let offsetX = $('#geoEffectOffsetX-input').val();
+                let offsetY = $('#geoEffectOffsetY-input').val();
+                let offsetZ = $('#geoEffectOffsetZ-input').val();
+                let bChangeSizeFlowModel = $('#bChangeSizeFlowModel-checkbox').is(':checked');
+                let geoEffectVisible = $('#geoEffectVisible-checkbox').is(':checked');
+
+                if (geoEffectDiameter != geoEffect.getCrossDiameter()) {
+                    geoEffect.setCrossDiameter(geoEffectDiameter);
+                }
+                let offsetTmp = geoEffect.getOffset();
+                if (offsetX != offsetTmp.x || offsetY != offsetTmp.y || offsetZ != offsetTmp.z) {
+                    geoEffect.setOffset(new SuperMap3D.PlotPoint3D(offsetX, offsetY, offsetZ));
+                }
+                if (bChangeSizeFlowModel != geoEffect.isChangeSizeFlowModel()) {
+                    geoEffect.setChangeSizeFlowModel(bChangeSizeFlowModel);
+                }
+                if (geoEffectVisible != geoEffect.isVisible()) {
+                    geoEffect.setVisible(geoEffectVisible);
+                }
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectTailFrame-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function geoEffectTailFrameCancel() {
+                var geoEffectAugmentEditor = document.getElementById("geoEffectTailFrame-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            // 编辑尾焰特效
+            function editGeoEffectTailFrame() {
+                // 在此处初始化值，获取选中组给弹出框赋值
+                $('#geoEffectDiameter-input').val(geoEffect.getCrossDiameter());
+                let pntOffset = geoEffect.getOffset();
+                $('#geoEffectOffsetX-input').val(pntOffset.x);
+                $('#geoEffectOffsetY-input').val(pntOffset.y);
+                $('#geoEffectOffsetZ-input').val(pntOffset.z);
+
+                $('#bChangeSizeFlowModel-checkbox').attr("checked", geoEffect.isChangeSizeFlowModel());
+                $('#geoEffectVisible-checkbox').attr("checked", geoEffect.isVisible());
+
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectTailFrame-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+
+            function geoEffectAnnularDiffusionConfirm() {
+                let geoEffectDiffusionCount = $('#geoEffectDiffusionCount-input').val();
+                let geoEffectDiffusionColor = $('#geoEffectDiffusionColor-input').val();
+
+                if (geoEffectDiffusionCount != geoEffect.getRepeat()) {
+                    geoEffect.setRepeat(geoEffectDiffusionCount);
+                }
+
+                let colorTmp = colorToHex(geoEffect.getScanColor());
+                if (geoEffectDiffusionColor != colorTmp) {
+                    geoEffect.setScanColor(hexToColor(geoEffectDiffusionColor));
+                }
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectAnnularDiffusion-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function geoEffectAnnularDiffusionCancel() {
+                var geoEffectAugmentEditor = document.getElementById("geoEffectAnnularDiffusion-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            // 编辑扩散圆特效
+            function editGeoEffectAnnularDiffusion() {
+                // 在此处初始化值，获取选中组给弹出框赋值
+                let colorStr = colorToHex(geoEffect.getScanColor());
+                $('#geoEffectDiffusionCount-input').val(geoEffect.getRepeat());
+                $('#geoEffectDiffusionColor-input').val(colorStr);
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectAnnularDiffusion-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+
+
+            function geoEffectSignConfirm() {
+                let signType = parseInt($('#geoEffectSignType-select').val());
+                if (signType != geoEffect.getSignType()) {
+                    let text = "歼敌机";
+                    // if (signType !== 0) {
+                    //     text = { title: "歼敌机", 型号: "XXXX-10" };
+                    // }
+                    geoEffect.setText(text);
+                    geoEffect.setSignType(signType);
+                }
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectSign-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function geoEffectSignCancel() {
+                var geoEffectAugmentEditor = document.getElementById("geoEffectSign-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            // 编辑标牌特效
+            function editGeoEffectSign() {
+                // 在此处初始化值，获取选中组给弹出框赋值（未完成）
+                $('#geoEffectSignType-select').val(geoEffect.getSignType());
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectSign-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+            function geoEffectScanconeConfirm() {
+                let scanconeRadius = $('#scanconeRadius-input').val();
+                let scanconeHAngle = $('#scanconeHAngle-input').val();
+                let scanconeVAngle = $('#scanconeVAngle-input').val();
+                let scanconeType = $('#scanconeType-select').val();
+                let scanconescanSpeed = $('#scanconescanSpeed-input').val();
+                let scanconePitchAngle = $('#scanconePitchAngle-input').val();
+                let scanconeScanRange = $('#scanconeScanRange-input').val();
+
+                let scanconeIsFill = $('#scanconeIsFill-checkbox').is(':checked');
+                let scanconeIsOutLineColor = $('#scanconeIsOutLineColor-checkbox').is(':checked');
+
+                if (scanconeRadius != geoEffect.getRadius()) {
+                    geoEffect.setRadius(scanconeRadius);
+                }
+                if (scanconeHAngle != geoEffect.getScanHAngle()) {
+                    geoEffect.setScanHAngle(scanconeHAngle);
+                }
+                if (scanconeVAngle != geoEffect.getScanVAngle()) {
+                    geoEffect.setScanVAngle(scanconeVAngle);
+                }
+                if (scanconeType != geoEffect.getScanConeType()) {
+                    geoEffect.setScanConeType(scanconeType);
+                }
+                if (scanconescanSpeed != geoEffect.getScanSpeed()) {
+                    geoEffect.setScanSpeed(scanconescanSpeed);
+                }
+                if (scanconePitchAngle != geoEffect.getPitchAngle()) {
+                    geoEffect.setPitchAngle(scanconePitchAngle);
+                }
+                if (scanconeScanRange != geoEffect.getScanRange()) {
+                    geoEffect.setScanRange(scanconeScanRange);
+                }
+                if (scanconeIsFill != geoEffect.getIsFill()) {
+                    geoEffect.setIsFill(scanconeIsFill);
+                }
+                if (scanconeIsOutLineColor != geoEffect.getIsOutline()) {
+                    geoEffect.setIsOutline(scanconeIsOutLineColor);
+                }
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectScancone-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function geoEffectScanconeCancel() {
+                var geoEffectAugmentEditor = document.getElementById("geoEffectScancone-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            // 编辑扫描棱锥特效
+            function editGeoEffectScancone() {
+                // 在此处初始化值，获取选中组给弹出框赋值
+                $('#scanconeRadius-input').val(geoEffect.getRadius());
+                $('#scanconeHAngle-input').val(geoEffect.getScanHAngle());
+                $('#scanconeVAngle-input').val(geoEffect.getScanVAngle());
+                $('#scanconeType-select').val(geoEffect.getScanConeType());
+                $('#scanconescanSpeed-input').val(geoEffect.getScanSpeed());
+                $('#scanconePitchAngle-input').val(geoEffect.getPitchAngle());
+                $('#scanconeScanRange-input').val(geoEffect.getScanRange());
+
+                $("#scanconeIsFill-checkbox").attr("checked", geoEffect.getIsFill());
+                $("#scanconeIsOutLineColor-checkbox").attr("checked", geoEffect.getIsOutline());
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectScancone-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+
+            function geoEffectAugmentConfirm() {
+                let augmentUrl = $('#augmentUrlPath-input').val();
+                geoEffect.setAugmentPicture(augmentUrl);
+
+                let geoEffectAugmentEditor = document.getElementById("geoEffectAugment-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function geoEffectAugmentCancel() {
+                let geoEffectAugmentEditor = document.getElementById("geoEffectAugment-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            // 编辑增强特效
+            function editGeoEffectAugment() {
+                // 在此处初始化值，获取选中组给弹出框赋值
+                $('#augmentUrlPath-input').val(geoEffect.getAugmentPicture());
+
+                var geoEffectAugmentEditor = document.getElementById("geoEffectAugment-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+            function addGeoEntityModel() {
+                geoEntityManager.addGeoEntityModel("坦克1", new SuperMap3D.PlotPoint3D(121.38609175716589, 24.684481556096536, 1200), './SampleData/situationSimulation/Model/T90-blueV1.gltf', function (options) {
+                    flyUUID = options.UUID;
+                    updateGeoEntitys();
+                }, {
+                    modelScale: 100,
+                    modelRotate: new SuperMap3D.PlotPoint3D(0, 0, 254),
+                });
+
+                geoEntityManager.addGeoEntityModel("坦克2", new SuperMap3D.PlotPoint3D(121.35, 24.75, 0), './SampleData/situationSimulation/Model/T90-redV1.gltf', function (options) {
+                    missileCarUUID = options.UUID;
+                    updateGeoEntitys();
+                }, {
+                    modelScale: 100,
+                    modelRotate: new SuperMap3D.PlotPoint3D(0, 0, 250),
+                });
+            }
+
+            function addGeoEntityDot() {
+                geoEntityManager.addGeoEntityDotPlot("雷达", new SuperMap3D.PlotPoint3D(121.30747079878837, 24.654671383038526, 1100), 100, 13300, function (options) {
+                    radarUUID = options.UUID;
+                    updateGeoEntitys();
+                }, {
+                    visible: true,
+                });
+            }
+
+            function getGeoEntityUUIDByName(geoEntityName) {
+                let geoEntitys = geoEntityManager.getGeoEntitys();
+                for (const [key, value] of geoEntitys) {
+                    if (value.getName() === geoEntityName) {
+                        return key;
+                    }
+                }
+                return undefined;
+            }
+
+            var allTime = 0;
+            var playSpeedRate = 1.0;
+            var startTime = undefined;
+            function startPlay() {
+                simulationController.reset();
+
+                deductionScriptManager.removeAllScriptGroup();
+                let deductionScriptGroup = deductionScriptManager.createScriptGroup("组1");
+
+                let geoEntityTmps = [];  // 实体1
+                for (let geoTmp of geoEntityManager.getGeoEntitys().values()) {
+                    geoEntityTmps.push(geoTmp);
+                }
+
+                if (geoEntityTmps.length > 0) {
+                    let geoEntityFly = geoEntityTmps[0];
+
+                    let positions1 = [];
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.380229, 24.680403, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.367762, 24.672064, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.35969, 24.671319, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.354131, 24.668848, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.346654, 24.67032, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.341674, 24.669372, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.337472, 24.666242, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.332281, 24.665605, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.330464, 24.664276, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.32774, 24.661384, 1200.0));
+                    positions1.push(new SuperMap3D.PlotPoint3D(121.321577, 24.656336, 1200.0));
+
+                    let positions2 = [];
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.380229, 24.680403, 1200.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.367762, 24.672064, 1200.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.35969, 24.671319, 1200.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.354131, 24.668848, 1200.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.346654, 24.67032, 1200.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.341674, 24.669372, 2500.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.338217, 24.669027, 2900.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.335523, 24.668049, 2500.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.330464, 24.664276, 1200.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.32774, 24.661384, 1200.0));
+                    positions2.push(new SuperMap3D.PlotPoint3D(121.321577, 24.656336, 1200.0));
+
+                    let deductionScriptName = $('#deductionScripts').val();
+                    if (deductionScriptName === "脚本1") {
+                        // 基础参数
+                        let deductionScript = deductionScriptGroup.createDeductionScript(geoEntityFly.getUUID());
+
+                        let moveParm = new SuperMap3D.GeoEntityMoveParameter();
+                        moveParm.setTime(20);
+                        moveParm.setOriginGeoEntityUUID(geoEntityFly.getUUID());
+                        moveParm.setPathPoint3D(positions1);
+                        moveParm.setIsCurvePath(true);
+                        deductionScript.setGeoEntityMoveParameter(0, moveParm);
+
+                        let basicParm = new SuperMap3D.GeoEntityBasicParameter();
+                        basicParm.setShowMode(SuperMap3D.DotMode.Marker);
+                        basicParm.setModelPath("./SampleData/situationSimulation/Model/T90-redV1.gltf");
+                        deductionScript.setGeoEntityBasicParameter(3, basicParm);
+
+                        let scaleParm = new SuperMap3D.GeoEntityScaleParameter();
+                        scaleParm.setTime(0);
+                        scaleParm.setStartScale(100);
+                        scaleParm.setEndScale(1);
+                        scaleParm.setIsGradient(false);
+                        scaleParm.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.NO);
+                        // scaleParm.setTotalTime(3);
+                        deductionScript.setGeoEntityScaleParameter(10, scaleParm);
+
+                        let basicParm2 = new SuperMap3D.GeoEntityBasicParameter();
+                        basicParm2.setShowMode(SuperMap3D.DotMode.Picture);
+                        deductionScript.setGeoEntityBasicParameter(10, basicParm2);
+
+                        let scaleParm2 = new SuperMap3D.GeoEntityScaleParameter();
+                        scaleParm2.setTime(0);
+                        scaleParm2.setStartScale(1);
+                        scaleParm2.setEndScale(100);
+                        scaleParm2.setIsGradient(false);
+                        scaleParm2.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.NO);
+                        // scaleParm.setTotalTime(3);
+                        deductionScript.setGeoEntityScaleParameter(13, scaleParm2);
+
+                        let basicParm3 = new SuperMap3D.GeoEntityBasicParameter();
+                        basicParm3.setShowMode(SuperMap3D.DotMode.Marker);
+                        // basicParm3.setModelPath("./SampleData/situationSimulation/Model/Cesium_Air.gltf");
+                        deductionScript.setGeoEntityBasicParameter(13, basicParm3);
+
+                        // let basicParm3 = new SuperMap3D.GeoEntityBasicParameter();
+                        // basicParm3.setShowMode(SuperMap3D.DotMode.Grid);
+                        // deductionScript.setGeoEntityBasicParameter(5, basicParm3);
+                    }
+                    else if (deductionScriptName === "脚本2") {
+                        // 特效变化
+                        let deductionScript = deductionScriptGroup.createDeductionScript(geoEntityFly.getUUID());
+
+                        let moveParm = new SuperMap3D.GeoEntityMoveParameter();
+                        moveParm.setTime(20);
+                        moveParm.setOriginGeoEntityUUID(geoEntityFly.getUUID());
+                        moveParm.setPathPoint3D(positions1);
+                        moveParm.setIsCurvePath(true);
+                        deductionScript.setGeoEntityMoveParameter(0, moveParm);
+
+                        let geoEntityParameter = geoEntityFly.getGeoEntityParameter();
+
+                        let geoEffectTailgas = new SuperMap3D.GeoEntityEffectTailgas({
+                            crossDiameter: geoEntityParameter.getModelScale() * 5.0,
+                            pntOffset: new SuperMap3D.PlotPoint3D(0, -0.5, 0.5),
+                        });
+                        let geoEntityEffectParameter1 = new SuperMap3D.GeoEntityEffectParameter([geoEffectTailgas]);
+                        deductionScript.setGeoEntityEffectParameter(0, geoEntityEffectParameter1);
+
+                        let geoEffectTailflame = new SuperMap3D.GeoEntityEffectTailflame({
+                            crossDiameter: geoEntityParameter.getModelScale() * 2.0,
+                            pntOffset: new SuperMap3D.PlotPoint3D(0, -0.5, 0.5),
+                        });
+                        let geoEntityEffectParameter2 = new SuperMap3D.GeoEntityEffectParameter([geoEffectTailflame]);
+
+                        deductionScript.setGeoEntityEffectParameter(3, geoEntityEffectParameter2);
+
+
+                        let geoEffectScancone = new SuperMap3D.GeoEntityEffectScancone({
+                            fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                            outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                            radius: 1000,
+                        });
+                        let geoEntityEffectParameter3 = new SuperMap3D.GeoEntityEffectParameter([geoEffectScancone]);
+
+                        deductionScript.setGeoEntityEffectParameter(6, geoEntityEffectParameter3);
+
+
+                        let geoEffectSign = new SuperMap3D.GeoEntityEffectSign({ text: " XX轰炸机 " });
+                        //geoEffectSign.setText({ title: "歼敌机", 型号: "XXXX-10" });
+                        //geoEffectSign.setSignType(SuperMap3D.GeoEntityEffectSignType.PICTUREBACKGROUND_SCIENCE);
+                        let geoEntityEffectParameter4 = new SuperMap3D.GeoEntityEffectParameter([geoEffectSign]);
+
+                        deductionScript.setGeoEntityEffectParameter(9, geoEntityEffectParameter4);
+
+
+                        let geoEntityEffectScanWave = new SuperMap3D.GeoEntityEffectScanWave({
+                            length: 1000,
+                            width: 300,
+                            height: 200,
+                            pntOffset: new SuperMap3D.PlotPoint3D(0, 0.5, 0.5),
+                            repeatCount: 5.0,
+                            flowSpeed: 2.0,
+                        });
+                        let geoEntityEffectParameter5 = new SuperMap3D.GeoEntityEffectParameter([geoEntityEffectScanWave]);
+
+                        deductionScript.setGeoEntityEffectParameter(12, geoEntityEffectParameter5);
+
+                        let arrScans = []; // 各个扫描瓣的样式
+                        for (let i = 0; i < 3; i++) {
+                            let scaneBase = new SuperMap3D.GeoEntityEffectRadarScanBase({
+                                fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                                outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                            });
+                            arrScans.push(scaneBase);
+                        }
+
+                        let geoEntityEffectWarningRadar = new SuperMap3D.GeoEntityEffectWarningRadar({
+                            fillColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.3),
+                            outlineColor: new SuperMap3D.Color(0.04, 0.67, 0.7, 0.7),
+                            arrGeoEntityEffectRadarScans: arrScans,
+                            radius: 800,
+                            pntOffset: new SuperMap3D.PlotPoint3D(0, 0, -1),
+                        });
+                        let geoEntityEffectParameter6 = new SuperMap3D.GeoEntityEffectParameter([geoEntityEffectWarningRadar]);
+
+                        deductionScript.setGeoEntityEffectParameter(15, geoEntityEffectParameter6);
+
+                        deductionScript.setGeoEntityEffectParameter(18, new SuperMap3D.GeoEntityEffectParameter([]));
+
+                    }
+                    else if (deductionScriptName === "脚本3") {
+                        //缩放变化
+                        let deductionScript = deductionScriptGroup.createDeductionScript(geoEntityFly.getUUID());
+
+                        let moveParm = new SuperMap3D.GeoEntityMoveParameter();
+                        moveParm.setTime(20);
+                        moveParm.setOriginGeoEntityUUID(geoEntityFly.getUUID());
+                        moveParm.setPathPoint3D(positions1);
+                        moveParm.setIsCurvePath(true);
+                        deductionScript.setGeoEntityMoveParameter(0, moveParm);
+
+                        let scaleParm1 = new SuperMap3D.GeoEntityScaleParameter();
+                        scaleParm1.setTime(1);
+                        scaleParm1.setStartScale(100);
+                        scaleParm1.setEndScale(10);
+                        scaleParm1.setIsGradient(true);
+                        scaleParm1.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.BOTHWAY);
+                        scaleParm1.setTotalTime(4);
+                        deductionScript.setGeoEntityScaleParameter(2, scaleParm1);
+
+                        let scaleParm2 = new SuperMap3D.GeoEntityScaleParameter();
+                        scaleParm2.setTime(0.5);
+                        scaleParm2.setStartScale(0);
+                        scaleParm2.setEndScale(100);
+                        scaleParm2.setIsGradient(false);
+                        scaleParm2.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.BOTHWAY);
+                        scaleParm2.setTotalTime(3);
+                        deductionScript.setGeoEntityScaleParameter(8, scaleParm2);
+
+                        let scaleParm3 = new SuperMap3D.GeoEntityScaleParameter();
+                        scaleParm3.setTime(2);
+                        scaleParm3.setStartScale(100);
+                        scaleParm3.setEndScale(10);
+                        scaleParm3.setIsGradient(true);
+                        scaleParm3.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.NO);
+                        // scaleParm4.setTotalTime(5);
+                        deductionScript.setGeoEntityScaleParameter(13, scaleParm3);
+
+                        let scaleParm4 = new SuperMap3D.GeoEntityScaleParameter();
+                        scaleParm4.setTime(2);
+                        scaleParm4.setStartScale(10);
+                        scaleParm4.setEndScale(100);
+                        scaleParm4.setIsGradient(true);
+                        scaleParm4.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.NO);
+                        // scaleParm4.setTotalTime(5);
+                        deductionScript.setGeoEntityScaleParameter(17, scaleParm4);
+                    }
+                    else if (deductionScriptName === "脚本4") {
+                        // 旋转变化
+                        let deductionScript = deductionScriptGroup.createDeductionScript(geoEntityFly.getUUID());
+
+                        let moveParm = new SuperMap3D.GeoEntityMoveParameter();
+                        moveParm.setTime(20);
+                        moveParm.setOriginGeoEntityUUID(geoEntityFly.getUUID());
+                        moveParm.setPathPoint3D(positions2);
+                        moveParm.setIsCurvePath(true);
+                        deductionScript.setGeoEntityMoveParameter(0, moveParm);
+
+                        let rotateParm = new SuperMap3D.GeoEntityRotationParameter();
+                        rotateParm.setTime(3);
+                        rotateParm.setStartRotation(new SuperMap3D.PlotPoint3D(0, 0, 0));
+                        rotateParm.setEndRotation(new SuperMap3D.PlotPoint3D(0, 360, 0));
+                        rotateParm.setIsGradient(true);
+                        rotateParm.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.NO);
+                        rotateParm.setTotalTime(3);
+                        deductionScript.setGeoEntityRotationParameter(1, rotateParm);
+
+                        let rotateParm2 = new SuperMap3D.GeoEntityRotationParameter();
+                        rotateParm2.setTime(3);
+                        rotateParm2.setStartRotation(new SuperMap3D.PlotPoint3D(0, 360, 0));
+                        rotateParm2.setEndRotation(new SuperMap3D.PlotPoint3D(0, 0, 0));
+                        rotateParm2.setIsGradient(true);
+                        rotateParm2.setCyclicType(SuperMap3D.GeoEntityParamCyclicType.NO);
+                        rotateParm2.setTotalTime(3);
+                        deductionScript.setGeoEntityRotationParameter(5, rotateParm2);
+
+                        let effectParm = new SuperMap3D.GeoEntityEffectParameter();
+
+                        let geoEffect = new SuperMap3D.GeoEntityEffectTrackline();
+                        geoEffect.setTrackType(SuperMap3D.GeoEntityEffectTrackLineType.STREAMER);
+                        // geoEffect.setTrackType(SuperMap3D.GeoEntityEffectTrackLineType.AXES);
+                        // geoEffect.setGradients([new SuperMap3D.Color(0.04, 0.67, 0.7, 1), new SuperMap3D.Color(0.04, 0.67, 0.7, 0)]);
+                        geoEffect.setGradients([new SuperMap3D.Color(1, 0, 0, 0.7), new SuperMap3D.Color(1, 1, 0, 0)]);
+                        geoEffect.setStreamerWidth(0.5);
+                        // geoEffect.setLineWidth(3);
+                        geoEffect.setShowPntCount(200);
+                        geoEffect.setOffset(new SuperMap3D.PlotPoint3D(0, -0.5, 0.5));
+                        effectParm.setGeoEntityEffects([geoEffect]);
+                        deductionScript.setGeoEntityEffectParameter(0, effectParm);
+
+                        let effectParm1 = new SuperMap3D.GeoEntityEffectParameter();
+                        deductionScript.setGeoEntityEffectParameter(20, effectParm1);
+                    }
+                    else if (deductionScriptName === "脚本5") {
+                        // 文字
+                        let text1 = {};
+                        text1.position = {
+                            type: 2,
+                            customPos: new SuperMap3D.Cartesian2(10, 10)
+                        };
+
+                        text1.paddingLeft = 10;
+                        text1.paddingRight = 10;
+                        text1.paddingTop = 10;
+                        text1.paddingBottom = 10;
+
+                        text1.borderWidth = 2;
+                        text1.borderStyle = "dashed";
+                        text1.borderColor = (new SuperMap3D.Color(1, 1, 0, 1)).toCssColorString();
+
+                        text1.borderRadius = 5;
+
+                        text1.backColor = (new SuperMap3D.Color(1, 0, 0, 0.3)).toCssColorString();
+                        text1.texts = [
+                            {
+                                text: "测试标题1",
+                                fontSize: 45,
+                                lineHeight: 1.0,
+                                color: (new SuperMap3D.Color(0, 1, 0, 1.0)).toCssColorString(),
+                                textAlign: "center",
+                                margin: 80,
+                                letterSpacing: 10,
+                                textDecoration: { type: "underline", color: (new SuperMap3D.Color(0.5, 0.5, 1, 1.0)).toCssColorString() },
+                                stroke: { width: 1, color: (new SuperMap3D.Color(0.5, 0.5, 1, 1.0)).toCssColorString() },
+                            },
+                            {
+                                text: "测试正文1",
+                                fontSize: 25,
+                                fontFamily: "宋体",
+                                textAlign: "left",
+                                margin: 10,
+                                fontStyle: "italic",
+                                lineHeight: 0.5,
+                                color: (new SuperMap3D.Color(1, 1, 0, 1.0)).toCssColorString(),
+                                // textShadow: ""
+                            }];
+                        text1.time = 5;
+
+                        let geoEntityEffectExtendText = geoEntityEffectExtendFactory.createTextExtendEffect(text1);
+
+                        let text2 = {};
+                        text2.position = {
+                            type: 6,
+                            customPos: new SuperMap3D.Cartesian2(10, 10)
+                        };
+
+                        text2.paddingLeft = 10;
+                        text2.paddingRight = 10;
+                        text2.paddingTop = 10;
+                        text2.paddingBottom = 10;
+                        text2.borderRadius = 5;
+
+                        text2.backColor = (new SuperMap3D.Color(1, 0, 0, 0.3)).toCssColorString();
+                        text2.texts = [
+                            {
+                                text: "测试标题2",
+                                fontSize: 45,
+                                lineHeight: 1.0,
+                                color: (new SuperMap3D.Color(0, 1, 0, 1.0)).toCssColorString(),
+                                textAlign: "center",
+                                margin: 80,
+                                letterSpacing: 10,
+                                // textDecoration: { type: "underline", color: (new SuperMap3D.Color(0.5, 0.5, 1, 1.0)).toCssColorString() },
+                                stroke: { width: 1, color: (new SuperMap3D.Color(0.5, 0.5, 1, 1.0)).toCssColorString() },
+                            },
+                            {
+                                text: "测试正文2",
+                                fontSize: 25,
+                                fontFamily: "宋体",
+                                textAlign: "left",
+                                margin: 10,
+                                // fontStyle: "italic",
+                                lineHeight: 0.5,
+                                color: (new SuperMap3D.Color(1, 1, 0, 1.0)).toCssColorString(),
+                                // textShadow: ""
+                            }];
+                        text2.time = 5;
+                        let geoEntityEffectExtendText1 = geoEntityEffectExtendFactory.createTextExtendEffect(text2);
+
+                        let text3 = {};
+                        text3.position = {
+                            type: 8,
+                            customPos: new SuperMap3D.Cartesian2(10, 10)
+                        };
+
+                        text3.paddingLeft = 10;
+                        text3.paddingRight = 10;
+                        text3.paddingTop = 10;
+                        text3.paddingBottom = 10;
+                        text3.borderRadius = 5;
+
+                        text3.backColor = (new SuperMap3D.Color(1, 0, 0, 0.3)).toCssColorString();
+                        text3.texts = [
+                            {
+                                text: "测试标题3",
+                                fontSize: 45,
+                                lineHeight: 1.0,
+                                color: (new SuperMap3D.Color(0, 1, 0, 1.0)).toCssColorString(),
+                                textAlign: "center",
+                                margin: 80,
+                                letterSpacing: 10,
+
+                                stroke: { width: 1, color: (new SuperMap3D.Color(0.5, 0.5, 1, 1.0)).toCssColorString() },
+                            },
+                            {
+                                text: "测试正文3",
+                                fontSize: 25,
+                                fontFamily: "宋体",
+                                textAlign: "left",
+                                margin: 10,
+                                // fontStyle: "italic",
+                                lineHeight: 0.5,
+                                color: (new SuperMap3D.Color(1, 1, 0, 1.0)).toCssColorString(),
+                                textDecoration: { type: "underline", color: (new SuperMap3D.Color(0.5, 0.5, 1, 1.0)).toCssColorString() },
+                                // textShadow: ""
+                            }];
+                        text3.time = 3;
+                        let geoEntityEffectExtendText2 = geoEntityEffectExtendFactory.createTextExtendEffect(text3);
+
+                        let geoEntityEffectParameter = new SuperMap3D.GeoEntityEffectParameter([geoEntityEffectExtendText]);
+                        let geoEntityEffectParameter1 = new SuperMap3D.GeoEntityEffectParameter([geoEntityEffectExtendText1]);
+                        let geoEntityEffectParameter2 = new SuperMap3D.GeoEntityEffectParameter([geoEntityEffectExtendText2]);
+
+                        let deductionScriptExtend = deductionScriptGroup.getDeductionScriptExtend();
+                        deductionScriptExtend.setGeoEntityEffectExtendParameter(1, geoEntityEffectParameter);
+                        deductionScriptExtend.setGeoEntityEffectExtendParameter(3, geoEntityEffectParameter1);
+                        deductionScriptExtend.setGeoEntityEffectExtendParameter(6, geoEntityEffectParameter2);
+                    }
+                }
+
+                let resetType = SuperMap3D.DeductionScriptExecuteResetType.ManualReset;
+                let selResetTypeObj = document.getElementById('resetType');
+                let selResetType = selResetTypeObj.options[selResetTypeObj.selectedIndex].text;
+                if (selResetType === "不复位") {
+                    resetType = SuperMap3D.DeductionScriptExecuteResetType.NoReset;
+                }
+                else if (selResetType === "手动复位") {
+                    resetType = SuperMap3D.DeductionScriptExecuteResetType.ManualReset;
+                }
+                else if (selResetType === "自动复位") {
+                    resetType = SuperMap3D.DeductionScriptExecuteResetType.AutoReset;
+                }
+
+                simulationController.setResetType(resetType);
+
+                allTime = 0;
+
+                allTime = simulationController.start();
+
+                simulationController.removeExecuteCallBackEvent(executeCallBack);
+                simulationController.addExecuteCallBackEvent(executeCallBack);
+
+                startTime = simulationController.getSimulationTime();
+            }
+
+            function executeCallBack(options) {
+                if (options !== undefined && options !== null) {
+                    let allPassTime = options.allPassTime;
+                    let value = allPassTime / allTime;
+                    setElementValueByID('slider-move', value * 100);
+                }
+            }
+
+            function pausePlay() {
+                simulationController.pause();
+            }
+
+            function continuePlay() {
+                simulationController.continue();
+            }
+
+            function stopPlay() {
+                simulationController.stop();
+            }
+
+            function resetPlay() {
+                simulationController.reset();
+                simulationController.setSimulationTime(startTime);
+            }
+
+            function speedUp() {
+                playSpeedRate = playSpeedRate * 2.0;
+                simulationController.setSimulationSpeed(playSpeedRate);
+                $("#playSpeedRate").text(playSpeedRate);
+            }
+
+            function speedDown() {
+                if (playSpeedRate > 1) {
+                    playSpeedRate = playSpeedRate / 2.0;
+                    simulationController.setSimulationSpeed(playSpeedRate);
+                    $("#playSpeedRate").text(playSpeedRate);
+                }
+            }
+
+            function forwardPlay() {
+                simulationController.setExecutePassTimeOffset(2 * 1000 * simulationController.getSimulationSpeed());
+            }
+
+            function reversePlay() {
+                simulationController.setExecutePassTimeOffset(-2 * 1000 * simulationController.getSimulationSpeed());
+            }
+
+            function backPlay() {
+                let isBack = false;
+                if ($("#isBackPlay").text() === "正向") {
+                    isBack = false;
+                }
+                else {
+                    isBack = true;
+                }
+                simulationController.setIsReverse(isBack);
+
+                if (isBack) {
+                    $("#isBackPlay").text("正向");
+                }
+                else {
+                    $("#isBackPlay").text("反向");
+                }
+            }
+
+            function geoEntityMoveSliderPlayChanged() {
+                let valude = getElementValueByID('slider-move');
+
+                let time = startTime + allTime * (valude * 1.0 / 100);
+
+                simulationController.setSimulationTime(time);
+            }
+
+
+
+            var executeManagerUUID;
+            function play() {
+                executeManagerUUID = deductionScriptManager.startAllDeductionScriptGroup(SuperMap3D.DeductionScriptExecuteResetType.AutoReset);
+            }
+
+            function reset() {
+                deductionScriptManager.reset(executeManagerUUID);
+            }
+
+            function modifyScript() {
+                let deductionScriptGroup1 = deductionScriptManager.getDeductionScriptGroups()[0];
+                let deductionScript = deductionScriptGroup1.getDeductionScripts()[1];
+
+                // let geoEffect = new SuperMap3D.GeoEntityEffectWarningRadar({
+                //     radius: 300000
+                // });
+
+                let geoEffectTrackline = new SuperMap3D.GeoEntityEffectTrackline();
+                geoEffectTrackline.setTrackColor(new SuperMap3D.Color(0, 1, 0, 0));
+                geoEffectTrackline.setGradients([new SuperMap3D.Color(0, 1, 0, 0), new SuperMap3D.Color(0, 1, 0, 1)]);
+                geoEffectTrackline.setShowPntCount(120);
+                deductionScript.setGeoEntityEffectArray(0, [geoEffectTrackline]);
+
+                let deductionScript1 = deductionScriptGroup1.getDeductionScripts()[2];
+
+                let geoEffectTrackline1 = new SuperMap3D.GeoEntityEffectTrackline();
+                geoEffectTrackline1.setTrackColor(new SuperMap3D.Color(0, 1, 0, 0));
+                geoEffectTrackline1.setGradients([new SuperMap3D.Color(0, 1, 0, 0), new SuperMap3D.Color(0, 1, 0, 1)]);
+                geoEffectTrackline1.setShowPntCount(120);
+
+                deductionScript1.setGeoEntityEffectArray(0, [geoEffectTrackline1]);
+            }
+
+            function openScheme(scheme) {
+                situationSimulationManager.closeScheme();
+                situationSimulationManager.openScheme(scheme);
+                updateGeoEntitys();
+                sessionStorage.setItem("schemeName", scheme);
+                document.getElementById("currentScheme").innerHTML = scheme;
+                initSatelliteSelectUI();
+            }
+
+            function saveScheme() {
+                // let schemeName = sessionStorage.getItem("schemeName");
+                // if (schemeName != null) {
+                //     situationSimulationManager.saveScheme(schemeName);
+                // }
+                situationSimulationManager.saveScheme();
+            }
+
+            function closeScheme() {
+                $("#currentScheme").text("");
+                situationSimulationManager.closeScheme();
+            }
+
+            function deleteScheme() {
+                $("#currentScheme").text("");
+                situationSimulationManager.closeScheme();
+                let currentScheme = sessionStorage.getItem("schemeName");
+                if (currentScheme !== undefined && currentScheme !== null && currentScheme.length > 0) {
+                    situationSimulationManager.deleteScheme(currentScheme);
+                    sessionStorage.setItem("schemeName", "");
+
+                }
+
+                initSchemeList();
+
+            }
+
+            function deleteAllScheme() {
+                $("#currentScheme").text("");
+                let SchemeNames = situationSimulationManager.getAllSchemeName();
+                for (let i = 0; i < SchemeNames.length; i++) {
+                    situationSimulationManager.deleteScheme(SchemeNames[i]);
+                }
+                initSchemeList();
+
+            }
+
+            function closediag() {
+                var dlg = document.getElementById('geo-entity-parm');
+                dlg.style.display = "none";
+            }
+
+            function initSatellite() {
+
+
+
+                // let url = "./SampleData/situationSimulation/Satellite/SatelliteInfo.xml";
+                // satelliteManager.loadFromXML(url);
+
+                satelliteManager.initSatelliteToScene();
+            }
+
+            function modifyOrbitStyle() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                const satelliteGroup = satelliteManager.getGroups()[1];
+                let nWidth = satelliteGroup.getOrbitsWidth();
+                nWidth += 1.0;
+                satelliteGroup.setOrbitsWidth(nWidth);
+                satelliteGroup.setOrbitsColor(new SuperMap3D.Color(1, 0, 0, 0.5));
+            }
+
+            function modifySatelliteGroupVisible() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                satelliteManager.getGroups().forEach(element => {
+                    element.setVisible(!element.isVisible());
+                });
+            }
+
+            function modifyySatelliteGroupOrbitVisible() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                satelliteManager.getGroups().forEach(element => {
+                    element.setOrbitsVisible(!element.isOrbitsVisible());
+                });
+            }
+
+            function satelliteSimulationPlay() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                const satelliteSimulation = satelliteManager.getSatelliteSimulation();
+                satelliteSimulation.play();
+
+            }
+
+            function satelliteSimulationStop() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                satelliteManager.getSatelliteSimulation().stop();
+            }
+
+            function satelliteSimulationReverse() {
+                if (null == satelliteManager) {
+                    return;
+                }
+                satelliteManager.getSatelliteSimulation().setIsReverse();
+            }
+
+            function addSatelliteEntity() {
+                satelliteEntityManager = situationSimulationManager.getSatelliteEntityManager();
+                if (null == satelliteManager) {
+                    return;
+                }
+                const satelliteGroup = satelliteManager.getGroups()[1];
+                let satellite = satelliteGroup.getSatellites(satelliteGroup.getSatelliteFileNames()[0])[0];
+                satelliteEntityManager.addSatelliteEntity(satellite.getUUID(), satelliteManager, satelliteGroup.getGroupName());
+
+                let satellite1 = satelliteGroup.getSatellites(satelliteGroup.getSatelliteFileNames()[0])[1];
+                satelliteEntityManager.addSatelliteEntity(satellite1.getUUID(), satelliteManager, satelliteGroup.getGroupName());
+
+                initSatelliteGeoEntity();
+            }
+
+            function initSatelliteGeoEntity() {
+                $('#satelliteGeoEntity').empty();
+
+                let geoEntitys = satelliteEntityManager.getSatelliteEntitys();
+                geoEntitys.forEach((element) => {
+                    $('#satelliteGeoEntity').append(new Option(element.getName(), element.getUUID()));
+                });
+            }
+
+            function removeSatelliteEntity() {
+                let nCount = satelliteEntityManager.getSatelliteEntitys().length;
+                for (let i = nCount - 1; i >= 0; --i) {
+                    let SatelliteEntity = satelliteEntityManager.getSatelliteEntitys()[i];
+                    satelliteEntityManager.removeSatelliteEntity(SatelliteEntity.getUUID(), satelliteManager);
+                }
+                $('#satelliteGeoEntity').empty();
+            }
+
+            function addSatelliteLinkEffect() {
+
+                let satelliteEntity = satelliteEntityManager.getSatelliteEntitys()[0]; // 卫星实体1
+                let satelliteEntity1 = satelliteEntityManager.getSatelliteEntitys()[1];// 卫星实体2
+
+                let geoEffect = new SuperMap3D.ArrowCommunicationLink({
+                    startUUID: satelliteEntity.getUUID(),
+                    endUUID: satelliteEntity1.getUUID(),
+                    pntStart: satelliteEntity.getGeoEntityParameter().getPosition(),
+                    pntEnd: satelliteEntity1.getGeoEntityParameter().getPosition(),
+                    speedV: 5,
+                });
+                satelliteEntity.addGeoEntityEffect(geoEffect);
+            }
+
+            function modifySatelliteEntity() {
+                let nCount = satelliteEntityManager.getSatelliteEntitys().length;
+                if (nCount > 0) {
+                    let SatelliteEntity = satelliteEntityManager.getSatelliteEntitys()[nCount - 1];
+                    let nWidth = SatelliteEntity.getOrbitWidth();
+                    nWidth += 1.0
+                    let param = SatelliteEntity.getGeoEntityParameter();
+                    param.setPictureSymbolSize(new SuperMap3D.Cartesian2(30, 30));
+                    SatelliteEntity.setGeoEntityBasicParameter(param);
+                    SatelliteEntity.setOrbitWidth(nWidth);
+                    SatelliteEntity.setOrbitVisible(true);
+                    SatelliteEntity.setOrbitColor(new SuperMap3D.Color(1, 0, 0, 0.5));
+                }
+            }
+
+            function flySatellite() {
+                let satelliteUUID = $("#satelliteGeoEntity option:selected").val();
+                if (!SuperMap3D.defined(satelliteUUID)) {
+                    return;
+                }
+                let geoEntitySelected = satelliteEntityManager.getSatelliteEntityByUUID(satelliteUUID);
+                let geoEntityParameter = geoEntitySelected.getGeoEntityParameter();
+
+                let modelSize = SuperMap3D.SituationSimulationToolkit.getModelSize({ scene: scene, modelPath: geoEntityParameter.getModelPath() });
+                if (!SuperMap3D.defined(modelSize)) {
+                    let timer = setInterval(() => {
+                        modelSize = SuperMap3D.SituationSimulationToolkit.getModelSize({ scene: scene, modelPath: geoEntityParameter.getModelPath() });
+                        if (SuperMap3D.defined(modelSize)) {
+                            clearInterval(timer);
+                            flySatellite();
+                        }
+                    }, 30);
+                } else {
+                    let position = geoEntityParameter.getPosition();
+
+                    position = new SuperMap3D.Cartesian3(position.x, position.y, position.z);
+                    if (SuperMap3D.defined(modelSize)) {
+                        if (geoEntityParameter.getShowMode() === SuperMap3D.DotMode.Marker) {
+                            let length = modelSize.x * geoEntityParameter.getModelScale();
+                            let width = modelSize.y * geoEntityParameter.getModelScale();
+                            let height = modelSize.z * geoEntityParameter.getModelScale();
+
+                            let viewLength = length > width ? length : width;
+                            viewLength = viewLength > height ? viewLength : height;
+
+                            position.z += height + viewLength * 4;
+                        } else if (geoEntityParameter.getShowMode() === SuperMap3D.DotMode.Vector) {
+                            position.z += 500000 * geoEntityParameter.getVectorScale();
+                        } else {
+                            position.z += 10000;
+                        }
+                    } else {
+                        position.z += 1000;
+                    }
+
+                    position = SuperMap3D.SituationSimulationToolkit.degreesToCartesian3(position);
+
+                    viewer.camera.flyTo({
+                        destination: position,
+                    });
+                }
+            }
+
+            function show_AddLinkEffect() {
+
+                let satelliteEntity = satelliteEntityManager.getSatelliteEntitys()[0]; // 卫星实体1
+                let satelliteEntity1 = satelliteEntityManager.getSatelliteEntitys()[1];// 卫星实体2
+
+                let geoEffect = new SuperMap3D.BasicLineCommunicationLink({
+                    startUUID: satelliteEntity.getUUID(),
+                    endUUID: satelliteEntity1.getUUID(),
+                    pntStart: satelliteEntity.getGeoEntityParameter().getPosition(),
+                    pntEnd: satelliteEntity1.getGeoEntityParameter().getPosition(),
+                });
+                satelliteEntity.addGeoEntityEffect(geoEffect);
+            }
+
+            // 初始化卫星分组Select
+            function initSatelliteSelectUI() {
+                $('#satelliteGroup').empty();
+
+                satelliteManager.getGroups().forEach(element => {
+                    let groupName = element.getGroupName();
+                    $('#satelliteGroup').append(new Option(groupName));
+                });
+
+                let groupName = $('#satelliteGroup').val();
+                let satelliteGroup = satelliteManager.getGroup(groupName);
+                if (SuperMap3D.defined(satelliteGroup)) {
+                    $("#satelliteVisible-checkbox").attr("checked", satelliteGroup.isVisible());
+                }
+            }
+
+            function colorToString(color) {
+                return "rgba(" + (color.red * 255).toString() + ", " + (color.green * 255).toString() + ", " + color.blue * 255 + ", " + color.alpha.toString() + ")";
+            }
+
+            function colorToHex(color) {
+                let strR = Math.floor(parseInt(color.red * 255) / 16).toString(16) + Math.floor(parseInt(color.red * 255) % 16).toString(16);
+                let strG = Math.floor(parseInt(color.green * 255) / 16).toString(16) + Math.floor(parseInt(color.green * 255) % 16).toString(16);
+                let strB = Math.floor(parseInt(color.blue * 255) / 16).toString(16) + Math.floor(parseInt(color.blue * 255) % 16).toString(16);
+                return "#" + strR + strG + strB;
+            }
+
+            function hexToColor(strColor) {
+                let values = strColor.replace("#", "");
+
+                let color = new SuperMap3D.Color();
+                color.red = parseInt(values.substring(0, 2), 16) / 255.0;
+                color.green = parseInt(values.substring(2, 4), 16) / 255.0;
+                color.blue = parseInt(values.substring(4, 6), 16) / 255.0;
+                return color;
+            }
+
+            function rgbaToColor(strColor) {
+                let values = strColor.replace('rgba(', '').replace(')', '').split(',');
+
+                let color = new SuperMap3D.Color();
+                color.red = parseInt(values[0]) / 255.0;
+                color.green = parseInt(values[1]) / 255.0;
+                color.blue = parseInt(values[2]) / 255.0;
+                color.alpha = parseFloat(values[3]);
+
+                return color;
+            }
+
+            function satelliteGroupChange() {
+                let groupName = $("#satelliteGroup").val();
+                let satelliteGroup = satelliteManager.getGroup(groupName);
+                $("#satelliteVisible-checkbox")[0].checked = satelliteGroup.isVisible();
+            }
+
+            function satelliteVisibleChange() {
+                let groupName = $("#satelliteGroup").val();
+                let satelliteGroup = satelliteManager.getGroup(groupName);
+                let isVisible = $("#satelliteVisible-checkbox")[0].checked;
+                satelliteGroup.setVisible(isVisible);
+            }
+
+            function satelliteGroupConfirm() {
+                let groupName = $('#satelliteGroup').val();
+                let satelliteGroup = satelliteManager.getGroup(groupName);
+                let satelliteModelScale = parseFloat($('#satelliteModelScale-input').val()) ;
+                let satelliteModelPath = $('#satelliteModelPath-input').val();
+                let satelliteModelVisible = $('#satelliteModelVisible-checkbox').is(':checked');
+                let orbitWidth = $('#orbitWidth-input').val();
+                let orbitColor = $('#orbitColor-input').val();
+                let orbitVisible = $('#orbitVisible-checkbox').is(':checked');
+
+                // 在此处获取卫星组样式值，调用接口(未完成)
+                if (satelliteModelScale !== satelliteGroup.getAllSatelliteScale()) {
+                    satelliteGroup.setAllSatelliteScale(satelliteModelScale);
+                }
+                if (satelliteModelPath !== satelliteGroup.getGroupModelPath()) {
+                    satelliteGroup.setGroupModelPath(satelliteModelPath);
+                }
+                if (satelliteModelVisible !== satelliteGroup.isVisible()) {
+                    satelliteGroup.setVisible(satelliteModelVisible);
+                }
+                if (orbitWidth !== satelliteGroup.getOrbitsWidth()) {
+                    satelliteGroup.setOrbitsWidth(orbitWidth);
+                }
+
+                if (orbitColor !== colorToHex(satelliteGroup.getOrbitsColor())) {
+                    satelliteGroup.setOrbitsColor(hexToColor(orbitColor));
+                }
+                if (orbitVisible !== satelliteGroup.isOrbitsVisible()) {
+                    satelliteGroup.setOrbitsVisible(orbitVisible);
+                    if (!satelliteGroup.isVisible() && orbitVisible) {
+                        alert("轨道显示受卫星显示影响！");
+                    }
+                }
+                var geoEffectAugmentEditor = document.getElementById("satelliteGroup-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function satelliteGroupCancel() {
+                var geoEffectAugmentEditor = document.getElementById("satelliteGroup-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+            // 编译卫星组
+            function editSatelliteGroup() {
+                let groupName = $('#satelliteGroup').val();
+                let satelliteGroup = satelliteManager.getGroup(groupName);
+                let orignalSatelliteScale = satelliteGroup.getAllSatelliteScale();
+                let orignalSatelliteModelPath = satelliteGroup.getGroupModelPath();
+                let orignalSatelliteModelVisible = satelliteGroup.isVisible();
+                let orignalOrbitWidth = satelliteGroup.getOrbitsWidth();
+                let orignalOrbitColor = colorToHex(satelliteGroup.getOrbitsColor());
+                let orignalOrbitVisible = satelliteGroup.isOrbitsVisible();
+                // 在此处初始化值，获取选中组给弹出框赋值（未完成）
+                $('#satelliteModelScale-input').val(orignalSatelliteScale);
+                $('#satelliteModelPath-input').val(orignalSatelliteModelPath);
+                //$('#satelliteModelVisible-checkbox')[0].checked = orignalSatelliteModelVisible;
+                $('#orbitWidth-input').val(orignalOrbitWidth);
+                $('#orbitColor-input').val(orignalOrbitColor);
+                //$('#orbitVisible-checkbox')[0].checked = orignalOrbitVisible;
+                $('#orbitVisible-checkbox').attr("checked", orignalOrbitVisible);
+                $("#satelliteModelVisible-checkbox").attr("checked", orignalSatelliteModelVisible);
+
+                var geoEffectAugmentEditor = document.getElementById("satelliteGroup-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+
+            function closeGeoEntityPanel() {
+                var geoEffectAugmentEditor = document.getElementById("geoEntity-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function editGeoEntity() {
+                $('#geoEntityOrbit-div').hide();
+
+                geoEntitySelectedChanged();
+                showProperty();
+
+                var geoEffectAugmentEditor = document.getElementById("geoEntity-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+
+            function flyGeoEntity() {
+                if (!SuperMap3D.defined($("#geoEntitys option:selected").val())) {
+                    return;
+                }
+                let geoEntitySelected = geoEntityManager.getGeoEntityByUUID($("#geoEntitys option:selected").val())
+                let geoEntityParameter = geoEntitySelected.getGeoEntityParameter();
+
+                let modelSize = SuperMap3D.SituationSimulationToolkit.getModelSize({ scene: scene, modelPath: geoEntityParameter.getModelPath() });
+                if (!SuperMap3D.defined(modelSize)) {
+                    let timer = setInterval(() => {
+                        modelSize = SuperMap3D.SituationSimulationToolkit.getModelSize({ scene: scene, modelPath: geoEntityParameter.getModelPath() });
+                        if (SuperMap3D.defined(modelSize)) {
+                            clearInterval(timer);
+                            flyGeoEntity();
+                        }
+                    }, 30);
+                } else {
+                    let position = geoEntityParameter.getPosition();
+                    position = new SuperMap3D.Cartesian3(position.x, position.y, position.z);
+                    if (SuperMap3D.defined(modelSize)) {
+                        if (geoEntityParameter.getShowMode() === SuperMap3D.DotMode.Marker) {
+                            let length = modelSize.x * geoEntityParameter.getModelScale();
+                            let width = modelSize.y * geoEntityParameter.getModelScale();
+                            let height = modelSize.z * geoEntityParameter.getModelScale();
+
+                            let viewLength = length > width ? length : width;
+                            viewLength = viewLength > height ? viewLength : height;
+
+                            position.z += height + viewLength * 4;
+                        } else if (geoEntityParameter.getShowMode() === SuperMap3D.DotMode.Vector) {
+                            position.z += 50000 * geoEntityParameter.getVectorScale();
+                        } else {
+                            position.z += 1000;
+                        }
+                    } else {
+                        position.z += 1000;
+                    }
+                    position = SuperMap3D.SituationSimulationToolkit.degreesToCartesian3(position);
+                    viewer.camera.flyTo({
+                        destination: position,
+                    });
+                }
+            }
+
+            function onGeoEntityOrbitVisibleChange() {
+                let newValue = $('#geoEntityOrbitVisible-checkbox')[0].checked;
+                geoEntity.setOrbitVisible(newValue);
+            }
+
+            function geoEntityOrbitColorChange() {
+                let color = $("#geoEntityOrbitColor-input").val();
+                geoEntity.setOrbitColor(hexToColor(color));
+            }
+
+            function editSatelliteGeoEntity() {
+                $('#geoEntityOrbit-div').show();
+
+                satelliteEntitySelectedChanged();
+                showProperty();
+
+                var geoEffectAugmentEditor = document.getElementById("geoEntity-editor");
+                geoEffectAugmentEditor.style.display = "block";
+            }
+
+            function geoEntityNameConfirm() {
+                let geoEntityName = $('#geoEntityName-input').val();
+                geoEntity.setName(geoEntityName);
+
+                $("#geoEntityName").text(geoEntityName);
+
+                let option = undefined;
+                if (isSatellite) {
+                    option = $("#satelliteGeoEntity option:selected");
+                } else {
+                    option = $("#geoEntitys option:selected");
+
+                }
+                option.text(geoEntityName);
+                var geoEffectAugmentEditor = document.getElementById("geoEntityName-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function geoEntityNameCancel() {
+                var geoEffectAugmentEditor = document.getElementById("geoEntityName-editor");
+                geoEffectAugmentEditor.style.display = "none";
+            }
+
+            function editGeoEntityName() {
+                $('#geoEntityName-input').val(geoEntity.getName());
+                var geoEffectAugmentEditor = document.getElementById("geoEntityName-editor");
+                geoEffectAugmentEditor.style.display = "block";
+                document.getElementById("geoEntityName-input").focus();
+            }
+
+            function showTabContent(id) {
+                let contents = document.getElementsByClassName("tabContent");
+                for (let index = 0; index < contents.length; index++) {
+                    let content = contents[index];
+                    if (content.getAttribute("id") === id + "Content") {
+                        content.style.display = "block";
+                    } else {
+                        content.style.display = "none"
+                    }
+                }
+
+                let tabs = document.getElementsByClassName("tab");
+                for (let index = 0; index < tabs.length; index++) {
+                    let tab = tabs[index];
+                    tab.classList.remove("active");
+                }
+
+                let tab = document.getElementById(id);
+                tab.classList.add("active");
+            }
+
+            function cameraFollowEarthRotateChange() {
+                let value = $("#cameraFollowEarthRotate")[0].checked;
+                simulationController.setCameraFollowEarthRotation(value);
+            }
+
+            function scanWaveConfirm() {
+                let showMode = geoEffect.getMode();
+
+                let tabs = document.getElementsByClassName("tab");
+                let activeTab = undefined;
+                for (let index = 0; index < tabs.length; index++) {
+                    let tab = tabs[index];
+                    if (tab.classList.contains("active")) {
+                        activeTab = tab;
+                    }
+                }
+
+                if (activeTab.getAttribute("id") === "scanWaveModeColor") {
+                    showMode = SuperMap3D.GeoEntityEffectScanWaveColorMode.ColorMode;
+                } else if (title === "scanWavePictureColor") {
+                    showMode = SuperMap3D.GeoEntityEffectScanWaveColorMode.PictureMode;
+                }
+
+                geoEffect.setLength($("#scanWave-length").val() * 1.0);
+                geoEffect.setWidth($("#scanWave-width").val() * 1.0);
+                geoEffect.setHeight($("#scanWave-height").val() * 1.0);
+                geoEffect.setScanAngle($("#scanWave-scanAngle").val() * 1.0);
+                geoEffect.setSectionSlices($("#scanWave-sectionSlices").val() * 1.0);
+                geoEffect.setInitRotate(new SuperMap3D.PlotPoint3D(
+                    $("#scanWave-initRotateX").val() * 1.0, $("#scanWave-initRotateY").val() * 1.0, $("#scanWave-initRotateZ").val() * 1.0));
+                geoEffect.setRepeatCount($("#scanWave-repeatCount").val() * 1.0);
+                geoEffect.setFlowSpeed($("#scanWave-flowSpeed").val() * 1.0);
+
+                if ($("#scanWave-rotateAxis").val() === "x轴") {
+                    geoEffect.setScanAxis(0);
+                } else if ($("#scanWave-rotateAxis").val() === "y轴") {
+                    geoEffect.setScanAxis(1);
+                } else if ($("#scanWave-rotateAxis").val() === "z轴") {
+                    geoEffect.setScanAxis(2);
+                }
+
+                geoEffect.setScanSpeed($("#scanWave-scanSpeed").val() * 1.0);
+                geoEffect.setColorBack(hexToColor($("#scanWave-colorBack").val()));
+                geoEffect.setColorBackLightScale($("#scanWave-colorBackLightScale").val() * 1.0);
+                geoEffect.setColorForward(hexToColor($("#scanWave-colorForward").val()));
+                geoEffect.setColorForwardLightScale($("#scanWave-colorForwardLightScale").val() * 1.0);
+                geoEffect.setColorForwardLengthRatio($("#scanWave-colorForwardLengthRatio").val() * 1.0);
+                geoEffect.setPicturePath($("#scanWave-picturePath").val());
+                geoEffect.setPictureColorLightScale($("#scanWave-pictureColorLightScale").val() * 1.0);
+                geoEffect.setSectionAngle($("#scanWave-sectionAngle").val() * 1.0);
+
+                geoEffect.setMode(showMode);
+
+                var geoEffectScanWaveEditor = document.getElementById("scanWave-editor");
+                geoEffectScanWaveEditor.style.display = "none";
+            }
+
+            function scanWaveCancel() {
+                var geoEffectScanWaveEditor = document.getElementById("scanWave-editor");
+                geoEffectScanWaveEditor.style.display = "none";
+            }
+
+            function editScanWave() {
+                $("#scanWave-length").val(geoEffect.getLength());
+                $("#scanWave-width").val(geoEffect.getWidth());
+                $("#scanWave-height").val(geoEffect.getHeight());
+                $("#scanWave-scanAngle").val(geoEffect.getScanAngle());
+                $("#scanWave-sectionSlices").val(geoEffect.getSectionSlices());
+                $("#scanWave-initRotateX").val(geoEffect.getInitRotate().x);
+                $("#scanWave-initRotateY").val(geoEffect.getInitRotate().y);
+                $("#scanWave-initRotateZ").val(geoEffect.getInitRotate().z);
+                $("#scanWave-repeatCount").val(geoEffect.getRepeatCount());
+                $("#scanWave-flowSpeed").val(geoEffect.getFlowSpeed());
+
+                if (geoEffect.getScanAxis() === 0) {
+                    $("#scanWave-rotateAxis").val("x轴");
+                }
+                else if (geoEffect.getScanAxis() === 1) {
+                    $("#scanWave-rotateAxis").val("y轴");
+                }
+                else if (geoEffect.getScanAxis() === 2) {
+                    $("#scanWave-rotateAxis").val("z轴");
+                }
+
+                $("#scanWave-scanSpeed").val(geoEffect.getScanSpeed());
+                $("#scanWave-colorBack").val(colorToHex(geoEffect.getColorBack()));
+                $("#scanWave-colorBackLightScale").val(geoEffect.getColorBackLightScale());
+                $("#scanWave-colorForward").val(colorToHex(geoEffect.getColorForward()));
+                $("#scanWave-colorForwardLightScale").val(geoEffect.getColorForwardLightScale());
+                $('#scanWave-colorForwardLengthRatio').val(geoEffect.getColorForwardLengthRatio());
+                $("#scanWave-picturePath").val(geoEffect.getPicturePath());
+                $("#scanWave-pictureColorLightScale").val(geoEffect.getPictureColorLightScale());
+                $("#scanWave-sectionAngle").val(geoEffect.getSectionAngle());
+
+                if (geoEffect.getMode() === SuperMap3D.GeoEntityEffectScanWaveColorMode.ColorMode) {
+                    let content = document.getElementById("scanWaveModeColorContent");
+                    content.style.display = "block";
+                }
+                else {
+                    let content = document.getElementById("scanWavePictureColorContent");
+                    content.style.display = "block";
+                }
+
+                var geoEffectScanWaveEditor = document.getElementById("scanWave-editor");
+                geoEffectScanWaveEditor.style.display = "block";
+            }
+        </script>
+    </div>
+</body>
+
+
+</html>

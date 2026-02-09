@@ -1,0 +1,24 @@
+<div class="phonefontsize">
+    {{title}}
+</div>
+<div class="panel-body">
+    <div class="news-list">
+        {{each content item}}
+        <div class="news-item">
+            <div class="decoration">
+                <div class="news-circle">
+                    <div class="solid-circle"></div>
+                </div>
+            </div>
+            <div class="news-box">
+                <p class="new-attributes_content">
+                    {{item.desc}}{{if item.desc&&item.desc!=""&&item.hrefText}},&ensp;{{/if}}
+                    {{if item.hrefText}}
+                    <a href="{{ typeof(item.hrefUrl)==='object' ? item.hrefUrl[type] : item.hrefUrl }}" target="_blank"> {{item.hrefText}} </a>
+                    {{/if}}
+                </p>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>
