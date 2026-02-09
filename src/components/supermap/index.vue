@@ -59,11 +59,13 @@ const initSuperMap3D = async () => {
     imageryProvider: false
   });
 
+  map.resolutionScale = window.devicePixelRatio;
+
   map.scenePromise.then(() => {
     //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
 
-    // 加载高德瓦片地图
-    const gaodeImageryProvider = new SuperMap3D.UrlTemplateImageryProvider({
+    // 将高德瓦片作为底图添加到场景
+    map.imageryLayers.addImageryProvider(new SuperMap3D.UrlTemplateImageryProvider({
       // 高德瓦片地址模板（{s} 用于多域名负载均衡）
       url: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
       // 配置子域名（对应 {s}）
@@ -76,25 +78,32 @@ const initSuperMap3D = async () => {
       // 瓦片大小 （默认256，行业标准 ：几乎所有主流地图服务（包括高德地图）都使用 256x256 的瓦片大小）
       tileWidth: 256,
       tileHeight: 256,
-      // 避免跨域问题（如果部署后报跨域，需要后端代理）
-      credit: new SuperMap3D.Credit('高德地图')
-    });
-
-    // 将高德瓦片作为底图添加到场景
-    const gaodeLayer = new SuperMap3D.ImageryLayer(gaodeImageryProvider);
-    map.imageryLayers.add(gaodeLayer);
+    }));
 
     checkWebGPUStatus(map); // 检测 WebGPU 状态
 
-    // 可选：设置相机初始视角（比如定位到北京）
-    map.scene.camera.setView({
+    // 可选：设置相机初始视角
+    // 使用 flyTo 替代 setView - setView 是瞬时定位，不支持动画； flyTo 支持平滑飞行效果
+    map.scene.camera.flyTo({
       destination: SuperMap3D.Cartesian3.fromDegrees(mapOptions.scene.center.lng, mapOptions.scene.center.lat, mapOptions.scene.center.alt), // 经纬度 + 高度
       orientation: {
         heading: SuperMap3D.Math.toRadians(mapOptions.scene.center.heading),   // 水平旋转
         pitch: SuperMap3D.Math.toRadians(mapOptions.scene.center.pitch),   // 俯仰角度
         roll: SuperMap3D.Math.toRadians(mapOptions.scene.center.roll)   // 翻滚角度
-      }
+      },
+      duration: mapOptions.scene.center.duration // 飞行时间（秒）
     });
+
+    map.scene.sun.show = true; // 显示太阳
+    map.scene.sun.intensity = 1.0; // 太阳强度
+    map.scene.moon.show = true; // 显示月球
+    map.scene.moon.intensity = 1.0; // 月球强度
+    // 开启/关闭 地球光照效果
+    map.scene.globe.enableLighting = mapOptions.scene.globe.enableLighting
+    // 显示帧速（FPS）
+    map.scene.debugShowFramesPerSecond = true;
+    // 开启地形深度测试，确保在地形上的实体正确渲染
+    map.scene.globe.depthTestAgainstTerrain = true;
   });
 }
 
