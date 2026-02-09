@@ -10,14 +10,18 @@
       "duration": 0  // 地图中心点动画时间
     },
     "globe": {
-      "depthTestAgainstTerrain": false, // 开启地形深度测试
-      "showGroundAtmosphere": true, // 显示地面大气效果
-      "enableLighting": false  // 是否开启光照效果
-    }
+      "depthTestAgainstTerrain": false, // 开启地形深度测试，开启后物体在地形下会被遮挡，关闭则穿透。
+      "showGroundAtmosphere": false, // 是否显示地面大气辉光，让地球边缘更柔和。
+      "enableLighting": false,  // 是否开启光照效果
+      "backFaceCulling": true,  // 是否启用背面剔除，开启后不渲染朝向相机背面的三角形，提升性能。
+      "showSkirts": true,  // 是否显示地形裙边，用于消除地形瓦片拼接时的缝隙。
+      "shadows": 3,  // 阴影模式，3 表示启用地形和模型的阴影投射与接收。
+      "tileCacheSize": 1024  // 地形瓦片缓存大小，单位 MB，默认 1024 MB。
+    },
+    "debugShowFramesPerSecond": true  // 是否显示帧率信息，用于调试性能。
   },
   "control": {
     "baseLayerPicker": true,  // 是否显示基础图层选择器
-    "geocoder": true,  // 是否显示地址搜索框
     "homeButton": true,  // 是否显示返回首页按钮
     "sceneModePicker": true,  // 是否显示场景模式选择器
     "navigationHelpButton": true,  // 是否显示导航帮助按钮

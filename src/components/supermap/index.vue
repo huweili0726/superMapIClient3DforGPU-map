@@ -61,8 +61,8 @@ const initSuperMap3D = async () => {
 
   map.resolutionScale = window.devicePixelRatio;
 
+  //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
   map.scenePromise.then(() => {
-    //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
 
     // 从配置中加载底图
     if (mapOptions && mapOptions.basemaps) {
@@ -106,18 +106,16 @@ const initSuperMap3D = async () => {
       duration: mapOptions.scene.center.duration // 飞行时间（秒）
     });
 
-    map.scene.sun.show = false; // 显示太阳
-    map.scene.sun.intensity = 1.0; // 太阳强度
-    map.scene.moon.show = true; // 显示月球
-    map.scene.moon.intensity = 1.0; // 月球强度
     // 显示地面大气效果
     map.scene.globe.showGroundAtmosphere = mapOptions.scene.globe.showGroundAtmosphere;
     // 开启/关闭 地球光照效果
     map.scene.globe.enableLighting = mapOptions.scene.globe.enableLighting
     // 显示帧速（FPS）
-    map.scene.debugShowFramesPerSecond = true;
+    map.scene.debugShowFramesPerSecond = mapOptions.scene.debugShowFramesPerSecond;
     // 开启地形深度测试，确保在地形上的实体正确渲染
     map.scene.globe.depthTestAgainstTerrain = mapOptions.scene.globe.depthTestAgainstTerrain;
+    // 配置地形瓦片缓存大小
+    map.scene.globe.tileCacheSize = mapOptions.scene.globe.tileCacheSize;
   });
 }
 
