@@ -61,43 +61,40 @@ const initSuperMap3D = async () => {
 
   map.scenePromise.then(() => {
     //初始化场景（由于WebGPU采用异步加载，初始化场景需要放在回调中打开）	
-    initSceneCallback(SuperMap3D, map, mapOptions);
-  });
-}
 
-const initSceneCallback = (SuperMap3D: any, map: any, mapOptions: any) => {
-  // 加载高德瓦片地图
-  const gaodeImageryProvider = new SuperMap3D.UrlTemplateImageryProvider({
-    // 高德瓦片地址模板（{s} 用于多域名负载均衡）
-    url: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
-    // 配置子域名（对应 {s}）
-    subdomains: ['1', '2', '3', '4'],
-    // 瓦片投影坐标系（高德默认是墨卡托，对应 EPSG:3857）
-    projection: SuperMap3D.WebMercatorProjection,
-    // 瓦片层级范围
-    minimumLevel: 0,
-    maximumLevel: 18,
-    // 瓦片大小 （默认256，行业标准 ：几乎所有主流地图服务（包括高德地图）都使用 256x256 的瓦片大小）
-    tileWidth: 256,
-    tileHeight: 256,
-    // 避免跨域问题（如果部署后报跨域，需要后端代理）
-    credit: new SuperMap3D.Credit('高德地图')
-  });
+    // 加载高德瓦片地图
+    const gaodeImageryProvider = new SuperMap3D.UrlTemplateImageryProvider({
+      // 高德瓦片地址模板（{s} 用于多域名负载均衡）
+      url: 'https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}',
+      // 配置子域名（对应 {s}）
+      subdomains: ['1', '2', '3', '4'],
+      // 瓦片投影坐标系（高德默认是墨卡托，对应 EPSG:3857）
+      projection: SuperMap3D.WebMercatorProjection,
+      // 瓦片层级范围
+      minimumLevel: 0,
+      maximumLevel: 18,
+      // 瓦片大小 （默认256，行业标准 ：几乎所有主流地图服务（包括高德地图）都使用 256x256 的瓦片大小）
+      tileWidth: 256,
+      tileHeight: 256,
+      // 避免跨域问题（如果部署后报跨域，需要后端代理）
+      credit: new SuperMap3D.Credit('高德地图')
+    });
 
-  // 将高德瓦片作为底图添加到场景
-  const gaodeLayer = new SuperMap3D.ImageryLayer(gaodeImageryProvider);
-  map.imageryLayers.add(gaodeLayer);
+    // 将高德瓦片作为底图添加到场景
+    const gaodeLayer = new SuperMap3D.ImageryLayer(gaodeImageryProvider);
+    map.imageryLayers.add(gaodeLayer);
 
-  checkWebGPUStatus(map); // 检测 WebGPU 状态
+    checkWebGPUStatus(map); // 检测 WebGPU 状态
 
-  // 可选：设置相机初始视角（比如定位到北京）
-  map.scene.camera.setView({
-    destination: SuperMap3D.Cartesian3.fromDegrees(mapOptions.scene.center.lng, mapOptions.scene.center.lat, mapOptions.scene.center.alt), // 经纬度 + 高度
-    orientation: {
-      heading: SuperMap3D.Math.toRadians(mapOptions.scene.center.heading),   // 水平旋转
-      pitch: SuperMap3D.Math.toRadians(mapOptions.scene.center.pitch),   // 俯仰角度
-      roll: SuperMap3D.Math.toRadians(mapOptions.scene.center.roll)   // 翻滚角度
-    }
+    // 可选：设置相机初始视角（比如定位到北京）
+    map.scene.camera.setView({
+      destination: SuperMap3D.Cartesian3.fromDegrees(mapOptions.scene.center.lng, mapOptions.scene.center.lat, mapOptions.scene.center.alt), // 经纬度 + 高度
+      orientation: {
+        heading: SuperMap3D.Math.toRadians(mapOptions.scene.center.heading),   // 水平旋转
+        pitch: SuperMap3D.Math.toRadians(mapOptions.scene.center.pitch),   // 俯仰角度
+        roll: SuperMap3D.Math.toRadians(mapOptions.scene.center.roll)   // 翻滚角度
+      }
+    });
   });
 }
 
