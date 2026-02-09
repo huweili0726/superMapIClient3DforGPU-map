@@ -10,12 +10,12 @@
       "duration": 0  // 地图中心点动画时间
     },
     "globe": {
+      "depthTestAgainstTerrain": false, // 开启地形深度测试
+      "showGroundAtmosphere": true, // 显示地面大气效果
       "enableLighting": false  // 是否开启光照效果
     }
   },
   "control": {
-    "disableDoubleClick": true,  // 是否禁用双击缩放
-    "disableEntityClick": true,  // 是否禁用实体点击事件
     "baseLayerPicker": true,  // 是否显示基础图层选择器
     "geocoder": true,  // 是否显示地址搜索框
     "homeButton": true,  // 是否显示返回首页按钮
@@ -37,12 +37,12 @@
     {
       "name": "高德电子-(白底)",  // 基础图层名称
       "url": "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",  // 基础图层 URL
-      "show": true  // 是否显示该基础图层
+      "show": false  // 是否显示该基础图层
     },
     {
       "name": "高德影像-(卫星影像)",  // 基础图层名称
       "url": "https://webst0{s}.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",  // 基础图层 URL
-      "show": false  // 是否显示该基础图层
+      "show": true  // 是否显示该基础图层
     },
     {
       "name": "高德影像-本地",  // 基础图层名称
