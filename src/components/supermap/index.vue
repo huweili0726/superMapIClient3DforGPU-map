@@ -7,6 +7,9 @@ import { ref, onMounted, onUnmounted, toRaw } from 'vue';
 import { jsonUtils } from '@/utils/json'
 import { objectUtils } from '@/utils/object'
 
+// onload事件将在地图渲染后触发
+const emit = defineEmits(["onload"])
+
 const props = withDefaults(
   defineProps<{
     mapConfigUrl?: string // 传入的地图构造参数url，可为空，只传options
@@ -118,6 +121,8 @@ const initSuperMap3D = async () => {
       duration: mapOptions.scene.center.duration // 飞行时间（秒）
     });
 
+    emit("onload", map)
+
     // 显示地面大气效果
     map.scene.globe.showGroundAtmosphere = mapOptions.scene.globe.showGroundAtmosphere;
     // 开启/关闭 地球光照效果
@@ -128,8 +133,6 @@ const initSuperMap3D = async () => {
     map.scene.globe.depthTestAgainstTerrain = mapOptions.scene.globe.depthTestAgainstTerrain;
     // 配置地形瓦片缓存大小
     map.scene.globe.tileCacheSize = mapOptions.scene.globe.tileCacheSize;
-
-    console.log('control:', map.control);
   });
 }
 
