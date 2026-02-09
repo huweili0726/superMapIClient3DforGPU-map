@@ -18,6 +18,13 @@ export default ({ mode }: ConfigEnv) => {
       host: '0.0.0.0', // 监听所有网络接口
       port: 3001, // 监听端口
       open: true, //项目启东时是否打开页面
+      proxy: {
+        // 自定义地形服务
+        '/terrain': {
+          target: 'http://data.mars3d.cn',//目标地址（跨域）
+          changeOrigin: true,
+        },
+      }
     },
     define: {
       "process.env": {

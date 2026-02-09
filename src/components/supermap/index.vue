@@ -57,7 +57,6 @@ const initSuperMap3D = async () => {
       requestWebgpu: true  // 启用 WebGPU
     },
     baseLayerPicker: false,
-    terrainProvider: null,
     imageryProvider: false,
     timeline: true, // 开启时间线控件（不受 WebGPU 影响）
     animation: true,// 同时开启动画控件（和时间线配套使用）
@@ -67,7 +66,8 @@ const initSuperMap3D = async () => {
     navigationHelpButton: mapOptions.control.navigationHelpButton, // 导航帮助按钮
     infoBox: mapOptions.control.infoBox, // 信息框
     fullscreenButton: mapOptions.control.fullscreenButton, // 全屏按钮
-    vrButton: mapOptions.control.vrButton // VR 按钮
+    vrButton: mapOptions.control.vrButton, // VR 按钮
+    terrainProvider: await initTerrain(mapOptions), // 加载自定义地形服务
   });
 
 
@@ -131,6 +131,24 @@ const initSuperMap3D = async () => {
 
     console.log('control:', map.control);
   });
+}
+
+// 封装地形加载函数（异步，适配 SuperMap3D）
+async function initTerrain(mapOptions: any) {
+  let terrainProvider = undefined;
+  
+  if (mapOptions.terrain.show) {
+    terrainProvider = new SuperMap3D.SuperMapTerrainProvider({
+      url: mapOptions.terrain.url, // SuperMap iServer 地形服务地址
+      isSct: mapOptions.terrain.isSct, // 必设：标识为 SuperMap 地形缓存（SCT 格式）
+      requestWaterMask: mapOptions.terrain.coastlineData, // 水体掩码
+      requestVertexNormals: mapOptions.terrain.lightingData, // 地形法线（光照）
+      showSkirts: mapOptions.terrain.showSkirts, // 消除地形裂缝（信创场景必开）
+      maximumScreenSpaceError: mapOptions.terrain.maximumScreenSpaceError// 地形精度（默认2，建议2-4，根据场景复杂度调整）
+    });
+  }
+  
+  return terrainProvider;
 }
 
 // 检测 WebGPU 状态的函数

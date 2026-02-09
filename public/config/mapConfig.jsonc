@@ -35,8 +35,11 @@
   "terrain": {
     "url": "http://data.mars3d.cn/terrain",  // 地形数据 URL
     "show": true,  // 是否显示地形
+    "isSct": false,  // 必设：标识为 SuperMap 地形缓存（SCT 格式）
     "coastlineData": true,  // 是否显示海岸线数据
-    "lightingData": true  // 是否显示光照数据
+    "lightingData": true,  // 是否显示光照数据
+    "maximumScreenSpaceError": 2, // 地形精度（默认2，建议2-4，根据场景复杂度调整）
+    "showSkirts": true, // 消除地形裂缝（信创场景必开）
   },
   "basemaps": [
     {
