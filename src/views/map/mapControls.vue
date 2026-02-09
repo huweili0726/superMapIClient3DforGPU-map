@@ -4,16 +4,86 @@
     地图加载状态：{{ mapStore.mapStatus?.info || '未知状态' }}
   </div>
 
-
+  <!-- 点位控制按钮 -->
+  <div class="map-controls">
+    <div class="button-group">
+      <!-- 图片点位控制按钮组 -->
+      <div class="button-group img-point-controls">
+        <div class="group-title" @click="toggleControls('imgPoint')">
+          图片点位控制
+          <span class="toggle-icon">{{ isImgPointControlsOpen ? '▼' : '▶' }}</span>
+        </div>
+        <div v-if="isImgPointControlsOpen" class="controls-content">
+          <button @click="toSetPointEntityByImg" class="control-btn">set entity点位(img)</button>
+          <button @click="toSetPointPrimitiveByImg" class="control-btn">set primitive点位(img)</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue'
 import { useMapStore } from '@/stores/modules/mapStore'
+import { setPoint } from '@/components/supermap/ts/setPoint'
 
 // 获取store实例，保持响应性
 const mapStore = useMapStore()
 
+// 按钮组展开/折叠状态
+const isImgPointControlsOpen = ref(false)
+const isModelControlsOpen = ref(false)
+const isHemisphereControlsOpen = ref(false)
+const isDroneControlsOpen = ref(false)
+const isReplayControlsOpen = ref(false)
+const isDiffusionControlsOpen = ref(false)
+const isFenceControlsOpen = ref(false)
+const isPyramidControlsOpen = ref(false)
+
+// 切换按钮组展开/折叠状态
+const toggleControls = (controlType: string) => {
+  switch (controlType) {
+    case 'imgPoint':
+      isImgPointControlsOpen.value = !isImgPointControlsOpen.value
+      break
+    case 'model':
+      isModelControlsOpen.value = !isModelControlsOpen.value
+      break
+    case 'hemisphere':
+      isHemisphereControlsOpen.value = !isHemisphereControlsOpen.value
+      break
+    case 'drone':
+      isDroneControlsOpen.value = !isDroneControlsOpen.value
+      break
+    case 'replay':
+      isReplayControlsOpen.value = !isReplayControlsOpen.value
+      break
+    case 'diffusion':
+      isDiffusionControlsOpen.value = !isDiffusionControlsOpen.value
+      break
+    case 'fence':
+      isFenceControlsOpen.value = !isFenceControlsOpen.value
+      break
+    case 'pyramid':
+      isPyramidControlsOpen.value = !isPyramidControlsOpen.value
+      break
+  }
+}
+
+const toSetPointEntityByImg = () => {
+  // 设置点位 （通过提供的图片设置点位）【Entity】
+  setPointEntityByImg({id: '1', lng: 117.229629, lat: 31.716888});
+}
+
+// 设置点位 （通过提供的设置点位）【Primitive】
+const toSetPointPrimitiveByImg = () => {
+  setPointPrimitiveByImg({id: `point-primitive-1`, lng: 117.229629, lat: 31.716888, name: `雷达位置`, imageUrl: new URL('@/assets/img/point1.png', import.meta.url).href});
+}
+
+const {
+  setPointEntityByImg,
+  setPointPrimitiveByImg
+} = setPoint(process.env.BASE_URL)
 </script>
 
 <style scoped lang="less">

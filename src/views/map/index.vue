@@ -17,7 +17,6 @@ import MapControls from './mapControls.vue'
 import { useMapStore, MapLoadStatus } from '@/stores/modules/mapStore'
 import { basicConfig } from '@/components/supermap/ts/basis'
 
-
 // 获取store实例，保持响应性
 const mapStore = useMapStore()
 
